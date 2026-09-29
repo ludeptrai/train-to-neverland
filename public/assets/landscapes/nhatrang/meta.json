@@ -1,0 +1,13 @@
+{
+  "name": "Biển Nha Trang",
+  "subtitle": "Bờ cát trắng & Tuyến đường sắt ven biển ngọc",
+  "location": "Khánh Hòa, Việt Nam",
+  "bgSpeed": 0.15,
+  "mgSpeed": 0.85,
+  "skyPresets": {
+    "dawn": ["#ff9a9e", "#fecfef", "#a1c4fd"],
+    "day": ["#4facfe", "#00f2fe", "#e0f7fa"],
+    "sunset": ["#fa709a", "#fee140", "#f39c12"],
+    "night": ["#09203f", "#1b2a4a", "#2c3e50"]
+  }
+}

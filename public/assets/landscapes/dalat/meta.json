@@ -1,0 +1,13 @@
+{
+  "name": "Đà Lạt Ngàn Hoa",
+  "subtitle": "Đồi thông sương mờ & Ga xe lửa cổ kính",
+  "location": "Lâm Đồng, Việt Nam",
+  "bgSpeed": 0.15,
+  "mgSpeed": 0.85,
+  "skyPresets": {
+    "dawn": ["#ff9a9e", "#fecfef"],
+    "day": ["#a1c4fd", "#c2e9fb"],
+    "sunset": ["#fa709a", "#fee140"],
+    "night": ["#1e3c72", "#2a5298"]
+  }
+}

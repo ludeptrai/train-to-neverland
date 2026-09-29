@@ -1,0 +1,28 @@
+{
+  "name": "train-to-the-neverland",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "process:landscape": "node scripts/process_landscape_theme.js",
+    "scan:assets": "node scripts/scan_assets.js"
+  },
+  "dependencies": {
+    "howler": "^2.2.4",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.12",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "sharp": "^0.35.5",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.11"
+  }
+}

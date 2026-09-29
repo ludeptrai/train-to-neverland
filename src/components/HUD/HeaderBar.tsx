@@ -1,0 +1,247 @@
+import React, { useState } from 'react';
+import { TimeOfDay, WeatherType, SceneConfig, TrainTheme } from '../../types';
+import { PixelButton } from '../Shared/PixelButton';
+import { Sun, CloudRain, Snowflake, Sparkles, Sunrise, Sunset, Moon, Clock, MapPin, TrainTrack, ChevronDown, Compass } from 'lucide-react';
+
+interface HeaderBarProps {
+  weather: WeatherType;
+  onWeatherChange: (w: WeatherType) => void;
+  timeOfDay: TimeOfDay;
+  onTimeOfDayChange: (t: TimeOfDay) => void;
+  currentScene: SceneConfig;
+  onSceneChange: (scene: SceneConfig) => void;
+  scenes: SceneConfig[];
+  currentTrain: TrainTheme;
+  onTrainChange: (train: TrainTheme) => void;
+  trains: TrainTheme[];
+  isAutoTour?: boolean;
+  onToggleAutoTour?: () => void;
+}
+
+export const HeaderBar: React.FC<HeaderBarProps> = ({
+  weather,
+  onWeatherChange,
+  timeOfDay,
+  onTimeOfDayChange,
+  currentScene,
+  onSceneChange,
+  scenes,
+  currentTrain,
+  onTrainChange,
+  trains,
+  isAutoTour = true,
+  onToggleAutoTour,
+}) => {
+  const [isTrainMenuOpen, setIsTrainMenuOpen] = useState(false);
+  const [isSceneMenuOpen, setIsSceneMenuOpen] = useState(false);
+
+  // Cycle weather
+  const weatherList: WeatherType[] = ['clear', 'rain', 'snow', 'sakura'];
+  const nextWeather = () => {
+    const idx = weatherList.indexOf(weather);
+    onWeatherChange(weatherList[(idx + 1) % weatherList.length]);
+  };
+
+  const weatherLabels: Record<WeatherType, { text: string; icon: React.ReactNode }> = {
+    clear: { text: 'TRỜI QUANG', icon: <Sun size={13} color="#f9ca24" /> },
+    rain: { text: 'MƯA RƠI', icon: <CloudRain size={13} color="#70a1ff" /> },
+    snow: { text: 'TUYẾT TRẮNG', icon: <Snowflake size={13} color="#ffffff" /> },
+    sakura: { text: 'HOA ANH ĐÀO', icon: <Sparkles size={13} color="#ff9ff3" /> },
+  };
+
+  // Cycle time of day
+  const timeList: TimeOfDay[] = ['day', 'sunset', 'night', 'dawn', 'auto'];
+  const nextTime = () => {
+    const idx = timeList.indexOf(timeOfDay);
+    onTimeOfDayChange(timeList[(idx + 1) % timeList.length]);
+  };
+
+  const timeLabels: Record<TimeOfDay, { text: string; icon: React.ReactNode }> = {
+    dawn: { text: 'BÌNH MINH', icon: <Sunrise size={13} color="#ffbe76" /> },
+    day: { text: 'BAN NGÀY', icon: <Sun size={13} color="#f9ca24" /> },
+    sunset: { text: 'HOÀNG HÔN', icon: <Sunset size={13} color="#ff7979" /> },
+    night: { text: 'BAN ĐÊM', icon: <Moon size={13} color="#f6e58d" /> },
+    auto: { text: 'GIỜ THẬT', icon: <Clock size={13} color="#dff9fb" /> },
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: '20px',
+        left: '24px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '10px',
+        zIndex: 50,
+      }}
+    >
+      {/* Weather toggle button */}
+      <PixelButton onClick={nextWeather} title="Nhấn để đổi thời tiết">
+        {weatherLabels[weather].icon}
+        <span>{weatherLabels[weather].text}</span>
+      </PixelButton>
+
+      {/* Time of day toggle button */}
+      <PixelButton onClick={nextTime} title="Nhấn để đổi thời gian Ngày/Đêm">
+        {timeLabels[timeOfDay].icon}
+        <span>{timeLabels[timeOfDay].text}</span>
+      </PixelButton>
+
+      {/* Scene switch button with dropdown */}
+      <div style={{ position: 'relative' }}>
+        <PixelButton
+          active={isSceneMenuOpen}
+          onClick={() => {
+            setIsSceneMenuOpen(!isSceneMenuOpen);
+            setIsTrainMenuOpen(false);
+          }}
+          title="Chọn danh lam thắng cảnh"
+        >
+          <MapPin size={13} color="#badc58" />
+          <span>{currentScene.name}</span>
+          <ChevronDown size={11} />
+        </PixelButton>
+
+        {isSceneMenuOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '38px',
+              left: 0,
+              minWidth: '220px',
+              background: 'rgba(25, 20, 22, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '8px',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+            }}
+          >
+            {scenes.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => {
+                  onSceneChange(s);
+                  setIsSceneMenuOpen(false);
+                }}
+                style={{
+                  textAlign: 'left',
+                  padding: '8px 10px',
+                  background: s.id === currentScene.id ? 'rgba(74, 53, 50, 0.9)' : 'transparent',
+                  color: s.id === currentScene.id ? '#ffd166' : '#f5e6d3',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontFamily: "'Zen Maru Gothic', sans-serif",
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                }}
+              >
+                <span style={{ fontWeight: 'bold' }}>{s.name}</span>
+                <span style={{ fontSize: '10px', color: '#a09080' }}>{s.subtitle}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Train switch button with dropdown listing ALL 12 train templates */}
+      <div style={{ position: 'relative' }}>
+        <PixelButton
+          active={isTrainMenuOpen}
+          onClick={() => {
+            setIsTrainMenuOpen(!isTrainMenuOpen);
+            setIsSceneMenuOpen(false);
+          }}
+          title="Chọn mẫu đoàn tàu (12 Themes)"
+        >
+          <TrainTrack size={13} color="#e056fd" />
+          <span>{currentTrain.name}</span>
+          <ChevronDown size={11} />
+        </PixelButton>
+
+        {isTrainMenuOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '38px',
+              left: 0,
+              width: '320px',
+              maxHeight: '380px',
+              overflowY: 'auto',
+              background: 'rgba(25, 20, 22, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '8px',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+            }}
+          >
+            <div style={{ padding: '4px 8px', fontSize: '10px', color: '#ffd166', letterSpacing: '1px' }}>
+              CHỌN MẪU ĐOÀN TÀU ({trains.length} LOẠI)
+            </div>
+            {trains.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  onTrainChange(t);
+                  setIsTrainMenuOpen(false);
+                }}
+                style={{
+                  textAlign: 'left',
+                  padding: '8px 10px',
+                  background: t.id === currentTrain.id ? 'rgba(74, 53, 50, 0.9)' : 'rgba(255, 255, 255, 0.03)',
+                  color: t.id === currentTrain.id ? '#ffd166' : '#f5e6d3',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  fontFamily: "'Zen Maru Gothic', sans-serif",
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  transition: 'background 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold' }}>{t.name}</span>
+                  {t.hasSmoke && <span style={{ fontSize: '9px', color: '#aaa' }}>💨 Hơi nước</span>}
+                </div>
+                {/* Mini sprite preview */}
+                <div style={{ height: '28px', overflow: 'hidden', display: 'flex', alignItems: 'center', opacity: 0.9 }}>
+                  <img
+                    src={t.bodyUrl}
+                    alt={t.name}
+                    style={{ height: '24px', maxWidth: '100%', objectFit: 'contain', imageRendering: 'pixelated' }}
+                  />
+                </div>
+                <span style={{ fontSize: '10px', color: '#a09080' }}>{t.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Auto-Tour Toggle Button */}
+      {onToggleAutoTour && (
+        <PixelButton
+          active={isAutoTour}
+          onClick={onToggleAutoTour}
+          title={isAutoTour ? 'Đang tự chuyển ga (60s/ga). Nhấn để dừng tại ga này' : 'Nhấn để bật tự động chuyển ga'}
+        >
+          <Compass size={13} color="#edb08f" />
+          <span>{isAutoTour ? 'TỰ CHUYỂN GA' : 'DỪNG TẠI GA'}</span>
+        </PixelButton>
+      )}
+    </div>
+  );
+};

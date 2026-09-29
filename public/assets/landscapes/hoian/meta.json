@@ -1,0 +1,13 @@
+{
+  "name": "Phố Cổ Hội An",
+  "subtitle": "Đèn lồng lung linh bên bờ sông Hoài",
+  "location": "Quảng Nam, Việt Nam",
+  "bgSpeed": 0.16,
+  "mgSpeed": 0.85,
+  "skyPresets": {
+    "dawn": ["#fbc2eb", "#a6c1ee"],
+    "day": ["#fddb92", "#d1fdff"],
+    "sunset": ["#ff5858", "#f09819"],
+    "night": ["#0f2027", "#203a43", "#2c5364"]
+  }
+}

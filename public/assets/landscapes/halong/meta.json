@@ -1,0 +1,13 @@
+{
+  "name": "Vịnh Hạ Long",
+  "subtitle": "Kỳ quan đảo ngọc & Biển xanh huyền ảo",
+  "location": "Quảng Ninh, Việt Nam",
+  "bgSpeed": 0.14,
+  "mgSpeed": 0.85,
+  "skyPresets": {
+    "dawn": ["#a8edea", "#fed6e3"],
+    "day": ["#4facfe", "#00f2fe"],
+    "sunset": ["#ff758c", "#ff7eb3"],
+    "night": ["#13547a", "#80d0c7"]
+  }
+}
