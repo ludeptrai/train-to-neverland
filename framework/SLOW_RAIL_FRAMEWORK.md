@@ -130,7 +130,7 @@ Tạo chiều sâu điện ảnh 3D nổi bật:
 ## 🗂️ 7. Danh mục 110 danh lam thắng cảnh Slow Rail đã lưu sẵn tại máy
 
 Toàn bộ 12 file spritesheet atlas gốc đã được tải về lưu trữ nguyên vẹn tại:
-📁 **`f:\TrainToThe Neverland\public\assets\reference_slowrail\`**
+📁 **`f:\TrainToThe Neverland\references\slowrail\`**
 
 * `anh-5.png` (10 danh lam Bắc Bộ): **Sa Pa, Hà Giang, Cao Bằng, Hạ Long, Ninh Bình, Hải Phòng, Mai Châu, Phong Nha, Huế, Đà Nẵng**.
 * `anh-6.png` (10 danh lam Nam Trung Bộ & Nam Bộ): **Hội An, Quy Nhơn, Phú Yên, Nha Trang, Đà Lạt, Mũi Né, Vũng Tàu, Cần Thơ, Rừng tràm Trà Sư, Phú Quốc**.

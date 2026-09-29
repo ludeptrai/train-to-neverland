@@ -4,6 +4,17 @@ node_modules/
 # Production build output
 dist/
 
+# TypeScript build info / cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Local reference materials (unpacked external references)
+references/
+
+# AI Agent skills, fonts and caches
+.agents/
+skills-lock.json
+
 # Local environment & IDE files
 .env
 .env.local
@@ -25,5 +36,6 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# Temporary files
+# Temporary and backup files
 *.tmp
+*.bak
