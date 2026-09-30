@@ -176,7 +176,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           animation: `tunnelInteriorFlow ${TUNNEL_FLOW_DURATION}ms ease forwards`,
         }}
       >
-        {/* TẦNG 1: Dãy đèn trần xa trên cao (Ceiling Far Lights) - Lướt nhanh sang trái liên tục */}
+        {/* TẦNG 1: Dãy đèn trần xa trên cao (Ceiling Far Lights) - Lướt êm ái sang trái liên tục */}
         <div
           style={{
             position: 'absolute',
@@ -194,7 +194,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
               left: 0,
               width: '6000px',
               height: '100%',
-              animation: 'tunnelCeilingFastLoop 0.85s linear infinite',
+              animation: 'tunnelCeilingFastLoop 1.5s linear infinite',
               transformOrigin: 'left center',
             }}
           >
@@ -217,7 +217,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           </div>
         </div>
 
-        {/* TẦNG 2: Dải đèn vách tường gần (Wall Near Motion Streaks) - Siêu tốc độ & Vệt Motion Blur xé gió */}
+        {/* TẦNG 2: Dải đèn vách tường gần (Wall Near Motion Streaks) - Chuyển động mượt mà vừa mắt */}
         <div
           style={{
             position: 'absolute',
@@ -235,7 +235,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
               left: 0,
               width: '8000px',
               height: '100%',
-              animation: 'tunnelWallStreakFastLoop 0.38s linear infinite',
+              animation: 'tunnelWallStreakFastLoop 0.72s linear infinite',
               transformOrigin: 'left center',
             }}
           >
