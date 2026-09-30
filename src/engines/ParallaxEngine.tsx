@@ -82,7 +82,6 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   useEffect(() => {
     let lastTime = performance.now();
     const bgWidth = 1920; // virtual canvas width for wrapping
-    const mgWidth = 1680;
 
     const loop = (currentTime: number) => {
       const delta = Math.min((currentTime - lastTime) / 16.66, 2.0);
@@ -91,8 +90,8 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       if (!isPaused) {
         // Update background offset (slow)
         bgOffsetRef.current = (bgOffsetRef.current + displayedScene.bgSpeed * 1.5 * delta) % bgWidth;
-        // Update midground track offset (fast)
-        mgOffsetRef.current = (mgOffsetRef.current + displayedScene.mgSpeed * 5.5 * delta) % mgWidth;
+        // Update midground track offset (fast) - scrolling smoothly forever
+        mgOffsetRef.current = (mgOffsetRef.current + displayedScene.mgSpeed * 5.5 * delta) % 100000;
 
         setBgOffset(bgOffsetRef.current);
         setMgOffset(mgOffsetRef.current);
@@ -283,7 +282,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         </div>
       )}
 
-      {/* 3. Layer Mặt Đất & Đường Ray (Midground Track) - Seamless Double Panel */}
+      {/* 3. Layer Mặt Đất & Đường Ray (Midground Track) - Tự động lặp vô tận, tỷ lệ chuẩn không méo hình */}
       <div
         style={{
           position: 'absolute',
@@ -291,38 +290,37 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           left: 0,
           width: '100%',
           height: '32%',
+          backgroundImage: `url(${displayedScene.midgroundUrl})`,
+          backgroundRepeat: 'repeat-x',
+          backgroundPosition: `${-mgOffset}px bottom`,
+          backgroundSize: 'auto 100%',
+          imageRendering: 'pixelated',
           filter: lighting.ambientFilter,
           transition: 'filter 1.5s ease',
           zIndex: 10,
         }}
-      >
-        <img
-          src={displayedScene.midgroundUrl}
-          alt="Midground Track 1"
+      />
+      {displayedScene.midgroundLightsUrl && (
+        <div
           style={{
             position: 'absolute',
             bottom: 0,
-            left: `${-mgOffset}px`,
-            width: '1680px',
-            height: '100%',
-            objectFit: 'fill',
+            left: 0,
+            width: '100%',
+            height: '32%',
+            backgroundImage: `url(${displayedScene.midgroundLightsUrl})`,
+            backgroundRepeat: 'repeat-x',
+            backgroundPosition: `${-mgOffset}px bottom`,
+            backgroundSize: 'auto 100%',
             imageRendering: 'pixelated',
+            opacity: lighting.emissiveOpacity,
+            transition: 'opacity 1.5s ease',
+            pointerEvents: 'none',
+            zIndex: 11,
+            mixBlendMode: 'screen',
           }}
         />
-        <img
-          src={displayedScene.midgroundUrl}
-          alt="Midground Track 2"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${1680 - mgOffset}px`,
-            width: '1680px',
-            height: '100%',
-            objectFit: 'fill',
-            imageRendering: 'pixelated',
-          }}
-        />
-      </div>
+      )}
 
       {/* 4. Layer Đoàn Tàu (Train Theme) - Căn giữa an toàn, không bao giờ tràn lề màn hình */}
       <div

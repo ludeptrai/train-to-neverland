@@ -10,6 +10,7 @@ tsconfig.tsbuildinfo
 
 # Local reference materials (unpacked external references)
 references/
+public/assets/reference_slowrail/
 
 # AI Agent skills, fonts and caches
 .agents/
