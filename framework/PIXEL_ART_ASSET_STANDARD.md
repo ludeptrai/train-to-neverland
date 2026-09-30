@@ -48,7 +48,7 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 - **File đèn đêm (Emissive Mask):** `background_lights.png` (cùng kích thước với `background.png`, nền 100% trong suốt, chỉ vẽ các chấm vàng/xanh của bóng đèn cửa sổ các tòa nhà).
 
 ### Prompt mẫu tạo Hậu cảnh bằng AI (Midjourney / DALL-E / Flux):
-> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills]. Crisp pixels, side-scroller game background asset. Only mountains and city buildings with lower 30% of canvas completely filled with solid terrain/ground/water (calm sea water, grassy hillside, pavement, low rooftops) extending all the way down to the bottom canvas edge, UPPER SKY ON PURE SOLID PITCH BLACK BACKGROUND #000000, empty black void sky, NO blank space at bottom, NO floating buildings, flat horizon line at the bottom 75%, hard crisp silhouette borders, no drop shadow, zero ambient glow, warm ambient aesthetic, authentic pixel art style --ar 3:1 --style raw --v 6.0"*
+> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills], clear bright neutral daylight lighting, natural original base colors, normal balanced exposure, clean daytime atmosphere. Crisp pixels, side-scroller game background asset. Only mountains and city buildings with lower 30% of canvas completely filled with solid terrain/ground/water (calm sea water, grassy hillside, pavement, low rooftops) extending all the way down to the bottom canvas edge, UPPER SKY ON PURE SOLID PITCH BLACK BACKGROUND #000000, empty black void sky, NO blank space at bottom, NO floating buildings, flat horizon line at the bottom 75%, hard crisp silhouette borders, no drop shadow, zero ambient glow, authentic pixel art style --ar 3:1 --style raw --v 6.0 --no night, nighttime, dark, twilight, sunset tint, gloomy, underexposed, white background, floating islands"*
 
 ---
 
@@ -63,10 +63,11 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
   - Mặt trên của thanh ray thép **phải nằm cách đáy ảnh đúng `40 px`** (tương ứng `y = 200 px` tính từ đỉnh ảnh).
   - Quy chuẩn này đảm bảo bất kỳ con tàu nào trong hệ thống khi đặt lên ray cũng sẽ tiếp xúc bánh xe hoàn hảo, không bị bay lơ lửng hay chìm vào đá dăm!
 - **Nội dung vẽ:** Lớp đá dăm ba-lát xám, tà-vẹt gỗ/bê tông, ray thép đôi, rào chắn ven đường, hàng cây nhỏ hoặc bờ kè chắn sóng.
+- **Ánh sáng & Màu sắc:** Chiếu sáng ban ngày tự nhiên, phơi sáng bình thường (`clear neutral daylight, normal exposure`).
 - **Hạn chế bóng đổ & Hào quang viền:** Nền đen phía trên phải thuần khiết `#000000`, không có bóng đổ mờ hay vệt hào quang (no drop shadow, no edge glow/bloom) để thuật toán tự động tách nền đạt độ chính xác tuyệt đối.
 
 ### Prompt mẫu tạo Trung cảnh & Đường ray bằng AI (Midjourney / DALL-E):
-> *"Pixel art horizontal seamless side-scrolling tile of a [loại ray: modern urban concrete viaduct / rustic countryside railway with wildflowers / coastal seawall embankment]. 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% IS PURE SOLID PITCH BLACK BACKGROUND #000000 with NO sky, NO scenery, horizontal rail line aligned 40px from bottom edge, perfectly seamless repeating left and right borders, sharp hard borders, no drop shadow, no border glow, crisp pixel art, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0"*
+> *"Pixel art horizontal seamless side-scrolling tile of a [loại ray: modern urban concrete viaduct / rustic countryside railway with wildflowers / coastal seawall embankment]. Clear neutral daylight lighting, natural concrete and steel colors, 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% IS PURE SOLID PITCH BLACK BACKGROUND #000000 with NO sky, NO scenery, horizontal rail line aligned 40px from bottom edge, perfectly seamless repeating left and right borders, sharp hard borders, no drop shadow, no border glow, crisp pixel art, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0 --no night, dark, white background, sky"*
 >
 > *(Xem thêm 4 Prompt mẫu chính thức và thư viện preset chi tiết tại [PROMPT_TEMPLATES.md](./PROMPT_TEMPLATES.md))*
 
