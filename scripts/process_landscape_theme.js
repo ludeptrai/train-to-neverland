@@ -137,32 +137,36 @@ export async function processLandscapeFolder(folderPath) {
       }
     }
 
-    // Tìm bounding box dọc của nội dung thực tế (loại bỏ dải trắng trống trên trời và dưới đáy)
-    let firstContentY = -1;
-    let lastContentY = -1;
+    // Nhận diện phần nội dung thực tế (non-transparent content) - Tuyệt đối KHÔNG cắt bỏ chi tiết
+    let minY = -1;
+    let maxY = -1;
     for (let y = 0; y < h; y++) {
       let contentPixels = 0;
       for (let x = 0; x < w; x++) {
         if (!isOutdoorBg[y * w + x]) contentPixels++;
       }
-      if (contentPixels > w * 0.02 && firstContentY === -1) firstContentY = y;
-      if (contentPixels > w * 0.02) lastContentY = y;
+      if (contentPixels >= 2) {
+        if (minY === -1) minY = y;
+        maxY = y;
+      }
     }
 
-    const cropTop = Math.max(0, firstContentY - 10);
-    const cropBottom = Math.min(h, lastContentY + 2);
-    const cropHeight = Math.max(100, cropBottom - cropTop);
+    if (minY === -1) {
+      minY = 0;
+      maxY = h - 1;
+    }
 
-    console.log(`   Khung chứa tranh phong cảnh nhận diện: y=${cropTop} -> y=${cropBottom} (cao ${cropHeight}px)`);
+    const contentH = maxY - minY + 1;
+    console.log(`   Khung chứa tranh phong cảnh (phần non-transparent): y=${minY} -> y=${maxY} (cao ${contentH}px, rộng nguyên bản ${w}px - KHÔNG CẮT BỎ CHI TIẾT)`);
 
-    const bgRgba = Buffer.alloc(w * cropHeight * 4);
-    const bgLightsRgba = Buffer.alloc(w * cropHeight * 4);
+    const bgContentRgba = Buffer.alloc(w * contentH * 4);
+    const bgLightsContentRgba = Buffer.alloc(w * contentH * 4);
 
     let protectedWhites = 0;
     let lightsCount = 0;
 
-    for (let y = 0; y < cropHeight; y++) {
-      const origY = cropTop + y;
+    for (let y = 0; y < contentH; y++) {
+      const origY = minY + y;
       for (let x = 0; x < w; x++) {
         const srcIdx = (origY * w + x) * info.channels;
         const destIdx = (y * w + x) * 4;
@@ -174,8 +178,8 @@ export async function processLandscapeFolder(folderPath) {
 
         if (isBg) {
           // Bầu trời ngoài trời -> 100% Trong suốt
-          bgRgba[destIdx + 3] = 0;
-          bgLightsRgba[destIdx + 3] = 0;
+          bgContentRgba[destIdx + 3] = 0;
+          bgLightsContentRgba[destIdx + 3] = 0;
         } else {
           if (r >= 240 && g >= 240 && b >= 240) {
             protectedWhites++;
@@ -190,31 +194,31 @@ export async function processLandscapeFolder(folderPath) {
 
           if (isBorderPixel && r > 230 && g > 230 && b > 230) {
             // Điểm tiếp giáp quá sáng do nén JPEG -> làm trong suốt viền
-            bgRgba[destIdx + 3] = 0;
-            bgLightsRgba[destIdx + 3] = 0;
+            bgContentRgba[destIdx + 3] = 0;
+            bgLightsContentRgba[destIdx + 3] = 0;
             continue;
           }
 
           // Lượng tử hóa màu nhẹ (Pixel art color quantization)
-          bgRgba[destIdx] = Math.min(255, Math.round(r / 4) * 4);
-          bgRgba[destIdx + 1] = Math.min(255, Math.round(g / 4) * 4);
-          bgRgba[destIdx + 2] = Math.min(255, Math.round(b / 4) * 4);
-          bgRgba[destIdx + 3] = 255;
+          bgContentRgba[destIdx] = Math.min(255, Math.round(r / 4) * 4);
+          bgContentRgba[destIdx + 1] = Math.min(255, Math.round(g / 4) * 4);
+          bgContentRgba[destIdx + 2] = Math.min(255, Math.round(b / 4) * 4);
+          bgContentRgba[destIdx + 3] = 255;
 
           // Trích xuất đèn đêm:
           const isWarmYellow = (r > 195 && g > 165 && b < 145);
           const isAmber = (r > 200 && g > 125 && b < 85);
           const isCyan = (b > 175 && g > 160 && r < 140);
-          const isBrightWindow = (r > 220 && g > 215 && b > 205 && (r - b > 10 || origY > cropTop + cropHeight * 0.3));
+          const isBrightWindow = (r > 220 && g > 215 && b > 205 && (r - b > 10 || origY > minY + contentH * 0.3));
 
           if (isWarmYellow || isAmber || isCyan || isBrightWindow) {
             lightsCount++;
-            bgLightsRgba[destIdx] = 255;
-            bgLightsRgba[destIdx + 1] = isWarmYellow ? 230 : isAmber ? 165 : isCyan ? 245 : 240;
-            bgLightsRgba[destIdx + 2] = isWarmYellow ? 110 : isAmber ? 65 : isCyan ? 255 : 180;
-            bgLightsRgba[destIdx + 3] = 255;
+            bgLightsContentRgba[destIdx] = 255;
+            bgLightsContentRgba[destIdx + 1] = isWarmYellow ? 230 : isAmber ? 165 : isCyan ? 245 : 240;
+            bgLightsContentRgba[destIdx + 2] = isWarmYellow ? 110 : isAmber ? 65 : isCyan ? 255 : 180;
+            bgLightsContentRgba[destIdx + 3] = 255;
           } else {
-            bgLightsRgba[destIdx + 3] = 0;
+            bgLightsContentRgba[destIdx + 3] = 0;
           }
         }
       }
@@ -223,19 +227,51 @@ export async function processLandscapeFolder(folderPath) {
     console.log(`   🛡️ Đã bảo vệ ${protectedWhites.toLocaleString()} pixel trắng nội cảnh không bị cắt nhầm!`);
     console.log(`   ✨ Đã trích xuất ${lightsCount.toLocaleString()} bóng đèn đêm cho background_lights.png!`);
 
-    // Lưu background.png chuẩn 1920x520 px
-    await sharp(bgRgba, { raw: { width: w, height: cropHeight, channels: 4 } })
-      .resize(1920, 520, { kernel: 'nearest' })
+    // Scale phần non-transparent về kích thước chuẩn và ghép vào khung canvas 1920x600 px
+    // (chuẩn đồng bộ 100% với các ga Đà Lạt, Hạ Long, Sa Pa, giữ 140px khoảng đệm trong suốt phía dưới để không bị đường ray che khuất)
+    const targetCanvasW = 1920;
+    const targetCanvasH = 600;
+    const targetArtH = 460;
+
+    console.log(`   📐 Đang scale phần non-transparent về kích thước: ${targetCanvasW}px x ${targetArtH}px trên canvas chuẩn ${targetCanvasW}px x ${targetCanvasH}px`);
+
+    const scaledArtBuffer = await sharp(bgContentRgba, { raw: { width: w, height: contentH, channels: 4 } })
+      .resize(targetCanvasW, targetArtH, { kernel: 'nearest' })
+      .png()
+      .toBuffer();
+
+    const scaledLightsBuffer = await sharp(bgLightsContentRgba, { raw: { width: w, height: contentH, channels: 4 } })
+      .resize(targetCanvasW, targetArtH, { kernel: 'nearest' })
+      .png()
+      .toBuffer();
+
+    // Lưu background.png chuẩn 1920x600 px
+    await sharp({
+      create: {
+        width: targetCanvasW,
+        height: targetCanvasH,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      }
+    })
+      .composite([{ input: scaledArtBuffer, left: 0, top: 0 }])
       .png({ compressionLevel: 9 })
       .toFile(path.join(fullPath, 'background.png'));
 
-    // Lưu background_lights.png
-    await sharp(bgLightsRgba, { raw: { width: w, height: cropHeight, channels: 4 } })
-      .resize(1920, 520, { kernel: 'nearest' })
+    // Lưu background_lights.png chuẩn 1920x600 px
+    await sharp({
+      create: {
+        width: targetCanvasW,
+        height: targetCanvasH,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      }
+    })
+      .composite([{ input: scaledLightsBuffer, left: 0, top: 0 }])
       .png({ compressionLevel: 9 })
       .toFile(path.join(fullPath, 'background_lights.png'));
 
-    console.log(`   ✅ Đã xuất background.png & background_lights.png thành công!`);
+    console.log(`   ✅ Đã xuất background.png & background_lights.png chuẩn 1920x600 thành công!`);
   }
 
   // =======================================================================
