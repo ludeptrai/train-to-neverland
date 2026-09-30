@@ -29,6 +29,9 @@ function assetRegistryPlugin(): Plugin {
               '.mp3': 'audio/mpeg',
               '.wav': 'audio/wav',
               '.ogg': 'audio/ogg',
+              '.m4a': 'audio/mp4',
+              '.flac': 'audio/flac',
+              '.aac': 'audio/aac',
             };
             if (mimeMap[ext]) {
               res.setHeader('Content-Type', mimeMap[ext]);
@@ -44,28 +47,41 @@ function assetRegistryPlugin(): Plugin {
       generateRegistryFiles();
 
       // Tự động theo dõi các thư mục asset
-      const watchPaths = ['public/assets/landscapes', 'public/assets/trains/templates'];
+      const watchPaths = ['public/assets/landscapes', 'public/assets/trains/templates', 'public/assets/music'];
       server.watcher.add(watchPaths);
 
+      // Bắt lỗi EBUSY / file lock trên Windows để không làm sập server
+      server.watcher.on('error', (err) => {
+        console.warn('⚠️ [Vite Watcher Ignored Error]:', err instanceof Error ? err.message : err);
+      });
+
       // Khi người dùng thả thêm file .jpg/.jpeg mới vào bất kỳ thư mục ga nào -> Tự động xử lý tách nền sang PNG!
-      server.watcher.on('add', async (filePath) => {
+      let processTimeout: NodeJS.Timeout | null = null;
+      server.watcher.on('add', (filePath) => {
         const norm = filePath.replace(/\\/g, '/');
         if (/public\/assets\/landscapes\/([^/]+)\/.+\.(jpg|jpeg)$/i.test(norm)) {
           const match = norm.match(/public\/assets\/landscapes\/([^/]+)/i);
           if (match) {
             console.log(`\n📸 [Auto-Process] Phát hiện ảnh JPG mới: ${filePath}`);
-            try {
-              await processLandscapeFolder(match[0]);
-            } catch (err) {
-              console.error('❌ Lỗi tự động xử lý ảnh:', err);
-            }
+            if (processTimeout) clearTimeout(processTimeout);
+            processTimeout = setTimeout(async () => {
+              try {
+                await processLandscapeFolder(match[0]);
+              } catch (err) {
+                console.error('❌ Lỗi tự động xử lý ảnh:', err);
+              }
+            }, 600);
           }
         }
       });
 
       server.watcher.on('all', (event, filePath) => {
         const norm = filePath.replace(/\\/g, '/');
-        if (norm.includes('public/assets/landscapes') || norm.includes('public/assets/trains/templates')) {
+        if (
+          norm.includes('public/assets/landscapes') ||
+          norm.includes('public/assets/trains/templates') ||
+          norm.includes('public/assets/music')
+        ) {
           generateRegistryFiles();
           server.ws.send({ type: 'full-reload' });
         }
@@ -77,5 +93,11 @@ function assetRegistryPlugin(): Plugin {
 // https://vitejs.dev/config/
 export default defineConfig({
   base: './',
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 800,
+    },
+  },
   plugins: [react(), assetRegistryPlugin()],
 });

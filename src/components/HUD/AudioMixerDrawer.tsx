@@ -130,6 +130,31 @@ export const AudioMixerDrawer: React.FC = () => {
               </div>
             </div>
 
+            {/* Danh sách nhạc tự động quét từ public/assets/music/ */}
+            <select
+              value={settings.currentTrackIndex}
+              onChange={(e) => audioManager.setTrack(Number(e.target.value))}
+              title="Chọn bài hát từ danh sách nhạc"
+              style={{
+                width: '100%',
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: '1px solid rgba(255, 209, 102, 0.25)',
+                color: '#ffd166',
+                borderRadius: '6px',
+                padding: '4px 6px',
+                fontSize: '13px',
+                fontFamily: "'VT323', monospace",
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {audioManager.tracks.map((t, idx) => (
+                <option key={t.id || idx} value={idx} style={{ background: '#1c1720', color: '#f5e6d3' }}>
+                  {idx + 1}. {t.title} {t.artist ? `(${t.artist})` : ''}
+                </option>
+              ))}
+            </select>
+
             {/* Playback Controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '6px' }}>

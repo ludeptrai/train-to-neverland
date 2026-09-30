@@ -249,11 +249,109 @@ export function scanTrains() {
 }
 
 /**
- * Ghi tự động ra src/config/auto_scenes.ts và src/config/auto_trains.ts
+ * Quét toàn bộ thư mục public/assets/music để sinh ra MUSIC_TRACKS
+ */
+export function scanMusic() {
+  const musicDir = path.resolve('public/assets/music');
+  if (!fs.existsSync(musicDir)) return [];
+
+  const metaPath = path.join(musicDir, 'meta.json');
+  let metaMap = {};
+  if (fs.existsSync(metaPath)) {
+    try {
+      metaMap = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    } catch (e) {
+      console.warn(`⚠️ Lỗi đọc ${metaPath}:`, e.message);
+    }
+  }
+
+  const supportedExts = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.webm'];
+
+  function getAudioFiles(dir, relativePrefix = '') {
+    let results = [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue;
+      if (entry.name === 'meta.json') continue;
+      const fullPath = path.join(dir, entry.name);
+      const relPath = relativePrefix ? `${relativePrefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        results = results.concat(getAudioFiles(fullPath, relPath));
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (supportedExts.includes(ext)) {
+          results.push({ name: entry.name, relPath });
+        }
+      }
+    }
+    return results;
+  }
+
+  const audioFiles = getAudioFiles(musicDir);
+  const tracks = [];
+
+  for (const file of audioFiles) {
+    const ext = path.extname(file.name);
+    const baseName = path.basename(file.name, ext).trim();
+    // Tạo ID thân thiện: hỗ trợ unicode (tiếng Việt, CJK, Nhật), thay khoảng trắng và ký tự đặc biệt bằng _
+    const id = baseName
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}_-]/gu, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || `track_${tracks.length + 1}`;
+
+    // Kiểm tra cấu hình trong meta.json (tìm theo tên file đầy đủ, tên file tương đối hoặc id)
+    const fileMeta = metaMap[file.name] || metaMap[file.relPath] || metaMap[id] || metaMap[baseName] || {};
+
+    let title = fileMeta.title;
+    let artist = fileMeta.artist;
+
+    if (!title || !artist) {
+      // Tự động phân tách Artist - Title nếu có dạng "Nghệ sĩ - Tên bài"
+      if (baseName.includes(' - ')) {
+        const parts = baseName.split(' - ');
+        if (!artist) artist = parts[0].trim();
+        if (!title) title = parts.slice(1).join(' - ').trim();
+      } else if (baseName.includes(' – ')) {
+        const parts = baseName.split(' – ');
+        if (!artist) artist = parts[0].trim();
+        if (!title) title = parts.slice(1).join(' – ').trim();
+      } else if (baseName.includes('-')) {
+        const parts = baseName.split('-');
+        if (!artist) artist = parts[0].trim();
+        if (!title) title = parts.slice(1).join('-').trim();
+      } else {
+        if (!title) title = baseName.replace(/_/g, ' ');
+        if (!artist) artist = 'Bản Nhạc Thư Giãn';
+      }
+    }
+
+    tracks.push({
+      id: id || `track_${tracks.length + 1}`,
+      title,
+      artist,
+      url: `./assets/music/${file.relPath.replace(/\\/g, '/')}`,
+    });
+  }
+
+  // Luôn kèm một kênh Procedural Synthesizer tạo hợp âm Lo-Fi thời gian thực
+  tracks.push({
+    id: 'synth_tokyo_sunset',
+    title: 'Tokyo Sunset Ambient Chords',
+    artist: 'Neverland Lo-Fi Synthesizer',
+    url: 'procedural',
+  });
+
+  return tracks;
+}
+
+/**
+ * Ghi tự động ra src/config/auto_scenes.ts, src/config/auto_trains.ts và src/config/auto_music.ts
  */
 export function generateRegistryFiles() {
   const scenes = scanLandscapes();
   const trains = scanTrains();
+  const musicTracks = scanMusic();
 
   const scenesTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/landscapes/
 // KHÔNG CHỈNH SỬA THỦ CÔNG FILE NÀY.
@@ -273,16 +371,29 @@ import { TrainTheme } from '../types';
 export const TRAINS: TrainTheme[] = ${JSON.stringify(trains, null, 2)};
 `;
 
+  const musicTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/music/
+// KHÔNG CHỈNH SỬA THỦ CÔNG FILE NÀY.
+// Để thêm nhạc mới: chỉ cần thả file audio (.mp3, .wav, .ogg, .flac) vào public/assets/music/
+// Tùy chọn: chỉnh sửa public/assets/music/meta.json để đặt tiêu đề và tên nghệ sĩ mong muốn
+
+import { AudioTrack } from '../types';
+
+export const MUSIC_TRACKS: AudioTrack[] = ${JSON.stringify(musicTracks, null, 2)};
+`;
+
   const outScenes = path.resolve('src/config/auto_scenes.ts');
   const outTrains = path.resolve('src/config/auto_trains.ts');
+  const outMusic = path.resolve('src/config/auto_music.ts');
 
   fs.writeFileSync(outScenes, scenesTs, 'utf-8');
   fs.writeFileSync(outTrains, trainsTs, 'utf-8');
+  fs.writeFileSync(outMusic, musicTs, 'utf-8');
 
-  console.log(`✅ [Asset Registry Scanner] Đã quét thành công ${scenes.length} địa điểm (scenes) và ${trains.length} đoàn tàu (trains)!`);
+  console.log(`✅ [Asset Registry Scanner] Đã quét thành công ${scenes.length} địa điểm (scenes), ${trains.length} đoàn tàu (trains) và ${musicTracks.length} bản nhạc (music)!`);
 }
 
 // Chạy trực tiếp
 if (process.argv[1] && process.argv[1].endsWith('scan_assets.js')) {
   generateRegistryFiles();
 }
+

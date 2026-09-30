@@ -45,6 +45,7 @@ export const SCENES: SceneConfig[] = [
     "bgSpeed": 0.14,
     "mgSpeed": 0.85,
     "backgroundUrl": "./assets/landscapes/halong/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/halong/background_lights.png",
     "midgroundUrl": "./assets/landscapes/dalat/midground_track.svg",
     "skyPresets": {
       "dawn": [

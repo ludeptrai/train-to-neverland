@@ -25,7 +25,14 @@ function isFullWhitePixel(r, g, b, threshold = 240) {
   if (r < threshold || g < threshold || b < threshold) return false;
   // Kiểm tra độ cân bằng xám (tránh nhầm với màu vàng nhạt hoặc xanh pastel)
   const diff = Math.max(r, g, b) - Math.min(r, g, b);
-  return diff <= 8;
+  return diff <= 12;
+}
+
+// Hàm kiểm tra pixel có phải màu đen / gần đen thuần khiết không
+function isFullBlackPixel(r, g, b, threshold = 24) {
+  if (r > threshold || g > threshold || b > threshold) return false;
+  const diff = Math.max(r, g, b) - Math.min(r, g, b);
+  return diff <= 14;
 }
 
 export async function processLandscapeFolder(folderPath) {
@@ -47,11 +54,14 @@ export async function processLandscapeFolder(folderPath) {
 
   // Tìm file background
   const bgFile = files.find(f => /^background\.(jpg|jpeg|webp)$/i.test(f)) ||
-                 files.find(f => /^(bg|haucang)\.(jpg|jpeg|webp)$/i.test(f));
+                 files.find(f => /^(bg|haucang)\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /(skyline|panorama|background)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /\.(jpg|jpeg|webp)$/i.test(f) && !/(midground|track|rail|trungcanh)/i.test(f));
 
   // Tìm file midground track
   const mgFile = files.find(f => /^midground\.(jpg|jpeg|webp)$/i.test(f)) ||
-                 files.find(f => /^(track|rail|trungcanh)\.(jpg|jpeg|webp)$/i.test(f));
+                 files.find(f => /^(track|rail|trungcanh)\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /(midground|track|rail|trungcanh)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f));
 
   if (!bgFile && !mgFile) {
     console.log(`ℹ️ Không tìm thấy file JPG/JPEG nào cần xử lý trong ${path.basename(fullPath)}.`);
@@ -59,18 +69,34 @@ export async function processLandscapeFolder(folderPath) {
   }
 
   // ==========================================================
-  // --- 1. XỬ LÝ BACKGROUND (HẬU CẢNH PANORAMA FULL TRẮNG) ---
+  // --- 1. XỬ LÝ BACKGROUND (HẬU CẢNH PANORAMA BẦU TRỜI TRẮNG HOẶC ĐEN) ---
   // ==========================================================
   if (bgFile) {
     const bgInput = path.join(fullPath, bgFile);
     console.log(`🎨 1. Đang xử lý Background: ${bgFile}...`);
 
-    const img = sharp(bgInput);
+    const img = sharp(fs.readFileSync(bgInput));
     const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
     const w = info.width;
     const h = info.height;
 
-    // Mảng đánh dấu pixel nền ngoài trời (1: nền trắng bên ngoài, 0: tác phẩm nghệ thuật)
+    // Tự động phân tích màu nền bầu trời: kiểm tra viền trên cùng (y = 0)
+    let whiteSeedCount = 0;
+    let blackSeedCount = 0;
+    for (let x = 0; x < w; x++) {
+      const idx = (0 * w + x) * info.channels;
+      if (isFullWhitePixel(data[idx], data[idx + 1], data[idx + 2])) whiteSeedCount++;
+      if (isFullBlackPixel(data[idx], data[idx + 1], data[idx + 2])) blackSeedCount++;
+    }
+
+    const skyMode = blackSeedCount > whiteSeedCount ? 'black' : 'white';
+    console.log(`   🌌 Chế độ nhận diện bầu trời: ${skyMode === 'black' ? 'MÀU ĐEN (#000000)' : 'MÀU TRẮNG (#FFFFFF)'} (Hạt giống Trắng: ${whiteSeedCount}, Đen: ${blackSeedCount})`);
+
+    const isBgPixel = skyMode === 'black'
+      ? (r, g, b) => isFullBlackPixel(r, g, b, 24)
+      : (r, g, b) => isFullWhitePixel(r, g, b, 240);
+
+    // Mảng đánh dấu pixel nền ngoài trời (1: nền bầu trời bên ngoài, 0: tác phẩm nghệ thuật)
     const isOutdoorBg = new Uint8Array(w * h);
     const queue = new Int32Array(w * h);
     let qHead = 0, qTail = 0;
@@ -78,7 +104,7 @@ export async function processLandscapeFolder(folderPath) {
     // Hạt giống (Seeds): Viền trên cùng (y = 0)
     for (let x = 0; x < w; x++) {
       const idx = (0 * w + x) * info.channels;
-      if (isFullWhitePixel(data[idx], data[idx + 1], data[idx + 2])) {
+      if (isBgPixel(data[idx], data[idx + 1], data[idx + 2])) {
         isOutdoorBg[x] = 1;
         queue[qTail++] = x;
       }
@@ -88,23 +114,25 @@ export async function processLandscapeFolder(folderPath) {
     const seedH = Math.floor(h * 0.65);
     for (let y = 0; y < seedH; y++) {
       const lIdx = (y * w + 0) * info.channels;
-      if (isFullWhitePixel(data[lIdx], data[lIdx + 1], data[lIdx + 2]) && !isOutdoorBg[y * w + 0]) {
+      if (isBgPixel(data[lIdx], data[lIdx + 1], data[lIdx + 2]) && !isOutdoorBg[y * w + 0]) {
         isOutdoorBg[y * w + 0] = 1;
         queue[qTail++] = (y * w + 0);
       }
       const rIdx = (y * w + (w - 1)) * info.channels;
-      if (isFullWhitePixel(data[rIdx], data[rIdx + 1], data[rIdx + 2]) && !isOutdoorBg[y * w + (w - 1)]) {
+      if (isBgPixel(data[rIdx], data[rIdx + 1], data[rIdx + 2]) && !isOutdoorBg[y * w + (w - 1)]) {
         isOutdoorBg[y * w + (w - 1)] = 1;
         queue[qTail++] = (y * w + (w - 1));
       }
     }
 
-    // Hạt giống: Viền dưới đáy (nếu ảnh canvas có dải trắng dư phía dưới biển/mặt đất)
-    for (let x = 0; x < w; x++) {
-      const bIdx = ((h - 1) * w + x) * info.channels;
-      if (isFullWhitePixel(data[bIdx], data[bIdx + 1], data[bIdx + 2]) && !isOutdoorBg[(h - 1) * w + x]) {
-        isOutdoorBg[(h - 1) * w + x] = 1;
-        queue[qTail++] = ((h - 1) * w + x);
+    // Hạt giống: Viền dưới đáy (chỉ áp dụng nếu nền là màu trắng và đáy có khoảng trắng dư thừa)
+    if (skyMode === 'white') {
+      for (let x = 0; x < w; x++) {
+        const bIdx = ((h - 1) * w + x) * info.channels;
+        if (isFullWhitePixel(data[bIdx], data[bIdx + 1], data[bIdx + 2]) && !isOutdoorBg[(h - 1) * w + x]) {
+          isOutdoorBg[(h - 1) * w + x] = 1;
+          queue[qTail++] = ((h - 1) * w + x);
+        }
       }
     }
 
@@ -128,7 +156,7 @@ export async function processLandscapeFolder(folderPath) {
           const nIdx = ny * w + nx;
           if (!isOutdoorBg[nIdx]) {
             const srcIdx = nIdx * info.channels;
-            if (isFullWhitePixel(data[srcIdx], data[srcIdx + 1], data[srcIdx + 2])) {
+            if (isBgPixel(data[srcIdx], data[srcIdx + 1], data[srcIdx + 2])) {
               isOutdoorBg[nIdx] = 1;
               queue[qTail++] = nIdx;
             }
@@ -138,13 +166,13 @@ export async function processLandscapeFolder(folderPath) {
     }
 
     // Lấy TOÀN BỘ HÌNH ẢNH (100% Canvas, KHÔNG CẮT BẤT KỲ PHẦN NÀO)
-    // Tách sạch bầu trời trắng và lề trắng bằng BFS Flood Fill, bảo vệ toàn bộ chi tiết nội cảnh
+    // Tách sạch bầu trời bằng BFS Flood Fill, bảo vệ toàn bộ chi tiết nội cảnh
     console.log(`   🖼️ Đang xử lý toàn bộ hình ảnh gốc: ${w}px x ${h}px (KHÔNG CẮT XÉN BẤT KỲ PHẦN NÀO)`);
 
     const bgFullRgba = Buffer.alloc(w * h * 4);
     const bgLightsFullRgba = Buffer.alloc(w * h * 4);
 
-    let protectedWhites = 0;
+    let protectedDetails = 0;
     let lightsCount = 0;
 
     for (let y = 0; y < h; y++) {
@@ -158,26 +186,34 @@ export async function processLandscapeFolder(folderPath) {
         const b = data[srcIdx + 2];
 
         if (isBg) {
-          // Bầu trời ngoài trời & lề trắng ngoài -> 100% Trong suốt
+          // Bầu trời ngoài trời -> 100% Trong suốt
           bgFullRgba[destIdx + 3] = 0;
           bgLightsFullRgba[destIdx + 3] = 0;
         } else {
-          if (r >= 240 && g >= 240 && b >= 240) {
-            protectedWhites++;
+          if (skyMode === 'white' && r >= 240 && g >= 240 && b >= 240) {
+            protectedDetails++;
+          } else if (skyMode === 'black' && r <= 25 && g <= 25 && b <= 25) {
+            protectedDetails++;
           }
 
-          // Khử viền trắng (Anti-Halo Defringe): Nếu pixel tiếp giáp với nền và gần trắng -> làm dịu biên
+          // Khử viền (Anti-Halo Defringe): Nếu pixel tiếp giáp với nền và gần màu nền bị loang do nén JPEG
           let isBorderPixel = false;
           if (y > 0 && isOutdoorBg[(y - 1) * w + x]) isBorderPixel = true;
           else if (y < h - 1 && isOutdoorBg[(y + 1) * w + x]) isBorderPixel = true;
           else if (x > 0 && isOutdoorBg[y * w + (x - 1)]) isBorderPixel = true;
           else if (x < w - 1 && isOutdoorBg[y * w + (x + 1)]) isBorderPixel = true;
 
-          if (isBorderPixel && r > 230 && g > 230 && b > 230) {
-            // Điểm tiếp giáp quá sáng do nén JPEG -> làm trong suốt viền
-            bgFullRgba[destIdx + 3] = 0;
-            bgLightsFullRgba[destIdx + 3] = 0;
-            continue;
+          if (isBorderPixel) {
+            if (skyMode === 'white' && r > 230 && g > 230 && b > 230) {
+              bgFullRgba[destIdx + 3] = 0;
+              bgLightsFullRgba[destIdx + 3] = 0;
+              continue;
+            }
+            if (skyMode === 'black' && r < 30 && g < 30 && b < 30) {
+              bgFullRgba[destIdx + 3] = 0;
+              bgLightsFullRgba[destIdx + 3] = 0;
+              continue;
+            }
           }
 
           // Lượng tử hóa màu nhẹ (Pixel art color quantization)
@@ -207,7 +243,7 @@ export async function processLandscapeFolder(folderPath) {
       }
     }
 
-    console.log(`   🛡️ Đã bảo vệ ${protectedWhites.toLocaleString()} pixel trắng nội cảnh không bị cắt nhầm!`);
+    console.log(`   🛡️ Đã bảo vệ ${protectedDetails.toLocaleString()} pixel chi tiết nội cảnh không bị cắt nhầm!`);
     console.log(`   ✨ Đã trích xuất ${lightsCount.toLocaleString()} bóng đèn đêm cho background_lights.png!`);
 
     // Scale TOÀN BỘ bức tranh theo tỉ lệ chuẩn chiều ngang 1920px (giữ 100% tỉ lệ gốc, không méo hình, không cắt xén)
@@ -253,19 +289,32 @@ export async function processLandscapeFolder(folderPath) {
     const mgInput = path.join(fullPath, mgFile);
     console.log(`🛤️ 2. Đang xử lý Midground Track: ${mgFile}...`);
 
-    const img = sharp(mgInput);
+    const img = sharp(fs.readFileSync(mgInput));
     const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
     const w = info.width;
     const h = info.height;
 
-    // Flood fill tách nền trắng phía trên thanh ray từ viền trên cùng (y = 0)
+    // Tự động phân tích màu nền của Midground (trên thanh ray)
+    let mgWhiteSeed = 0;
+    let mgBlackSeed = 0;
+    for (let x = 0; x < w; x++) {
+      const idx = (0 * w + x) * info.channels;
+      if (isFullWhitePixel(data[idx], data[idx + 1], data[idx + 2])) mgWhiteSeed++;
+      if (isFullBlackPixel(data[idx], data[idx + 1], data[idx + 2])) mgBlackSeed++;
+    }
+    const mgSkyMode = mgBlackSeed > mgWhiteSeed ? 'black' : 'white';
+    const isMgBgPixel = mgSkyMode === 'black'
+      ? (r, g, b) => isFullBlackPixel(r, g, b, 24)
+      : (r, g, b) => isFullWhitePixel(r, g, b, 240);
+
+    // Flood fill tách nền phía trên thanh ray từ viền trên cùng (y = 0)
     const isMgBg = new Uint8Array(w * h);
     const queue = new Int32Array(w * h);
     let qHead = 0, qTail = 0;
 
     for (let x = 0; x < w; x++) {
       const idx = (0 * w + x) * info.channels;
-      if (isFullWhitePixel(data[idx], data[idx + 1], data[idx + 2])) {
+      if (isMgBgPixel(data[idx], data[idx + 1], data[idx + 2])) {
         isMgBg[x] = 1;
         queue[qTail++] = x;
       }
@@ -274,27 +323,29 @@ export async function processLandscapeFolder(folderPath) {
     // Viền trái & phải trên ray
     for (let y = 0; y < Math.floor(h * 0.7); y++) {
       const lIdx = (y * w + 0) * info.channels;
-      if (isFullWhitePixel(data[lIdx], data[lIdx + 1], data[lIdx + 2]) && !isMgBg[y * w + 0]) {
+      if (isMgBgPixel(data[lIdx], data[lIdx + 1], data[lIdx + 2]) && !isMgBg[y * w + 0]) {
         isMgBg[y * w + 0] = 1;
         queue[qTail++] = (y * w + 0);
       }
       const rIdx = (y * w + (w - 1)) * info.channels;
-      if (isFullWhitePixel(data[rIdx], data[rIdx + 1], data[rIdx + 2]) && !isMgBg[y * w + (w - 1)]) {
+      if (isMgBgPixel(data[rIdx], data[rIdx + 1], data[rIdx + 2]) && !isMgBg[y * w + (w - 1)]) {
         isMgBg[y * w + (w - 1)] = 1;
         queue[qTail++] = (y * w + (w - 1));
       }
     }
 
-    // Hạt giống: Viền dưới đáy (nếu ảnh canvas có dải trắng dư phía dưới mặt đất/đường ray)
-    for (let x = 0; x < w; x++) {
-      const bIdx = ((h - 1) * w + x) * info.channels;
-      if (isFullWhitePixel(data[bIdx], data[bIdx + 1], data[bIdx + 2]) && !isMgBg[(h - 1) * w + x]) {
-        isMgBg[(h - 1) * w + x] = 1;
-        queue[qTail++] = ((h - 1) * w + x);
+    // Hạt giống: Viền dưới đáy (nếu nền là trắng và ảnh có dải trắng dư phía dưới ray)
+    if (mgSkyMode === 'white') {
+      for (let x = 0; x < w; x++) {
+        const bIdx = ((h - 1) * w + x) * info.channels;
+        if (isFullWhitePixel(data[bIdx], data[bIdx + 1], data[bIdx + 2]) && !isMgBg[(h - 1) * w + x]) {
+          isMgBg[(h - 1) * w + x] = 1;
+          queue[qTail++] = ((h - 1) * w + x);
+        }
       }
     }
 
-    // BFS loang nền trắng
+    // BFS loang nền
     while (qHead < qTail) {
       const curr = queue[qHead++];
       const cx = curr % w;
@@ -314,7 +365,7 @@ export async function processLandscapeFolder(folderPath) {
           const nIdx = ny * w + nx;
           if (!isMgBg[nIdx]) {
             const srcIdx = nIdx * info.channels;
-            if (isFullWhitePixel(data[srcIdx], data[srcIdx + 1], data[srcIdx + 2])) {
+            if (isMgBgPixel(data[srcIdx], data[srcIdx + 1], data[srcIdx + 2])) {
               isMgBg[nIdx] = 1;
               queue[qTail++] = nIdx;
             }

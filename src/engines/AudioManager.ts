@@ -1,4 +1,5 @@
 import { AudioSettings, AudioTrack, DSPPreset } from '../types';
+import { MUSIC_TRACKS } from '../config/music';
 
 /**
  * AudioManager - Bộ quản lý âm thanh đa kênh tích hợp Realtime DSP Audio Engine
@@ -52,21 +53,8 @@ class AudioManager {
   private downsampleFactor = 1;
   private isBitcrusherActive = false;
 
-  // Playlists
-  public tracks: AudioTrack[] = [
-    {
-      id: 'rokudenashi_one_voice',
-      title: 'One Voice (ただ声一つ)',
-      artist: 'Rokudenashi (ロクデナシ)',
-      url: './assets/music/rokudenashi_one_voice.mp3',
-    },
-    {
-      id: 'synth_tokyo_sunset',
-      title: 'Tokyo Sunset Ambient Chords',
-      artist: 'Neverland Lo-Fi Synthesizer',
-      url: 'procedural',
-    },
-  ];
+  // Playlists được quét tự động từ public/assets/music/
+  public tracks: AudioTrack[] = [...MUSIC_TRACKS];
 
   public settings: AudioSettings = {
     masterVolume: 0.85,
@@ -103,6 +91,9 @@ class AudioManager {
       const saved = localStorage.getItem('neverland_audio_settings');
       if (saved) {
         this.settings = { ...this.settings, ...JSON.parse(saved) };
+        if (this.settings.currentTrackIndex < 0 || this.settings.currentTrackIndex >= this.tracks.length) {
+          this.settings.currentTrackIndex = 0;
+        }
       }
     } catch {
       // fallback
@@ -321,7 +312,10 @@ class AudioManager {
 
     this.audioElement = new Audio();
     this.audioElement.crossOrigin = 'anonymous';
-    this.audioElement.loop = true;
+    this.audioElement.loop = false;
+    this.audioElement.onended = () => {
+      this.nextTrack();
+    };
 
     // Load initial track URL
     const track = this.tracks[this.settings.currentTrackIndex];

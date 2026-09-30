@@ -40,3 +40,4 @@ pnpm-debug.log*
 # Temporary and backup files
 *.tmp
 *.bak
+*.timestamp-*.mjs
