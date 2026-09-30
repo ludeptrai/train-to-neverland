@@ -21,6 +21,7 @@ import {
   PhoneCall,
   Sparkles,
   Waves,
+  X,
 } from 'lucide-react';
 
 export const AudioMixerDrawer: React.FC = () => {
@@ -60,39 +61,39 @@ export const AudioMixerDrawer: React.FC = () => {
   return (
     <div
       style={{
-        position: 'absolute',
-        bottom: '20px',
-        right: '24px',
-        zIndex: 50,
+        position: 'relative',
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '10px',
+        alignItems: 'center',
+        gap: '8px',
       }}
     >
-      {/* Drawer Content */}
+      {/* Drawer Dropdown Content */}
       {isOpen && (
         <div
           style={{
+            position: 'absolute',
+            top: '42px',
+            right: 0,
             width: '320px',
-            maxHeight: '560px',
+            maxHeight: 'calc(100vh - 80px)',
             overflowY: 'auto',
             background: 'rgba(20, 16, 20, 0.95)',
             backdropFilter: 'blur(16px)',
             border: '2px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '14px',
+            borderRadius: '12px',
             padding: '16px',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.85)',
             color: '#f5e6d3',
-            fontFamily: "'Silkscreen', 'Press Start 2P', monospace",
+            fontFamily: "'VT323', monospace",
             display: 'flex',
             flexDirection: 'column',
             gap: '14px',
+            zIndex: 60,
           }}
         >
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#ffd166', letterSpacing: '1px' }}>AUDIO DSP & MIXER</span>
+            <span style={{ fontSize: '16px', color: '#ffd166', letterSpacing: '1px' }}>AUDIO DSP & MIXER</span>
             <button
               onClick={() => setIsOpen(false)}
               style={{
@@ -100,10 +101,12 @@ export const AudioMixerDrawer: React.FC = () => {
                 border: 'none',
                 color: '#aaa',
                 cursor: 'pointer',
-                fontSize: '14px',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
 
@@ -193,8 +196,8 @@ export const AudioMixerDrawer: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      fontFamily: "'Silkscreen', monospace",
-                      fontSize: '9px',
+                      fontFamily: "'VT323', monospace",
+                      fontSize: '14px',
                       transition: 'all 0.15s ease',
                       textAlign: 'left',
                     }}
@@ -327,27 +330,26 @@ export const AudioMixerDrawer: React.FC = () => {
       )}
 
       {/* Floating Toggle Button */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <PixelButton
-          active={isOpen}
-          onClick={() => {
-            audioManager.init();
-            setIsOpen(!isOpen);
-          }}
-          title="Bật/Mở bàn trộn âm thanh và bộ lọc Realtime DSP"
-        >
-          <Sliders size={13} color="#ffd166" />
-          <span>ÂM THANH & DSP</span>
-        </PixelButton>
+      <PixelButton
+        active={isOpen}
+        onClick={() => {
+          audioManager.init();
+          setIsOpen(!isOpen);
+        }}
+        title="Bật/Mở bàn trộn âm thanh và bộ lọc Realtime DSP"
+      >
+        <Sliders size={14} color="#ffd166" />
+        <span>ÂM THANH & DSP</span>
+      </PixelButton>
 
-        <PixelButton
-          active={settings.isPlayingMusic}
-          onClick={() => audioManager.toggleMusic()}
-          title={settings.isPlayingMusic ? 'Tắt nhạc' : 'Bật nhạc'}
-        >
-          {settings.isPlayingMusic ? <Volume2 size={13} color="#55efc4" /> : <VolumeX size={13} color="#ff7675" />}
-        </PixelButton>
-      </div>
+      <PixelButton
+        active={settings.isPlayingMusic}
+        onClick={() => audioManager.toggleMusic()}
+        title={settings.isPlayingMusic ? 'Tắt nhạc' : 'Bật nhạc'}
+        style={{ width: '34px', height: '34px', minWidth: '34px', padding: 0 }}
+      >
+        {settings.isPlayingMusic ? <Volume2 size={14} color="#55efc4" /> : <VolumeX size={14} color="#ff7675" />}
+      </PixelButton>
     </div>
   );
 };

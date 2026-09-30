@@ -21,6 +21,9 @@ class AudioManager {
 
   // Active procedural loop intervals/oscillators
   private trainIntervalId: number | null = null;
+  private trainAudioElement: HTMLAudioElement | null = null;
+  private trainMediaSourceNode: MediaElementAudioSourceNode | null = null;
+  private isTrainMediaConnected = false;
   private rainNode: AudioNode | null = null;
   private windNode: AudioNode | null = null;
   private natureIntervalId: number | null = null;
@@ -158,8 +161,8 @@ class AudioManager {
     // 4. Setup HTML5 Audio Element for MP3 tracks
     this.setupAudioElement();
 
-    // 5. Start background procedural ambiance
-    this.startTrainSynthesis();
+    // 5. Start background procedural ambiance & train sound
+    this.setupTrainAudio();
     this.startRainSynthesis();
     this.startWindSynthesis();
     this.startNatureSynthesis();
@@ -446,44 +449,32 @@ class AudioManager {
     this.notify();
   }
 
-  // --- Procedural Train Click-Clack Rhythm ---
-  private startTrainSynthesis() {
+  // --- Train Ambient Track from /assets/sfx/train_default.mp3 ---
+  private setupTrainAudio() {
     if (!this.ctx || !this.trainGain) return;
 
-    const playClickClack = () => {
-      if (!this.ctx || !this.trainGain || this.trainGain.gain.value === 0) return;
-      const now = this.ctx.currentTime;
-      this.playRailClick(now, 0.4);
-      this.playRailClick(now + 0.12, 0.25);
-      this.playRailClick(now + 0.35, 0.3);
-      this.playRailClick(now + 0.47, 0.2);
-    };
+    if (!this.trainAudioElement) {
+      this.trainAudioElement = new Audio();
+      this.trainAudioElement.crossOrigin = 'anonymous';
+      this.trainAudioElement.loop = true;
+      this.trainAudioElement.src = './assets/sfx/train_default.mp3';
 
-    this.trainIntervalId = window.setInterval(playClickClack, 850);
-  }
-
-  private playRailClick(time: number, intensity: number) {
-    if (!this.ctx || !this.trainGain) return;
-    const bufferSize = this.ctx.sampleRate * 0.08;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+      try {
+        this.trainMediaSourceNode = this.ctx.createMediaElementSource(this.trainAudioElement);
+        this.trainMediaSourceNode.connect(this.trainGain);
+        this.isTrainMediaConnected = true;
+      } catch {
+        // Fallback direct volume control if Web Audio element source is restricted
+        this.isTrainMediaConnected = false;
+        this.trainAudioElement.volume = this.settings.trainVolume * this.settings.masterVolume;
+      }
     }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    const bandpass = this.ctx.createBiquadFilter();
-    bandpass.type = 'bandpass';
-    bandpass.frequency.setValueAtTime(450, time);
-    bandpass.Q.setValueAtTime(3.0, time);
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(intensity * 0.8, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
-    noise.connect(bandpass);
-    bandpass.connect(gain);
-    gain.connect(this.trainGain);
-    noise.start(time);
-    noise.stop(time + 0.08);
+
+    if (this.settings.trainVolume > 0 && this.trainAudioElement.paused) {
+      this.trainAudioElement.play().catch(() => {
+        // Autoplay policy waiting for user gesture
+      });
+    }
   }
 
   // --- Procedural Rain Noise ---
@@ -713,6 +704,9 @@ class AudioManager {
     switch (channel) {
       case 'masterVolume':
         this.masterGain?.gain.setValueAtTime(clamped, now);
+        if (!this.isTrainMediaConnected && this.trainAudioElement) {
+          this.trainAudioElement.volume = clamped * this.settings.trainVolume;
+        }
         break;
       case 'musicVolume':
         if (this.settings.isPlayingMusic) {
@@ -721,6 +715,16 @@ class AudioManager {
         break;
       case 'trainVolume':
         this.trainGain?.gain.setValueAtTime(clamped, now);
+        if (this.trainAudioElement) {
+          if (!this.isTrainMediaConnected) {
+            this.trainAudioElement.volume = clamped * this.settings.masterVolume;
+          }
+          if (clamped > 0 && this.trainAudioElement.paused) {
+            this.trainAudioElement.play().catch(() => {});
+          } else if (clamped === 0 && !this.trainAudioElement.paused) {
+            this.trainAudioElement.pause();
+          }
+        }
         break;
       case 'rainVolume':
         this.rainGain?.gain.setValueAtTime(clamped, now);
@@ -754,6 +758,10 @@ class AudioManager {
       try {
         (this.vinylNoiseNode as AudioScheduledSourceNode).stop();
       } catch {}
+    }
+    if (this.trainAudioElement) {
+      this.trainAudioElement.pause();
+      this.trainAudioElement.src = '';
     }
     if (this.audioElement) {
       this.audioElement.pause();

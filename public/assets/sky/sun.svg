@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" shape-rendering="crispEdges">
+  <defs>
+    <filter id="sunHalo" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <!-- Outer Corona Stepped Glow -->
+  <g opacity="0.45">
+    <rect x="24" y="8" width="16" height="48" fill="#ffb142" />
+    <rect x="8" y="24" width="48" height="16" fill="#ffb142" />
+    <rect x="16" y="16" width="32" height="32" fill="#ffb142" />
+    <rect x="20" y="12" width="24" height="40" fill="#ffb142" />
+    <rect x="12" y="20" width="40" height="24" fill="#ffb142" />
+  </g>
+  <!-- Mid Corona Rim -->
+  <rect x="24" y="12" width="16" height="40" fill="#ff9f1a" />
+  <rect x="12" y="24" width="40" height="16" fill="#ff9f1a" />
+  <rect x="18" y="16" width="28" height="32" fill="#ff9f1a" />
+  <rect x="16" y="18" width="32" height="28" fill="#ff9f1a" />
+  <!-- Core Sun Body -->
+  <rect x="24" y="16" width="16" height="32" fill="#ffd32a" />
+  <rect x="16" y="24" width="32" height="16" fill="#ffd32a" />
+  <rect x="20" y="20" width="24" height="24" fill="#ffd32a" />
+  <!-- Inner Highlight -->
+  <rect x="26" y="20" width="12" height="24" fill="#fff275" />
+  <rect x="20" y="26" width="24" height="12" fill="#fff275" />
+  <rect x="22" y="22" width="16" height="16" fill="#ffffff" opacity="0.9" />
+</svg>

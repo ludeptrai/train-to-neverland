@@ -59,41 +59,124 @@ export const PomodoroTimer: React.FC = () => {
   const seconds = timeLeft % 60;
   const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+  const setTimerMode = (newMode: 'focus' | 'break') => {
+    setMode(newMode);
+    setTimeLeft(newMode === 'focus' ? 25 * 60 : 5 * 60);
+    setIsRunning(false);
+  };
+
   return (
     <div
       style={{
-        position: 'absolute',
-        top: '20px',
-        right: '24px',
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        zIndex: 50,
       }}
     >
-      <PixelButton onClick={() => setIsExpanded(!isExpanded)} title="Đồng hồ Pomodoro tập trung">
-        <Timer size={14} color="#686de0" />
-        <span style={{ fontSize: '12px', letterSpacing: '1px' }}>{timeFormatted}</span>
+      <PixelButton
+        active={isExpanded || isRunning}
+        onClick={() => setIsExpanded(!isExpanded)}
+        title="Đồng hồ Pomodoro tập trung"
+      >
+        <Timer size={14} color={isRunning ? '#55efc4' : '#ffd166'} />
+        <span>{timeFormatted}</span>
       </PixelButton>
 
       {isExpanded && (
         <div
           style={{
+            position: 'absolute',
+            top: '42px',
+            right: 0,
+            width: '210px',
+            background: 'rgba(20, 16, 20, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: '2px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '10px',
+            padding: '12px',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.85)',
+            color: '#f5e6d3',
+            fontFamily: "'VT323', monospace",
             display: 'flex',
-            gap: '6px',
-            background: 'rgba(30, 25, 25, 0.75)',
-            backdropFilter: 'blur(6px)',
-            padding: '4px 8px',
-            borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.1)',
+            flexDirection: 'column',
+            gap: '8px',
+            zIndex: 60,
           }}
         >
-          <PixelButton onClick={toggleRun} title={isRunning ? 'Tạm dừng' : 'Bắt đầu'}>
-            {isRunning ? <Pause size={12} color="#ff7675" /> : <Play size={12} color="#55efc4" />}
-          </PixelButton>
-          <PixelButton onClick={resetTimer} title="Đặt lại">
-            <RotateCcw size={12} color="#dfe6e9" />
-          </PixelButton>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '13px', color: '#ffd166', letterSpacing: '1px' }}>
+              POMODORO • {mode === 'focus' ? 'TẬP TRUNG' : 'NGHỈ NGƠI'}
+            </span>
+          </div>
+
+          <div
+            style={{
+              fontSize: '32px',
+              color: isRunning ? '#55efc4' : '#f5e6d3',
+              textAlign: 'center',
+              letterSpacing: '2px',
+              padding: '4px 0',
+              textShadow: isRunning ? '0 0 12px rgba(85, 239, 196, 0.4)' : 'none',
+            }}
+          >
+            {timeFormatted}
+          </div>
+
+          {/* Mode Switchers */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={() => setTimerMode('focus')}
+              style={{
+                flex: 1,
+                padding: '6px',
+                background: mode === 'focus' ? 'rgba(255, 209, 102, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                border: mode === 'focus' ? '1px solid #ffd166' : '1px solid rgba(255, 255, 255, 0.1)',
+                color: mode === 'focus' ? '#ffd166' : '#d4bda8',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: "'VT323', monospace",
+                fontSize: '14px',
+              }}
+            >
+              25P TẬP TRUNG
+            </button>
+            <button
+              onClick={() => setTimerMode('break')}
+              style={{
+                flex: 1,
+                padding: '6px',
+                background: mode === 'break' ? 'rgba(85, 239, 196, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                border: mode === 'break' ? '1px solid #55efc4' : '1px solid rgba(255, 255, 255, 0.1)',
+                color: mode === 'break' ? '#55efc4' : '#d4bda8',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: "'VT323', monospace",
+                fontSize: '14px',
+              }}
+            >
+              5P NGHỈ NGƠI
+            </button>
+          </div>
+
+          {/* Controls */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+            <PixelButton
+              onClick={toggleRun}
+              title={isRunning ? 'Tạm dừng' : 'Bắt đầu'}
+              style={{ flex: 1, padding: '0 8px' }}
+            >
+              {isRunning ? <Pause size={14} color="#ff7675" /> : <Play size={14} color="#55efc4" />}
+              <span>{isRunning ? 'TẠM DỪNG' : 'BẮT ĐẦU'}</span>
+            </PixelButton>
+            <PixelButton
+              onClick={resetTimer}
+              title="Đặt lại thời gian"
+              style={{ width: '34px', height: '34px', minWidth: '34px', padding: 0 }}
+            >
+              <RotateCcw size={14} color="#dfe6e9" />
+            </PixelButton>
+          </div>
         </div>
       )}
     </div>

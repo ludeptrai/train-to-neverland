@@ -11,8 +11,12 @@ export interface SceneConfig {
   location: string;
   bgSpeed: number; // 0.15 - 0.25
   mgSpeed: number; // 0.8 - 1.2
+  bgScaleRatio?: number; // Tỉ lệ co dãn background (mặc định 1.0 = 100% chiều cao khung hình)
+  bgY?: number | string; // Vị trí trục Y của background (px hoặc %, mặc định 0)
   mgScaleRatio?: number; // Tỉ lệ co dãn midground (mặc định 1.0 = 32% chiều cao khung hình)
   mgY?: number | string; // Vị trí trục Y của midground (px hoặc %, mặc định 0)
+  trainY?: number | string; // Vị trí trục Y của đoàn tàu (độc lập với midground, mặc định 0)
+  trainScaleRatio?: number; // Tỉ lệ phóng to/thu nhỏ đoàn tàu (mặc định 1.0)
   backgroundUrl: string;
   backgroundLightsUrl?: string;
   midgroundUrl: string;

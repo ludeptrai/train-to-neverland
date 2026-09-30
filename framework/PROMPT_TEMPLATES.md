@@ -6,16 +6,19 @@
 ## 📌 Nguyên tắc cốt lõi khi viết Prompt cho hệ thống này
 
 1. **Góc nhìn (Perspective)**: Bắt buộc là **`flat side-scrolling profile`** hoặc **`side view 2D`**. Tuyệt đối không dùng góc chéo isometric hay góc nhìn phối cảnh tụ (perspective convergence) vì sẽ làm hỏng hiệu ứng cuộn Parallax ngang.
-2. **Đường chân trời (Horizon Line)**: Luôn nhắc nhở AI đặt mặt đất/chân trời ở **75% phía dưới** (`clear horizon line at bottom 75% of canvas`), chừa 70-75% phía trên cho bầu trời thoáng đãng.
+2. **Đường chân trời & Lấp đầy mép đáy (Filled Solid Ground / Water Base - CỰC KỲ QUAN TRỌNG)**:
+   - **Phần trên (65-75% khung hình)**: Là bầu trời trên nền trắng tinh khiết `#FFFFFF` (`upper sky on pure solid white background #FFFFFF`) để thuật toán tách sạch bầu trời sang trong suốt.
+   - **Phần dưới (25-35% khung hình) BẮT BUỘC LẤP ĐẦY (NO WHITE/BLANK BOTTOM)**: Tuyệt đối **không để trống hoặc để viền trắng ở phía dưới**! Toàn bộ vùng dưới đường chân trời phải được lấp đầy hoàn chỉnh bằng địa hình phù hợp (mặt đất, thảm cỏ, thung lũng, mặt nước biển, mặt sông hồ, bờ cát, mái nhà thấp tầng,...) kéo dài tràn kín chạm sát mép đáy ảnh (`solid ground or water filling all the way down to the bottom canvas edge, touching bottom border, no blank white space at bottom, no floating buildings`).
+   - **Lý do**: Khi cuộn Parallax, nếu phần đáy để trắng hoặc bị cắt cụt lơ lửng, lớp background sẽ bị hở một dải trắng kỳ dị dưới thanh ray. Việc fill kín bằng đất/nước giúp khung cảnh có chiều sâu nền tảng vững chãi và ăn khớp tự nhiên với đường ray midground.
 3. **Không vẽ sẵn ray hoặc tàu vào nền (Clean Background Layer)**: Dùng Negative Prompt `--no train, tracks, rails, foreground obstruction` vì đường ray và tàu do code engine phụ trách.
 4. **Tỉ lệ khung hình (Aspect Ratio)**:
    - Phong cảnh Panorama: **`--ar 3:1`** hoặc **`--ar 21:9`**.
    - Đoàn tàu 3 toa: **`--ar 9:1`** (hoặc `--ar 8:1`).
 5. **Độ sắc nét Pixel (Crisp Pixel Edges)**: Luôn có từ khóa: `16-bit retro arcade aesthetic, pixel-perfect, crisp clean edges, limited color palette, Studio Ghibli nostalgic vibe`.
-6. **Hạn chế bóng đổ (Shadow) & Hào quang viền (Edge Glow / Flow / Bloom) [CỰC KỲ QUAN TRỌNG]**:
+6. **Hạn chế bóng đổ (Shadow) & Hào quang viền (Edge Glow / Flow / Bloom)**:
    - **Mục đích**: Giúp thuật toán xóa nền trắng tự động bóc tách sạch 100%, không bị lem nhem hoặc để lại vệt bóng xám mờ ảo quanh viền ảnh.
-   - **Quy tắc**: Tuyệt đối không để AI vẽ bóng đổ mờ (soft drop shadow), bóng tiếp xúc (ambient occlusion) hay hiệu ứng ánh sáng tỏa ra viền ngoài (outer glow, rim bloom, atmospheric haze). Đường biên giữa vật thể và nền trắng phải là **đường cắt pixel sắc nhọn (hard crisp silhouette borders)**.
-   - **Từ khóa bổ sung trong Prompt**: `sharp hard silhouette borders, no drop shadow, zero ambient glow, hard clean crisp edge outline, isolated on pure flat solid white background #FFFFFF, no edge bleed, no border blur, no bloom`.
+   - **Quy tắc**: Tuyệt đối không để AI vẽ bóng đổ mờ (soft drop shadow), bóng tiếp xúc (ambient occlusion) hay hiệu ứng ánh sáng tỏa ra viền ngoài (outer glow, rim bloom, atmospheric haze). Đường biên giữa đỉnh ngọn núi / tòa nhà và nền trời trắng phải là **đường cắt pixel sắc nhọn (hard crisp silhouette borders)**.
+   - **Từ khóa bổ sung trong Prompt**: `sharp hard silhouette borders, no drop shadow, zero ambient glow, hard clean crisp edge outline, upper sky on pure flat solid white background #FFFFFF, no edge bleed, no border blur, no bloom`.
 
 ---
 
@@ -25,39 +28,39 @@
 * **Thích hợp cho**: Tokyo, New York, Seoul, Singapore, Thượng Hải, Hong Kong.
 
 ```text
-Pixel art horizontal seamless panorama landscape of modern Tokyo city skyline with Tokyo Tower and distant Mount Fuji silhouette, 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, clear horizon line at bottom 75% of the frame, soft golden hour sunset glow reflecting off glass skyscrapers, warm amber and peach tones, crisp clean pixel lines, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating wallpaper texture, no trains, no tracks, no ground obstruction --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of modern Tokyo city skyline with Tokyo Tower and distant Mount Fuji silhouette, 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, upper sky on pure solid white background, lower 30% of canvas is completely filled with solid city ground, asphalt streets, pavement and low building rooftops extending all the way down to the bottom canvas edge, clear horizon line at bottom 75% of the frame, soft golden hour sunset glow reflecting off glass skyscrapers, warm amber and peach tones, crisp clean pixel lines, hard silhouette edges, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating wallpaper texture, no trains, no tracks, no ground obstruction, no blank white space at bottom, no floating buildings --ar 3:1 --style raw --v 6.0
 ```
 
 ### 2. Danh lam Cố đô & Phố cổ truyền thống (Ancient & Historic Towns)
 * **Thích hợp cho**: Phố cổ Hội An, Cố đô Huế, Kyoto, Tô Châu, Venice, Prague.
 
 ```text
-Pixel art horizontal seamless panorama landscape of Hoi An ancient town Vietnam along the Hoai River, traditional yellow wooden shop-houses, glowing colorful lanterns reflecting on calm river water, small wooden sampan boats, weeping willow trees, romantic twilight evening dusk atmosphere, side scrolling 2D profile view, horizon line at bottom 75%, 16-bit cozy retro pixel aesthetic, warm vermilion and indigo lighting palette, clean pixel edges, ultra wide panoramic ratio 3:1, no train, no rails, no tracks --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of Hoi An ancient town Vietnam along the Hoai River, traditional yellow wooden shop-houses, glowing colorful lanterns reflecting on calm river water, small wooden sampan boats, weeping willow trees, romantic twilight evening dusk atmosphere, side scrolling 2D profile view, upper sky on pure solid white background, lower 30% of canvas is completely filled with solid calm dark reflective river water surface extending all the way down to the bottom canvas edge, horizon line at bottom 75%, 16-bit cozy retro pixel aesthetic, warm vermilion and indigo lighting palette, clean sharp pixel edges, ultra wide panoramic ratio 3:1, no train, no rails, no tracks, no blank white space at bottom, no floating houses --ar 3:1 --style raw --v 6.0
 ```
 
 ### 3. Vùng cao, Đồi thông & Núi non hùng vĩ (Highlands & Mountains)
 * **Thích hợp cho**: Sa Pa, Đà Lạt, Fansipan, Hà Giang, Dãy Alps, Núi Phú Sĩ.
 
 ```text
-Pixel art horizontal seamless panorama landscape of Da Lat Vietnam misty pine forest hills, French colonial vintage rooftops, rolling morning fog and mist between green pine ridges, soft sunrise pastel pink and lavender gradient sky, peaceful quiet mountain plateau, side scrolling 2D profile view, flat horizon line at bottom 75%, 16-bit Ghibli inspired pixel art, crisp pixel cluster details, limited nostalgic palette, ultra wide panoramic ratio 3:1, no trains, no rails --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of Da Lat Vietnam misty pine forest hills, French colonial vintage rooftops, rolling morning fog and mist between green pine ridges, upper sky on pure solid white background, lower 30% of canvas is completely filled with lush green grassy meadow, pine tree slope and solid hillside ground extending all the way down to the bottom canvas edge, peaceful quiet mountain plateau, side scrolling 2D profile view, flat horizon line at bottom 75%, 16-bit Ghibli inspired pixel art, crisp pixel cluster details, limited nostalgic palette, ultra wide panoramic ratio 3:1, no trains, no rails, no blank white space at bottom, no floating hills --ar 3:1 --style raw --v 6.0
 ```
 
 ```text
-Pixel art horizontal seamless panorama landscape of Sa Pa Northwest Vietnam terraced rice fields winding along mountain slopes, majestic misty green mountains, rustic wooden ethnic stilt houses, soft morning sunlight rays, 16-bit retro aesthetic, side scrolling 2D view, horizon line at bottom 75%, vibrant emerald green and golden yellow palette, clean sharp pixel lines, ultra wide panoramic ratio 3:1, no tracks, no trains --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of Sa Pa Northwest Vietnam terraced rice fields winding along mountain slopes, majestic misty green mountains, rustic wooden ethnic stilt houses, soft morning sunlight rays, 16-bit retro aesthetic, side scrolling 2D view, upper sky on pure solid white background, lower 30% of canvas is completely filled with lush green terraced rice paddies and solid mountain terrain extending all the way down to the bottom canvas edge, horizon line at bottom 75%, vibrant emerald green and golden yellow palette, clean sharp pixel lines, ultra wide panoramic ratio 3:1, no tracks, no trains, no blank white space at bottom, no floating mountains --ar 3:1 --style raw --v 6.0
 ```
 
 ### 4. Kỳ quan Vịnh đảo & Biển nhiệt đới (Coastal & Island Wonders)
 * **Thích hợp cho**: Vịnh Hạ Long, Phú Quốc, Nha Trang, Đảo Jeju, Santorini Hy Lạp.
 
 ```text
-Pixel art horizontal seamless panorama landscape of Ha Long Bay Vietnam with iconic towering limestone karst pillars rising from calm emerald turquoise sea, traditional junk sailing boats with reddish sails in distance, dreamy sunset lilac and golden haze, side scrolling 2D view, flat horizon line at bottom 75%, 16-bit pixel art style, limited 32 color palette, crisp borders, ultra wide panoramic ratio 3:1, no tracks, no trains --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of Ha Long Bay Vietnam with iconic towering limestone karst pillars rising from calm emerald turquoise sea, traditional junk sailing boats with reddish sails in distance, dreamy sunset lilac and golden haze, side scrolling 2D view, upper sky on pure solid white background, lower 30% of canvas is completely filled with calm turquoise emerald sea water surface extending all the way down to the bottom canvas edge, flat horizon line at bottom 75%, 16-bit pixel art style, limited 32 color palette, crisp borders, ultra wide panoramic ratio 3:1, no tracks, no trains, no blank white space at bottom, no floating islands --ar 3:1 --style raw --v 6.0
 ```
 
 ### 5. Cyberpunk & Tương lai viễn tưởng (Sci-Fi & Cyberpunk)
 * **Thích hợp cho**: Neo-Tokyo 2088, Dải Ngân Hà, Thành phố Neon tương lai.
 
 ```text
-Pixel art horizontal seamless panorama landscape of futuristic Neo-Tokyo 2088 cyberpunk skyline, massive neon holographic billboards, flying vehicle silhouettes in the far distance, towering dark chrome mega-structures with magenta and cyan neon rim lighting, rainy reflective night atmosphere, side scrolling 2D view, flat horizon line at bottom 75%, 16-bit arcade pixel art, deep navy and electric neon palette, ultra wide panoramic ratio 3:1, no tracks, no train --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of futuristic Neo-Tokyo 2088 cyberpunk skyline, massive neon holographic billboards, flying vehicle silhouettes in the far distance, towering dark chrome mega-structures with magenta and cyan neon rim lighting, rainy reflective night atmosphere, side scrolling 2D view, upper sky on pure solid white background, lower 30% of canvas is completely filled with wet reflective dark asphalt road, neon puddles and lower city deck extending all the way down to the bottom canvas edge, flat horizon line at bottom 75%, 16-bit arcade pixel art, deep navy and electric neon palette, ultra wide panoramic ratio 3:1, no tracks, no train, no blank white space at bottom, no floating city --ar 3:1 --style raw --v 6.0
 ```
 
 ---
@@ -156,7 +159,7 @@ Khi tạo ảnh bằng Midjourney, Stable Diffusion hoặc DALL-E, hãy luôn k�
 
 * **Cho Hậu cảnh (Background)**:
   ```text
-  --no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature, drop shadow, cast shadow, ambient occlusion, border glow, outer glow, bloom, rim lighting, atmospheric haze at borders, edge bleed, vignette
+  --no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature, drop shadow, cast shadow, ambient occlusion, border glow, outer glow, bloom, rim lighting, atmospheric haze at borders, edge bleed, vignette, white space at bottom, blank bottom void, floating buildings, floating mountains, floating islands, cutoff ground, empty bottom margin
   ```
 * **Cho Trung cảnh đường ray (Midground Track)**:
   ```text

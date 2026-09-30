@@ -4,12 +4,25 @@
   "location": "Quảng Nam, Việt Nam",
   "bgSpeed": 0.16,
   "mgSpeed": 0.85,
-  "mgScaleRatio": 1.0,
-  "mgY": 0,
+  "mgScaleRatio": 0.5,
+  "mgY": -60,
   "skyPresets": {
-    "dawn": ["#fbc2eb", "#a6c1ee"],
-    "day": ["#fddb92", "#d1fdff"],
-    "sunset": ["#ff5858", "#f09819"],
-    "night": ["#0f2027", "#203a43", "#2c5364"]
+    "dawn": [
+      "#fbc2eb",
+      "#a6c1ee"
+    ],
+    "day": [
+      "#fddb92",
+      "#d1fdff"
+    ],
+    "sunset": [
+      "#ff5858",
+      "#f09819"
+    ],
+    "night": [
+      "#0f2027",
+      "#203a43",
+      "#2c5364"
+    ]
   }
 }

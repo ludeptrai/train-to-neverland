@@ -1,11 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SceneConfig, TrainTheme } from '../types';
+import { TimeOfDay, SceneConfig, TrainTheme } from '../types';
 import { LightingTheme } from './LightingManager';
+import {
+  TunnelDarknessOverlay,
+  TUNNEL_FLOW_DURATION,
+  TUNNEL_SWAP_MIDPOINT,
+} from '../components/Effects/TunnelDarknessOverlay';
+import { SkyLayer } from '../components/Effects/SkyLayer';
 
 interface ParallaxEngineProps {
   scene: SceneConfig;
   train: TrainTheme;
   lighting: LightingTheme;
+  timeOfDay?: TimeOfDay;
   isPaused?: boolean;
 }
 
@@ -13,6 +20,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   scene,
   train,
   lighting,
+  timeOfDay = 'day',
   isPaused = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -26,70 +34,161 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   const [mgOffset, setMgOffset] = useState(0);
   const [trainBounce, setTrainBounce] = useState(0);
 
-  // Steam puffs for steam train
-  const [steamPuffs, setSteamPuffs] = useState<Array<{ id: number; x: number; y: number; size: number; alpha: number }>>([]);
-
-  // Tunnel Transition State when switching stations
-  const prevSceneIdRef = useRef(scene.id);
-  const [displayedScene, setDisplayedScene] = useState<SceneConfig>(scene);
-  const [tunnelState, setTunnelState] = useState<{
-    active: boolean;
-    opacity: number;
-    stationName: string;
-    subtitle: string;
-  }>({
-    active: false,
-    opacity: 0,
-    stationName: '',
-    subtitle: '',
+  // Background True Aspect Ratio & Responsive Viewport Tracking
+  const [bgAspectRatio, setBgAspectRatio] = useState<number>(1920 / 1080);
+  const [viewportSize, setViewportSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
   });
 
   useEffect(() => {
-    if (scene.id !== prevSceneIdRef.current) {
-      prevSceneIdRef.current = scene.id;
-      // Enter dark tunnel
-      setTunnelState({
-        active: true,
-        opacity: 1,
-        stationName: scene.name,
-        subtitle: `${scene.location} • ${scene.subtitle}`,
-      });
+    if (!containerRef.current) return;
+    const handleResize = () => {
+      if (containerRef.current) {
+        const w = containerRef.current.clientWidth;
+        const h = containerRef.current.clientHeight;
+        if (w > 0 && h > 0) {
+          setViewportSize({ width: w, height: h });
+        }
+      }
+    };
+    handleResize();
 
-      // Switch landscape visually inside the dark tunnel
-      const swapTimer = setTimeout(() => {
-        setDisplayedScene(scene);
-      }, 700);
-
-      // Exit tunnel smoothly
-      const exitTimer = setTimeout(() => {
-        setTunnelState((prev) => ({ ...prev, opacity: 0 }));
-      }, 1900);
-
-      const finishTimer = setTimeout(() => {
-        setTunnelState((prev) => ({ ...prev, active: false }));
-      }, 2600);
-
-      return () => {
-        clearTimeout(swapTimer);
-        clearTimeout(exitTimer);
-        clearTimeout(finishTimer);
-      };
-    } else {
-      setDisplayedScene(scene);
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => handleResize());
+      ro.observe(containerRef.current);
     }
-  }, [scene]);
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Steam puffs for steam train
+  const [steamPuffs, setSteamPuffs] = useState<Array<{ id: number; x: number; y: number; size: number; alpha: number }>>([]);
+
+  // Wheel sparks inside tunnel
+  const [sparks, setSparks] = useState<Array<{ id: number; x: number; y: number; alpha: number; color: string }>>([]);
+
+  // 1-Flow Seamless Tunnel Transition
+  const [displayedScene, setDisplayedScene] = useState<SceneConfig>(scene);
+  const [isTunneling, setIsTunneling] = useState(false);
+  const [targetStation, setTargetStation] = useState({ name: '', subtitle: '' });
+
+  useEffect(() => {
+    if (!displayedScene.backgroundUrl) return;
+    const img = new Image();
+    img.src = displayedScene.backgroundUrl;
+    if (img.complete && img.naturalWidth && img.naturalHeight) {
+      setBgAspectRatio(img.naturalWidth / img.naturalHeight);
+    } else {
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          setBgAspectRatio(img.naturalWidth / img.naturalHeight);
+        }
+      };
+    }
+  }, [displayedScene.backgroundUrl]);
+
+  // Dynamic Live Metadata Sync: Reads meta.json directly with cache-busting timestamp on Ctrl+Shift+R
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLiveMeta = async () => {
+      try {
+        const res = await fetch(`./assets/landscapes/${displayedScene.id}/meta.json?t=${Date.now()}`);
+        if (!res.ok) return;
+        const meta = await res.json();
+        if (cancelled) return;
+
+        setDisplayedScene((prev) => {
+          if (prev.id !== displayedScene.id) return prev;
+          return {
+            ...prev,
+            ...(meta.name ? { name: meta.name } : {}),
+            ...(meta.subtitle ? { subtitle: meta.subtitle } : {}),
+            ...(meta.location ? { location: meta.location } : {}),
+            ...(meta.bgSpeed !== undefined ? { bgSpeed: Number(meta.bgSpeed) } : {}),
+            ...(meta.mgSpeed !== undefined ? { mgSpeed: Number(meta.mgSpeed) } : {}),
+            ...(meta.bgScaleRatio !== undefined ? { bgScaleRatio: Number(meta.bgScaleRatio) } : (meta.bgScale !== undefined ? { bgScaleRatio: Number(meta.bgScale) } : {})),
+            ...(meta.bgY !== undefined ? { bgY: meta.bgY } : (meta.bgOffsetY !== undefined ? { bgY: meta.bgOffsetY } : {})),
+            ...(meta.mgScaleRatio !== undefined ? { mgScaleRatio: Number(meta.mgScaleRatio) } : (meta.mgScale !== undefined ? { mgScaleRatio: Number(meta.mgScale) } : (meta.scaleRatio !== undefined ? { mgScaleRatio: Number(meta.scaleRatio) } : {}))),
+            ...(meta.mgY !== undefined ? { mgY: meta.mgY } : (meta.mgOffsetY !== undefined ? { mgY: meta.mgOffsetY } : (meta.yAxis !== undefined ? { mgY: meta.yAxis } : {}))),
+            ...(meta.trainY !== undefined ? { trainY: meta.trainY } : (meta.trainOffsetY !== undefined ? { trainY: meta.trainOffsetY } : {})),
+            ...(meta.trainScaleRatio !== undefined ? { trainScaleRatio: Number(meta.trainScaleRatio) } : (meta.trainScale !== undefined ? { trainScaleRatio: Number(meta.trainScale) } : {})),
+            ...(meta.backgroundUrl ? { backgroundUrl: meta.backgroundUrl } : {}),
+            ...(meta.midgroundUrl ? { midgroundUrl: meta.midgroundUrl } : {}),
+            ...(meta.backgroundLightsUrl ? { backgroundLightsUrl: meta.backgroundLightsUrl } : {}),
+            ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
+          };
+        });
+      } catch {
+        // Fallback to static scene config
+      }
+    };
+    fetchLiveMeta();
+    return () => {
+      cancelled = true;
+    };
+  }, [displayedScene.id]);
+
+  const activeTransitionTargetId = useRef<string | null>(null);
+  const transitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const startTunnelTransition = (targetScene: SceneConfig) => {
+    // Clear any previous transition timers
+    transitionTimersRef.current.forEach((t) => clearTimeout(t));
+    transitionTimersRef.current = [];
+
+    activeTransitionTargetId.current = targetScene.id;
+    setTargetStation({
+      name: targetScene.name,
+      subtitle: `${targetScene.location} • ${targetScene.subtitle}`,
+    });
+    setIsTunneling(true);
+
+    // Tráo cảnh nền ngầm khi màn hình tối hoàn toàn ở giữa luồng (1600ms)
+    const tSwap = setTimeout(() => {
+      setDisplayedScene(targetScene);
+    }, TUNNEL_SWAP_MIDPOINT);
+
+    // Kết thúc luồng hầm khi tàu đã lướt ra cảnh mới (3200ms)
+    const tFinish = setTimeout(() => {
+      setIsTunneling(false);
+      activeTransitionTargetId.current = null;
+    }, TUNNEL_FLOW_DURATION);
+
+    transitionTimersRef.current = [tSwap, tFinish];
+  };
+
+  // Kích hoạt chuyển cảnh hầm khi scene thay đổi
+  useEffect(() => {
+    if (scene.id !== displayedScene.id && activeTransitionTargetId.current !== scene.id) {
+      startTunnelTransition(scene);
+    }
+  }, [scene.id, displayedScene.id]);
+
+  // Cleanup chỉ chạy khi unmount ParallaxEngine
+  useEffect(() => {
+    return () => {
+      transitionTimersRef.current.forEach((t) => clearTimeout(t));
+      transitionTimersRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     let lastTime = performance.now();
-    const bgWidth = 1920; // virtual canvas width for wrapping
 
     const loop = (currentTime: number) => {
       const delta = Math.min((currentTime - lastTime) / 16.66, 2.0);
       lastTime = currentTime;
 
       if (!isPaused) {
-        // Update background offset (slow)
-        bgOffsetRef.current = (bgOffsetRef.current + displayedScene.bgSpeed * 1.5 * delta) % bgWidth;
+        // Update background offset (slow) with seamless 2-panel mirror cycle
+        const cycleWidth = (panelWidthRef.current || 1920) * 2;
+        bgOffsetRef.current = (bgOffsetRef.current + displayedScene.bgSpeed * 1.5 * delta) % cycleWidth;
         // Update midground track offset (fast) - scrolling smoothly forever
         mgOffsetRef.current = (mgOffsetRef.current + displayedScene.mgSpeed * 5.5 * delta) % 100000;
 
@@ -113,6 +212,22 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             },
           ]);
         }
+
+        // Wheel sparks logic when train is inside tunnel
+        if (isTunneling) {
+          if (Math.random() < 0.28) {
+            setSparks((prev) => [
+              ...prev.slice(-6),
+              {
+                id: Math.random(),
+                x: (Math.random() - 0.5) * 36,
+                y: (Math.random() - 0.5) * 4,
+                alpha: 1,
+                color: Math.random() > 0.5 ? '#fffa65' : '#ff9f43',
+              },
+            ]);
+          }
+        }
       }
 
       if (train.hasSmoke) {
@@ -129,6 +244,18 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         );
       }
 
+      if (sparks.length > 0) {
+        setSparks((prev) =>
+          prev
+            .map((s) => ({
+              ...s,
+              x: s.x - 3.8 * delta,
+              alpha: s.alpha - 0.16 * delta,
+            }))
+            .filter((s) => s.alpha > 0)
+        );
+      }
+
       animFrameRef.current = requestAnimationFrame(loop);
     };
 
@@ -139,15 +266,68 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [scene, train, isPaused]);
+  }, [scene, train, isPaused, isTunneling]);
 
-  // Dynamic Midground Scaling & Y-Axis Positioning from Scene Metadata
+  // Reference Stage Height (standard 21:9 cinema stage at 1920px width: 1920 * 9 / 21 = ~822.86px)
+  const REFERENCE_STAGE_HEIGHT = 822.86;
+  const stageScale = (viewportSize.height || REFERENCE_STAGE_HEIGHT) / REFERENCE_STAGE_HEIGHT;
+
+  // Helper: Đồng bộ hóa toàn bộ tọa độ Y (px hoặc %) theo tỉ lệ chiều cao khung hình (ngăn lệch layer khi đổi browser width)
+  const parseProportionalY = (val: string | number | undefined, defaultVal = '0px') => {
+    if (val === undefined || val === null) return defaultVal;
+    if (typeof val === 'number') {
+      return `${(val * stageScale).toFixed(2)}px`;
+    }
+    const str = String(val).trim();
+    if (str.endsWith('%')) return str;
+    const num = parseFloat(str);
+    if (!isNaN(num)) {
+      return `${(num * stageScale).toFixed(2)}px`;
+    }
+    return str || defaultVal;
+  };
+
+  // Dynamic Background Scaling preserving true aspect ratio & proportional Y
+  const bgScale = displayedScene.bgScaleRatio ?? 1.0;
+  const bgBottom = parseProportionalY(displayedScene.bgY, '0px');
+
+  const panelHeight = Math.max(100, Math.round(viewportSize.height * bgScale));
+  const panelWidth = Math.max(100, Math.round(panelHeight * bgAspectRatio));
+
+  const panelWidthRef = useRef(panelWidth);
+  panelWidthRef.current = panelWidth;
+
+  const firstTile = Math.floor(bgOffset / panelWidth);
+  const visibleTilesCount = Math.ceil(viewportSize.width / panelWidth) + 2;
+  const tileIndices: number[] = [];
+  for (let i = 0; i < visibleTilesCount; i++) {
+    tileIndices.push(firstTile + i);
+  }
+
+  // Dynamic Midground Scaling & Proportional Y-Axis Positioning
   const mgScale = displayedScene.mgScaleRatio ?? 1.0;
   const mgHeight = `${(32 * mgScale).toFixed(2)}%`;
-  const mgBottom = typeof displayedScene.mgY === 'number'
-    ? `${displayedScene.mgY}px`
-    : (displayedScene.mgY ? String(displayedScene.mgY) : '0px');
-  const trainBottom = `calc(${mgBottom} + ${(5.2 * mgScale).toFixed(2)}%)`;
+  const mgBottom = parseProportionalY(displayedScene.mgY, '0px');
+
+  // Vị trí đoàn tàu: bánh xe luôn bám khớp trên mặt ray tại mọi kích thước browser width/height
+  const trainYStr = parseProportionalY(displayedScene.trainY, '0px');
+  const trainBottom = trainYStr !== '0px' && trainYStr !== '0.00px'
+    ? `calc(5.2% + ${trainYStr})`
+    : '5.2%';
+
+  const trainScale = displayedScene.trainScaleRatio ?? 1.0;
+  // Chiều cao đoàn tàu co dãn tỉ lệ chuẩn theo khung hình (phóng to to hơn rõ nét: 72px chuẩn tại 1920x823)
+  const trainHeightPx = Math.max(24, Math.round(72 * stageScale * trainScale));
+
+  // Train Lights & Headlight: bật sáng khi trời tối HOẶC khi đang chui trong hầm
+  const effectiveTrainLightOpacity = Math.max(lighting.emissiveOpacity, isTunneling ? 1.0 : 0);
+  const isTunnelLighting = isTunneling;
+
+  // Kích thước chùm sáng đèn pha tròn & mềm mại (tỷ lệ chuẩn theo chiều cao tàu)
+  const beamHeight = Math.round(trainHeightPx * 1.45);
+  const beamWidth = Math.round(beamHeight * (640 / 220));
+  const beamBulbOffsetX = Math.round(beamWidth * (36 / 640));
+  const beamBulbOffsetY = Math.round(beamHeight * (110 / 220));
 
   return (
     <div
@@ -191,7 +371,14 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         </svg>
       </div>
 
-      {/* 2. Layer Hậu Cảnh (Landmark Background) - Seamless Double Panel */}
+      {/* 1.1. Dynamic Sky Layer (Sun, Moon, Clouds, Birds, Balloon, Airplane) */}
+      <SkyLayer
+        timeOfDay={timeOfDay}
+        lighting={lighting}
+        isPaused={isPaused}
+      />
+
+      {/* 2. Layer Hậu Cảnh (Landmark Background) - Seamless Parallax Mirror Loop with 100% True Aspect Ratio */}
       <div
         style={{
           position: 'absolute',
@@ -204,37 +391,29 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           zIndex: 2,
         }}
       >
-        {/* Panel 1 */}
-        <img
-          src={displayedScene.backgroundUrl}
-          alt="Landmark Background 1"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${-bgOffset}px`,
-            width: '1920px',
-            height: '100%',
-            objectFit: 'fill',
-            objectPosition: 'bottom left',
-            imageRendering: 'pixelated',
-          }}
-        />
-        {/* Panel 2 - Mirror flipped for seamless join with Panel 1 */}
-        <img
-          src={displayedScene.backgroundUrl}
-          alt="Landmark Background 2"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${1920 - bgOffset}px`,
-            width: '1920px',
-            height: '100%',
-            objectFit: 'fill',
-            objectPosition: 'bottom left',
-            imageRendering: 'pixelated',
-            transform: 'scaleX(-1)', // Mirrored!
-          }}
-        />
+        {tileIndices.map((k) => {
+          const drawX = k * panelWidth - bgOffset;
+          const isMirrored = Math.abs(k) % 2 === 1;
+          return (
+            <img
+              key={k}
+              src={displayedScene.backgroundUrl}
+              alt={`Landmark Background ${k}`}
+              style={{
+                position: 'absolute',
+                bottom: bgBottom,
+                left: `${drawX}px`,
+                width: `${panelWidth}px`,
+                height: `${panelHeight}px`,
+                objectFit: 'fill',
+                objectPosition: 'bottom left',
+                imageRendering: 'pixelated',
+                transform: isMirrored ? 'scaleX(-1)' : 'none',
+                transformOrigin: 'center center',
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* 2.1. Layer Đèn Đêm Thành Phố & Danh Lam (Emissive Night Lights Mask) - Lớp riêng biệt không bị mờ màu */}
@@ -249,44 +428,32 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             opacity: lighting.emissiveOpacity,
             transition: 'opacity 1.5s ease',
             pointerEvents: 'none',
-            zIndex: 4,
+            zIndex: 20, // Nằm trên Ambient Mood Overlay (zIndex 12) để bảo tồn 100% màu gốc không bị ám màu thời gian
           }}
         >
-          {/* Panel 1 */}
-          <img
-            src={displayedScene.backgroundLightsUrl}
-            alt="Background Lights 1"
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: `${-bgOffset}px`,
-              width: '1920px',
-              height: '100%',
-              objectFit: 'fill',
-              objectPosition: 'bottom left',
-              imageRendering: 'pixelated',
-              filter: 'drop-shadow(0 0 2px rgba(255, 240, 150, 0.95)) drop-shadow(0 0 8px rgba(255, 195, 60, 0.85)) drop-shadow(0 0 16px rgba(255, 160, 40, 0.45))',
-              mixBlendMode: 'screen',
-            }}
-          />
-          {/* Panel 2 - Mirror flipped */}
-          <img
-            src={displayedScene.backgroundLightsUrl}
-            alt="Background Lights 2"
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: `${1920 - bgOffset}px`,
-              width: '1920px',
-              height: '100%',
-              objectFit: 'fill',
-              objectPosition: 'bottom left',
-              imageRendering: 'pixelated',
-              transform: 'scaleX(-1)', // Mirrored!
-              filter: 'drop-shadow(0 0 2px rgba(255, 240, 150, 0.95)) drop-shadow(0 0 8px rgba(255, 195, 60, 0.85)) drop-shadow(0 0 16px rgba(255, 160, 40, 0.45))',
-              mixBlendMode: 'screen',
-            }}
-          />
+          {tileIndices.map((k) => {
+            const drawX = k * panelWidth - bgOffset;
+            const isMirrored = Math.abs(k) % 2 === 1;
+            return (
+              <img
+                key={k}
+                src={displayedScene.backgroundLightsUrl}
+                alt={`Background Lights ${k}`}
+                style={{
+                  position: 'absolute',
+                  bottom: bgBottom,
+                  left: `${drawX}px`,
+                  width: `${panelWidth}px`,
+                  height: `${panelHeight}px`,
+                  objectFit: 'fill',
+                  objectPosition: 'bottom left',
+                  imageRendering: 'pixelated',
+                  transform: isMirrored ? 'scaleX(-1)' : 'none',
+                  transformOrigin: 'center center',
+                }}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -324,8 +491,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             opacity: lighting.emissiveOpacity,
             transition: 'opacity 1.5s ease',
             pointerEvents: 'none',
-            zIndex: 11,
-            mixBlendMode: 'screen',
+            zIndex: 21, // Nằm trên Ambient Mood Overlay (zIndex 12) để giữ nguyên 100% màu gốc
           }}
         />
       )}
@@ -337,10 +503,8 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           bottom: trainBottom,
           left: '50%',
           transform: `translateX(-50%) translateY(${trainBounce}px)`,
-          zIndex: 15,
-          filter: lighting.ambientFilter,
-          transition: 'filter 1.5s ease',
-          maxWidth: '52%', // Tối đa 52% chiều ngang khung hình -> luôn giữ 24% lề 2 bên, tuyệt đối không tràn
+          zIndex: 35, // Đặt đoàn tàu trên bóng đen hầm (zIndex 30) để đèn tàu rực sáng bên trong hầm
+          maxWidth: '60%', // Tối đa 60% chiều ngang khung hình để đoàn tàu to rõ ràng, không bị co ép
           width: 'max-content',
           display: 'flex',
           justifyContent: 'center',
@@ -350,7 +514,16 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       >
         {/* Steam Puffs for Retro Train */}
         {train.hasSmoke && (
-          <div style={{ position: 'absolute', top: '5px', right: '60px', pointerEvents: 'none' }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '5px',
+              right: '60px',
+              pointerEvents: 'none',
+              filter: lighting.ambientFilter,
+              transition: 'filter 1.5s ease',
+            }}
+          >
             {steamPuffs.map((puff) => (
               <div
                 key={puff.id}
@@ -372,21 +545,26 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
 
         {/* Train Body Sprite & Lights Container */}
         <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+          {/* Thân vỏ tàu chịu hiệu ứng ánh sáng môi trường / bóng hầm */}
           <img
             src={train.bodyUrl}
             alt={train.name}
             style={{
               display: 'block',
-              height: 'clamp(36px, 11vh, 58px)',
-              maxHeight: '13%',
+              height: `${trainHeightPx}px`,
+              maxHeight: '16%',
               maxWidth: '100%',
               width: 'auto',
               objectFit: 'contain',
               imageRendering: 'pixelated',
+              filter: isTunnelLighting
+                ? 'brightness(0.92) contrast(1.15)'
+                : lighting.ambientFilter,
+              transition: 'filter 0.6s ease',
             }}
           />
 
-          {/* Train Lights (Windows & Headlight glow at night) */}
+          {/* Train Lights (Windows & Headlight glow) - Giữ 100% màu gốc không bị ám filter/thời gian */}
           {train.lightsUrl && (
             <img
               src={train.lightsUrl}
@@ -398,30 +576,81 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
-                opacity: lighting.emissiveOpacity,
-                filter: 'drop-shadow(0 0 8px rgba(255, 230, 100, 0.95))',
-                mixBlendMode: 'screen',
+                opacity: effectiveTrainLightOpacity,
                 pointerEvents: 'none',
-                transition: 'opacity 1.5s ease',
+                transition: 'opacity 0.6s ease',
                 imageRendering: 'pixelated',
               }}
             />
           )}
 
-          {/* Subtle Headlight beam forward */}
+          {/* Interior Cabin Window Glow inside Tunnel */}
+          {isTunnelLighting && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(90deg, transparent 4%, rgba(255, 235, 130, 0.22) 18%, rgba(255, 220, 100, 0.3) 50%, rgba(255, 235, 130, 0.22) 82%, transparent 96%)',
+                opacity: 1,
+                transition: 'opacity 0.6s ease',
+                pointerEvents: 'none',
+              }}
+            />
+          )}
+
+          {/* Chùm sáng đèn pha tròn & mềm mại (Round & Soft Pre-rendered Headlight Beam) */}
           <div
             style={{
               position: 'absolute',
-              right: '-60px',
-              bottom: '15px',
-              width: '140px',
-              height: '35px',
-              background: 'linear-gradient(90deg, rgba(255, 245, 150, 0.8) 0%, transparent 100%)',
-              clipPath: 'polygon(0% 40%, 100% 0%, 100% 100%, 0% 60%)',
-              opacity: lighting.emissiveOpacity * 0.7,
+              right: `-${beamWidth - beamBulbOffsetX}px`,
+              bottom: `${Math.round(trainHeightPx * 0.35 - beamBulbOffsetY)}px`,
+              width: `${beamWidth}px`,
+              height: `${beamHeight}px`,
               pointerEvents: 'none',
+              opacity: effectiveTrainLightOpacity,
+              transition: 'opacity 0.6s ease',
             }}
-          />
+          >
+            <img
+              src="./assets/trains/headlight_beam.png"
+              alt="Train Headlight Beam"
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'block',
+                objectFit: 'fill',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Hạt bụi phản quang lơ lửng trong luồng sáng khi chui trong hầm tối */}
+            {isTunnelLighting && (
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', left: '18%', top: '48%', width: '3px', height: '3px', borderRadius: '50%', background: '#fff8e7', opacity: 0.85 }} />
+                <div style={{ position: 'absolute', left: '35%', top: '42%', width: '2px', height: '2px', borderRadius: '50%', background: '#fff8e7', opacity: 0.7 }} />
+                <div style={{ position: 'absolute', left: '55%', top: '56%', width: '3px', height: '3px', borderRadius: '50%', background: '#ffeaa7', opacity: 0.75 }} />
+                <div style={{ position: 'absolute', left: '72%', top: '50%', width: '2px', height: '2px', borderRadius: '50%', background: '#ffd166', opacity: 0.55 }} />
+              </div>
+            )}
+          </div>
+
+          {/* Wheel Sparks on Rails under Train Bogie */}
+          {sparks.map((spark) => (
+            <div
+              key={spark.id}
+              style={{
+                position: 'absolute',
+                right: `${15 - spark.x}px`,
+                bottom: `${2 + spark.y}px`,
+                width: '3px',
+                height: '3px',
+                backgroundColor: spark.color,
+                opacity: spark.alpha,
+                imageRendering: 'pixelated',
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -433,7 +662,9 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 22, // Nằm ở phía trước đoàn tàu, tạo chiều sâu 3D Parallax chân thực như Slow Rail
+          zIndex: 38, // Nằm ở phía trước đoàn tàu (zIndex 35), tạo chiều sâu 3D Parallax chân thực
+          opacity: isTunneling ? 0 : 1, // Tự động ẩn cột điện ngoài trời khi tàu chui vào hầm
+          transition: 'opacity 0.4s ease',
           pointerEvents: 'none',
         }}
       >
@@ -530,7 +761,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         })}
       </div>
 
-      {/* 6. Ambient Mood Overlay Color (Warm tone or deep night tint) */}
+      {/* 6. Ambient Mood Overlay Color (Warm tone or deep night tint cho cảnh quan) */}
       <div
         style={{
           position: 'absolute',
@@ -542,96 +773,19 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           mixBlendMode: 'color',
           pointerEvents: 'none',
           transition: 'background-color 1.5s ease',
-          zIndex: 25,
+          zIndex: 12, // Đặt tại zIndex 12 để chỉ phủ màu cảnh nền (zIndex 2) và ray (zIndex 10), không đè lên đèn (zIndex 20, 21)
         }}
       />
 
-      {/* 7. Tunnel Station Transition Overlay (Hiệu ứng chui hầm chuyển ga) */}
-      {tunnelState.active && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 40,
-            backgroundColor: '#0c0d14',
-            opacity: tunnelState.opacity,
-            transition: 'opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1)',
-            pointerEvents: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Passing tunnel ceiling lamps */}
-          <div style={{ position: 'absolute', top: '15%', left: 0, width: '100%', height: '8px', overflow: 'hidden' }}>
-            {[0, 1, 2, 3, 4, 5, 6].map((k) => (
-              <div
-                key={k}
-                style={{
-                  position: 'absolute',
-                  left: `${((k * 320 - bgOffset * 9) % 2240 + 2240) % 2240 - 200}px`,
-                  width: '80px',
-                  height: '4px',
-                  backgroundColor: '#ffb347',
-                  boxShadow: '0 0 20px 4px rgba(255, 179, 71, 0.85)',
-                  borderRadius: '2px',
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Next Station Callout Badge */}
-          <div
-            style={{
-              textAlign: 'center',
-              transform: `scale(${tunnelState.opacity > 0.4 ? 1 : 0.95})`,
-              transition: 'transform 0.5s ease',
-              padding: '20px 40px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(25, 25, 35, 0.65)',
-              border: '1px solid rgba(237, 176, 143, 0.2)',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "'Space Mono', 'Silkscreen', monospace",
-                fontSize: '11px',
-                letterSpacing: '3px',
-                color: '#edb08f',
-                marginBottom: '8px',
-                opacity: 0.95,
-              }}
-            >
-              GA TIẾP THEO · NEXT STATION
-            </div>
-            <div
-              style={{
-                fontFamily: "'Zen Maru Gothic', sans-serif",
-                fontSize: '28px',
-                fontWeight: 700,
-                letterSpacing: '1px',
-                color: '#fdf6ee',
-                textShadow: '0 0 25px rgba(237, 176, 143, 0.65)',
-              }}
-            >
-              {tunnelState.stationName}
-            </div>
-            <div
-              style={{
-                fontFamily: "'Zen Maru Gothic', sans-serif",
-                fontSize: '13px',
-                color: '#aaa4b5',
-                marginTop: '6px',
-              }}
-            >
-              {tunnelState.subtitle}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 7. Tunnel Darkness Effect & Entrance Portal */}
+      <TunnelDarknessOverlay
+        isActive={isTunneling}
+        stationName={targetStation.name}
+        subtitle={targetStation.subtitle}
+        trainYOffset={trainYStr}
+        trainBottom={trainBottom}
+        bgOffset={bgOffset}
+      />
     </div>
   );
 };

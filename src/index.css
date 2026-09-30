@@ -9,9 +9,13 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
   background-color: #0b0c10;
-  font-family: 'Zen Maru Gothic', 'Silkscreen', -apple-system, sans-serif;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+}
+
+body, button, input, select, textarea, div, span, p, a, label, h1, h2, h3, h4, h5, h6 {
+  font-family: 'VT323', monospace, -apple-system, sans-serif;
+  letter-spacing: 0.5px;
 }
 
 /* Ensure all pixel art retains sharp crisp edges without blur */

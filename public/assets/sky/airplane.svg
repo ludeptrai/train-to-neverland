@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40" shape-rendering="crispEdges">
+  <!-- Contrail Smoke Trail (Jet engine exhaust) -->
+  <g opacity="0.65">
+    <rect x="0" y="21" width="18" height="2" fill="#ffffff" opacity="0.2" />
+    <rect x="18" y="20" width="22" height="3" fill="#ffffff" opacity="0.4" />
+    <rect x="40" y="19" width="20" height="4" fill="#ffffff" opacity="0.7" />
+  </g>
+  <!-- Tail Fin -->
+  <rect x="58" y="6" width="6" height="4" fill="#e74c3c" />
+  <rect x="60" y="10" width="8" height="6" fill="#e74c3c" />
+  <rect x="64" y="16" width="8" height="4" fill="#c0392b" />
+  <!-- Main Fuselage -->
+  <rect x="62" y="18" width="46" height="7" fill="#f5f6fa" />
+  <rect x="108" y="19" width="4" height="5" fill="#f5f6fa" />
+  <rect x="112" y="20" width="3" height="3" fill="#dcdde1" />
+  <!-- Cockpit Windshield (Cyan glass) -->
+  <rect x="104" y="18" width="5" height="3" fill="#00d2d3" />
+  <!-- Passenger Windows Line -->
+  <rect x="74" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="78" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="82" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="86" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="90" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="94" y="20" width="2" height="2" fill="#2f3640" />
+  <rect x="98" y="20" width="2" height="2" fill="#2f3640" />
+  <!-- Lower Wing with Jet Engine -->
+  <polygon points="76,24 92,24 82,32 72,32" fill="#718093" />
+  <!-- Engine Pod -->
+  <rect x="78" y="27" width="8" height="4" fill="#2f3640" />
+  <rect x="86" y="28" width="2" height="2" fill="#e1b12c" />
+  <!-- Blinking Red Beacon on Tail -->
+  <rect x="58" y="4" width="2" height="2" fill="#ff3838" />
+  <!-- Wingtip Strobe Light -->
+  <rect x="72" y="32" width="2" height="2" fill="#2ed573" />
+</svg>

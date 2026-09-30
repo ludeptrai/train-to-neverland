@@ -59,11 +59,14 @@ Blend: Soft Light '#dca28d33' | Cửa sổ: #dfc5a0 (Hồng đào nhạt)
 
 ## 🪄 4. Cú pháp Prompt Tóm tắt (Midjourney v6 / DALL-E)
 
-> 💡 **Quy tắc viền ảnh (Border Rule)**: Hạn chế bóng đổ (no drop shadow) và hào quang/phát sáng viền (no edge glow/bloom) để thuật toán tách nền trắng đạt độ chính xác 100%.
+> 💡 **Quy tắc viền ảnh & Mép đáy (Border & Bottom Rules)**:
+> 1. **Phần trên (Bầu trời)**: Nền trắng tinh khiết `#FFFFFF` để thuật toán bóc tách bầu trời sang trong suốt.
+> 2. **Phần dưới (Đáy ảnh)**: **Bắt buộc lấp đầy đất / nước / đường phố** (solid ground, calm water, grass) tràn kín sát mép đáy ảnh. Tuyệt đối **không để trống (white/blank) hoặc để công trình lơ lửng**!
+> 3. **Viền ảnh**: Hạn chế bóng đổ (no drop shadow) và hào quang/phát sáng viền (no edge glow/bloom).
 
 ### Prompt Phong cảnh Panorama (`--ar 3:1`):
 ```text
-Pixel art horizontal seamless panorama landscape of [ĐỊA DANH], 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, clear horizon line at bottom 75%, warm golden hour tones, crisp clean pixel lines, hard silhouette edges, no drop shadow, zero ambient glow, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating texture, no trains, no tracks, no ground obstruction --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of [ĐỊA DANH], 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, upper sky on pure solid white background, lower 30% of canvas is completely filled with solid terrain/ground/water (calm water, grass, pavement, low rooftops) extending all the way down to the bottom canvas edge, clear horizon line at bottom 75%, warm golden hour tones, crisp clean pixel lines, hard silhouette edges, no drop shadow, zero ambient glow, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating texture, no trains, no tracks, no ground obstruction, no blank white space at bottom, no floating buildings --ar 3:1 --style raw --v 6.0
 ```
 
 ### Prompt Trung cảnh & Đường ray (`--ar 5:1`):
@@ -78,5 +81,5 @@ Pixel art side view of a 3-car modular train [LOẠI TÀU: Shinkansen / Steam lo
 
 ### Negative Prompt (Loại trừ toàn diện):
 ```text
---no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature, drop shadow, cast shadow, ambient occlusion, border glow, outer glow, bloom, rim lighting, atmospheric haze, edge bleed, vignette
+--no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature, drop shadow, cast shadow, ambient occlusion, border glow, outer glow, bloom, rim lighting, atmospheric haze, edge bleed, vignette, white space at bottom, blank bottom void, floating buildings, floating mountains, floating islands, cutoff ground, empty bottom margin
 ```

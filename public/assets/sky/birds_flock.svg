@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" width="160" height="80" shape-rendering="crispEdges">
+  <!-- Bird 1 (Leader - Center Front) -->
+  <g transform="translate(130, 24)">
+    <rect x="0" y="2" width="3" height="3" fill="#2d3436" />
+    <rect x="3" y="1" width="3" height="3" fill="#2d3436" />
+    <rect x="6" y="0" width="4" height="2" fill="#2d3436" />
+    <rect x="3" y="3" width="5" height="2" fill="#2d3436" />
+    <rect x="8" y="2" width="4" height="2" fill="#2d3436" />
+    <rect x="12" y="1" width="3" height="2" fill="#2d3436" />
+  </g>
+  <!-- Bird 2 (Upper Flank 1) -->
+  <g transform="translate(95, 12)">
+    <rect x="0" y="2" width="3" height="2" fill="#3d4446" />
+    <rect x="3" y="0" width="4" height="2" fill="#3d4446" />
+    <rect x="7" y="2" width="3" height="2" fill="#3d4446" />
+    <rect x="10" y="0" width="3" height="2" fill="#3d4446" />
+  </g>
+  <!-- Bird 3 (Lower Flank 1) -->
+  <g transform="translate(100, 42)">
+    <rect x="0" y="1" width="3" height="2" fill="#3d4446" />
+    <rect x="3" y="2" width="4" height="2" fill="#3d4446" />
+    <rect x="7" y="1" width="3" height="2" fill="#3d4446" />
+    <rect x="10" y="0" width="3" height="2" fill="#3d4446" />
+  </g>
+  <!-- Bird 4 (Upper Flank 2) -->
+  <g transform="translate(60, 4)">
+    <rect x="0" y="2" width="2" height="2" fill="#4d5456" />
+    <rect x="2" y="0" width="3" height="2" fill="#4d5456" />
+    <rect x="5" y="2" width="3" height="2" fill="#4d5456" />
+    <rect x="8" y="0" width="3" height="2" fill="#4d5456" />
+  </g>
+  <!-- Bird 5 (Lower Flank 2) -->
+  <g transform="translate(68, 58)">
+    <rect x="0" y="2" width="3" height="2" fill="#4d5456" />
+    <rect x="3" y="1" width="4" height="2" fill="#4d5456" />
+    <rect x="7" y="2" width="3" height="2" fill="#4d5456" />
+  </g>
+  <!-- Bird 6 (Rear Upper) -->
+  <g transform="translate(25, 8)">
+    <rect x="0" y="1" width="2" height="2" fill="#636e72" />
+    <rect x="2" y="0" width="3" height="2" fill="#636e72" />
+    <rect x="5" y="1" width="2" height="2" fill="#636e72" />
+  </g>
+  <!-- Bird 7 (Rear Lower) -->
+  <g transform="translate(30, 68)">
+    <rect x="0" y="1" width="2" height="2" fill="#636e72" />
+    <rect x="2" y="0" width="3" height="2" fill="#636e72" />
+    <rect x="5" y="1" width="2" height="2" fill="#636e72" />
+  </g>
+</svg>

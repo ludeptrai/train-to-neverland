@@ -118,6 +118,15 @@ export function scanLandscapes() {
     const bgSpeed = meta.bgSpeed !== undefined ? meta.bgSpeed : 0.15;
     const mgSpeed = meta.mgSpeed !== undefined ? meta.mgSpeed : 0.85;
 
+    // Tham số cấu hình scale ratio & trục Y của background
+    const bgScaleRatio = meta.bgScaleRatio !== undefined
+      ? Number(meta.bgScaleRatio)
+      : (meta.bgScale !== undefined ? Number(meta.bgScale) : undefined);
+
+    const bgY = meta.bgY !== undefined
+      ? meta.bgY
+      : (meta.bgOffsetY !== undefined ? meta.bgOffsetY : undefined);
+
     // Tham số cấu hình scale ratio & trục Y của midground
     const mgScaleRatio = meta.mgScaleRatio !== undefined
       ? Number(meta.mgScaleRatio)
@@ -126,6 +135,15 @@ export function scanLandscapes() {
     const mgY = meta.mgY !== undefined
       ? meta.mgY
       : (meta.mgOffsetY !== undefined ? meta.mgOffsetY : (meta.yAxis !== undefined ? meta.yAxis : undefined));
+
+    // Tham số cấu hình trục Y của đoàn tàu (độc lập với midground)
+    const trainY = meta.trainY !== undefined
+      ? meta.trainY
+      : (meta.trainOffsetY !== undefined ? meta.trainOffsetY : undefined);
+
+    const trainScaleRatio = meta.trainScaleRatio !== undefined
+      ? Number(meta.trainScaleRatio)
+      : (meta.trainScale !== undefined ? Number(meta.trainScale) : undefined);
 
     const skyPresets = meta.skyPresets || {
       dawn: ['#fbc2eb', '#a6c1ee'],
@@ -141,8 +159,12 @@ export function scanLandscapes() {
       location,
       bgSpeed,
       mgSpeed,
+      ...(bgScaleRatio !== undefined ? { bgScaleRatio } : {}),
+      ...(bgY !== undefined ? { bgY } : {}),
       ...(mgScaleRatio !== undefined ? { mgScaleRatio } : {}),
       ...(mgY !== undefined ? { mgY } : {}),
+      ...(trainY !== undefined ? { trainY } : {}),
+      ...(trainScaleRatio !== undefined ? { trainScaleRatio } : {}),
       backgroundUrl: bgUrl,
       ...(bgLightsUrl ? { backgroundLightsUrl: bgLightsUrl } : {}),
       midgroundUrl: mgUrl,

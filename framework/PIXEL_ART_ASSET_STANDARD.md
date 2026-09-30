@@ -34,9 +34,9 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 ## 3. QUY CHUẨN LAYER 2: HẬU CẢNH DANH LAM (Landmark Background)
 
 > [!IMPORTANT]
-> **YÊU CẦU BẮT BUỘC: BẦU TRỜI PHẢI TRONG SUỐT (100% Transparent Alpha)**
-> - Bức tranh chỉ vẽ các công trình, đồi núi, tháp, cây cầu, skyline thành phố...
-> - Toàn bộ vùng phía trên đỉnh núi và nóc các tòa nhà **bắt buộc phải là nền trong suốt (PNG)** để màu bầu trời CSS và các ngôi sao ban đêm có thể hiển thị tự nhiên phía sau!
+> **YÊU CẦU BẮT BUỘC: BẦU TRỜI TRONG SUỐT (PHÍA TRÊN) & ĐÁY ẢNH PHẢI LẤP ĐẦY ĐẤT / NƯỚC (PHÍA DƯỚI)**
+> - **Phía trên (Bầu trời)**: Bắt buộc là nền trong suốt (PNG) hoặc nền trắng `#FFFFFF` (khi vẽ AI để tách nền) để bầu trời CSS và các ngôi sao ban đêm hiển thị tự nhiên.
+> - **Phía dưới (Chân trời & Đáy ảnh - 25% - 35% khung hình)**: **BẮT BUỘC FILL KÍN ĐẤT / NƯỚC**. Tuyệt đối không để trống hoặc để nền trắng ở đáy! Phải vẽ phủ kín bằng mặt đất, mặt cỏ, thung lũng, mặt biển, mặt sông hồ hoặc mái nhà thấp tầng kéo dài chạm sát mép đáy ảnh để tạo chiều sâu vững chãi và tránh bị hở khoảng trống dưới đường ray.
 
 ### Thông số kỹ thuật:
 - **Tên file:** `background.png`
@@ -48,7 +48,7 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 - **File đèn đêm (Emissive Mask):** `background_lights.png` (cùng kích thước với `background.png`, nền 100% trong suốt, chỉ vẽ các chấm vàng/xanh của bóng đèn cửa sổ các tòa nhà).
 
 ### Prompt mẫu tạo Hậu cảnh bằng AI (Midjourney / DALL-E):
-> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills]. Crisp pixels, side-scroller game background asset. Only mountains and city buildings, ISOLATED ON PURE SOLID WHITE BACKGROUND #FFFFFF (or transparent), NO SKY, flat horizon line at the bottom, hard crisp silhouette borders, no drop shadow, zero ambient glow, warm ambient aesthetic, authentic pixel art style."*
+> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills]. Crisp pixels, side-scroller game background asset. Only mountains and city buildings with lower 30% of canvas completely filled with solid terrain/ground/water (calm sea water, grassy hillside, pavement, low rooftops) extending all the way down to the bottom canvas edge, UPPER SKY ON PURE SOLID WHITE BACKGROUND #FFFFFF, NO blank white space at bottom, NO floating buildings, flat horizon line at the bottom 75%, hard crisp silhouette borders, no drop shadow, zero ambient glow, warm ambient aesthetic, authentic pixel art style."*
 
 ---
 

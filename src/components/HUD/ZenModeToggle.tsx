@@ -24,25 +24,33 @@ export const ZenModeToggle: React.FC<ZenModeToggleProps> = ({
   return (
     <div
       style={{
-        position: 'absolute',
-        bottom: '20px',
-        right: '185px',
-        zIndex: 50,
+        position: 'relative',
         display: 'flex',
+        alignItems: 'center',
         gap: '8px',
       }}
     >
       <PixelButton
         onClick={onToggleZenMode}
-        title={isZenMode ? 'Hiện giao diện' : 'Chế độ ngắm cảnh (Ẩn UI)'}
+        title={isZenMode ? 'Hiện giao diện (phím Z)' : 'Chế độ ngắm cảnh ẩn UI (phím Z)'}
+        style={{
+          borderColor: isZenMode ? '#ffd166' : undefined,
+          color: isZenMode ? '#ffd166' : '#f5e6d3',
+        }}
       >
-        {isZenMode ? <Eye size={13} color="#f5e6d3" /> : <EyeOff size={13} color="#f5e6d3" />}
+        {isZenMode ? <Eye size={14} color="#ffd166" /> : <EyeOff size={14} color="#f5e6d3" />}
         <span>{isZenMode ? 'HIỆN UI' : 'ZEN MODE'}</span>
       </PixelButton>
 
-      <PixelButton onClick={toggleFullscreen} title="Toàn màn hình">
-        <Maximize2 size={13} color="#f5e6d3" />
-      </PixelButton>
+      {!isZenMode && (
+        <PixelButton
+          onClick={toggleFullscreen}
+          title="Bật/Tắt toàn màn hình"
+          style={{ width: '34px', height: '34px', minWidth: '34px', padding: 0 }}
+        >
+          <Maximize2 size={14} color="#f5e6d3" />
+        </PixelButton>
+      )}
     </div>
   );
 };

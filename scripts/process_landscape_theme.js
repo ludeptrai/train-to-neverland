@@ -186,17 +186,19 @@ export async function processLandscapeFolder(folderPath) {
           bgFullRgba[destIdx + 2] = Math.min(255, Math.round(b / 4) * 4);
           bgFullRgba[destIdx + 3] = 255;
 
-          // Trích xuất đèn đêm:
+          // Trích xuất đèn đêm & bảo tồn 100% màu gốc (không ép màu, giữ nguyên màu nghệ sĩ vẽ):
           const isWarmYellow = (r > 195 && g > 165 && b < 145);
           const isAmber = (r > 200 && g > 125 && b < 85);
           const isCyan = (b > 175 && g > 160 && r < 140);
-          const isBrightWindow = (r > 220 && g > 215 && b > 205 && (r - b > 10 || y > h * 0.3));
+          const isLanternRed = (r > 170 && r > g * 1.3 && r > b * 1.3);
+          const isBrightWindow = (r > 215 && g > 210 && b > 200 && (r - b > 8 || y > h * 0.25));
 
-          if (isWarmYellow || isAmber || isCyan || isBrightWindow) {
+          if (isWarmYellow || isAmber || isCyan || isLanternRed || isBrightWindow) {
             lightsCount++;
-            bgLightsFullRgba[destIdx] = 255;
-            bgLightsFullRgba[destIdx + 1] = isWarmYellow ? 230 : isAmber ? 165 : isCyan ? 245 : 240;
-            bgLightsFullRgba[destIdx + 2] = isWarmYellow ? 110 : isAmber ? 65 : isCyan ? 255 : 180;
+            // Giữ nguyên 100% màu gốc của bức tranh
+            bgLightsFullRgba[destIdx] = r;
+            bgLightsFullRgba[destIdx + 1] = g;
+            bgLightsFullRgba[destIdx + 2] = b;
             bgLightsFullRgba[destIdx + 3] = 255;
           } else {
             bgLightsFullRgba[destIdx + 3] = 0;
@@ -220,13 +222,28 @@ export async function processLandscapeFolder(folderPath) {
       .png({ compressionLevel: 9 })
       .toFile(path.join(fullPath, 'background.png'));
 
-    // Lưu background_lights.png
-    await sharp(bgLightsFullRgba, { raw: { width: w, height: h, channels: 4 } })
+    // Lưu background_lights_raw.png (bản sao đèn sắc nét gốc)
+    const rawLightsBuffer = await sharp(bgLightsFullRgba, { raw: { width: w, height: h, channels: 4 } })
       .resize(targetW, targetH, { kernel: 'nearest' })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+    await fs.promises.writeFile(path.join(fullPath, 'background_lights_raw.png'), rawLightsBuffer);
+
+    // Pre-bake multi-tier glow vào background_lights.png để tối ưu 60 FPS (không cần CSS filter: drop-shadow)
+    const wideGlow = await sharp(rawLightsBuffer).blur(14).toBuffer();
+    const midGlow = await sharp(rawLightsBuffer).blur(5).toBuffer();
+    const tightGlow = await sharp(rawLightsBuffer).blur(2).toBuffer();
+
+    await sharp(wideGlow)
+      .composite([
+        { input: midGlow, blend: 'screen' },
+        { input: tightGlow, blend: 'screen' },
+        { input: rawLightsBuffer, blend: 'over' },
+      ])
       .png({ compressionLevel: 9 })
       .toFile(path.join(fullPath, 'background_lights.png'));
 
-    console.log(`   ✅ Đã xuất background.png & background_lights.png toàn bộ hình (${targetW}x${targetH}px) thành công!`);
+    console.log(`   ✅ Đã xuất background.png & background_lights.png (với hiệu ứng Glow pre-render sẵn) thành công!`);
   }
 
   // =======================================================================

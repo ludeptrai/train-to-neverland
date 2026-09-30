@@ -7,29 +7,33 @@ import { SceneConfig } from '../types';
 export const SCENES: SceneConfig[] = [
   {
     "id": "dalat",
-    "name": "Đà Lạt Ngàn Hoa",
-    "subtitle": "Đồi thông sương mờ & Ga xe lửa cổ kính",
+    "name": "Đà Lạt",
+    "subtitle": "Xứ sở ngàn hoa",
     "location": "Lâm Đồng, Việt Nam",
-    "bgSpeed": 0.15,
+    "bgSpeed": 0.16,
     "mgSpeed": 0.85,
+    "mgScaleRatio": 0.5,
+    "mgY": 10,
     "backgroundUrl": "./assets/landscapes/dalat/background.png",
-    "midgroundUrl": "./assets/landscapes/dalat/midground_track.svg",
+    "backgroundLightsUrl": "./assets/landscapes/dalat/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/dalat/midground_track.png",
     "skyPresets": {
       "dawn": [
-        "#ff9a9e",
-        "#fecfef"
+        "#fbc2eb",
+        "#a6c1ee"
       ],
       "day": [
-        "#a1c4fd",
-        "#c2e9fb"
+        "#fddb92",
+        "#d1fdff"
       ],
       "sunset": [
-        "#fa709a",
-        "#fee140"
+        "#ff5858",
+        "#f09819"
       ],
       "night": [
-        "#1e3c72",
-        "#2a5298"
+        "#0f2027",
+        "#203a43",
+        "#2c5364"
       ]
     }
   },
@@ -68,8 +72,8 @@ export const SCENES: SceneConfig[] = [
     "location": "Quảng Nam, Việt Nam",
     "bgSpeed": 0.16,
     "mgSpeed": 0.85,
-    "mgScaleRatio": 1,
-    "mgY": 0,
+    "mgScaleRatio": 0.5,
+    "mgY": -60,
     "backgroundUrl": "./assets/landscapes/hoian/background.png",
     "backgroundLightsUrl": "./assets/landscapes/hoian/background_lights.png",
     "midgroundUrl": "./assets/landscapes/hoian/midground_track.png",
@@ -100,8 +104,8 @@ export const SCENES: SceneConfig[] = [
     "location": "Khánh Hòa, Việt Nam",
     "bgSpeed": 0.15,
     "mgSpeed": 0.85,
-    "mgScaleRatio": 1,
-    "mgY": 0,
+    "mgScaleRatio": 0.8,
+    "mgY": -80,
     "backgroundUrl": "./assets/landscapes/nhatrang/background.png",
     "backgroundLightsUrl": "./assets/landscapes/nhatrang/background_lights.png",
     "midgroundUrl": "./assets/landscapes/nhatrang/midground_track.png",
@@ -125,34 +129,6 @@ export const SCENES: SceneConfig[] = [
         "#09203f",
         "#1b2a4a",
         "#2c3e50"
-      ]
-    }
-  },
-  {
-    "id": "sapa",
-    "name": "Sa Pa Tây Bắc",
-    "subtitle": "Ruộng bậc thang & Mây ngàn đỉnh Fansipan",
-    "location": "Lào Cai, Việt Nam",
-    "bgSpeed": 0.14,
-    "mgSpeed": 0.85,
-    "backgroundUrl": "./assets/landscapes/sapa/background.png",
-    "midgroundUrl": "./assets/landscapes/dalat/midground_track.svg",
-    "skyPresets": {
-      "dawn": [
-        "#f6d365",
-        "#fda085"
-      ],
-      "day": [
-        "#89f7fe",
-        "#66a6ff"
-      ],
-      "sunset": [
-        "#f093fb",
-        "#f5576c"
-      ],
-      "night": [
-        "#09203f",
-        "#537895"
       ]
     }
   }

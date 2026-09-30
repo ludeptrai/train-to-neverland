@@ -43,10 +43,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   };
 
   const weatherLabels: Record<WeatherType, { text: string; icon: React.ReactNode }> = {
-    clear: { text: 'TRỜI QUANG', icon: <Sun size={13} color="#f9ca24" /> },
-    rain: { text: 'MƯA RƠI', icon: <CloudRain size={13} color="#70a1ff" /> },
-    snow: { text: 'TUYẾT TRẮNG', icon: <Snowflake size={13} color="#ffffff" /> },
-    sakura: { text: 'HOA ANH ĐÀO', icon: <Sparkles size={13} color="#ff9ff3" /> },
+    clear: { text: 'TRỜI QUANG', icon: <Sun size={14} color="#f9ca24" /> },
+    rain: { text: 'MƯA RƠI', icon: <CloudRain size={14} color="#70a1ff" /> },
+    snow: { text: 'TUYẾT TRẮNG', icon: <Snowflake size={14} color="#ffffff" /> },
+    sakura: { text: 'HOA ANH ĐÀO', icon: <Sparkles size={14} color="#ff9ff3" /> },
   };
 
   // Cycle time of day
@@ -57,11 +57,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   };
 
   const timeLabels: Record<TimeOfDay, { text: string; icon: React.ReactNode }> = {
-    dawn: { text: 'BÌNH MINH', icon: <Sunrise size={13} color="#ffbe76" /> },
-    day: { text: 'BAN NGÀY', icon: <Sun size={13} color="#f9ca24" /> },
-    sunset: { text: 'HOÀNG HÔN', icon: <Sunset size={13} color="#ff7979" /> },
-    night: { text: 'BAN ĐÊM', icon: <Moon size={13} color="#f6e58d" /> },
-    auto: { text: 'GIỜ THẬT', icon: <Clock size={13} color="#dff9fb" /> },
+    dawn: { text: 'BÌNH MINH', icon: <Sunrise size={14} color="#ffbe76" /> },
+    day: { text: 'BAN NGÀY', icon: <Sun size={14} color="#f9ca24" /> },
+    sunset: { text: 'HOÀNG HÔN', icon: <Sunset size={14} color="#ff7979" /> },
+    night: { text: 'BAN ĐÊM', icon: <Moon size={14} color="#f6e58d" /> },
+    auto: { text: 'GIỜ THẬT', icon: <Clock size={14} color="#dff9fb" /> },
   };
 
   return (
@@ -72,7 +72,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         left: '24px',
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '10px',
+        gap: '8px',
         zIndex: 50,
       }}
     >
@@ -98,16 +98,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           }}
           title="Chọn danh lam thắng cảnh"
         >
-          <MapPin size={13} color="#badc58" />
+          <MapPin size={14} color="#badc58" />
           <span>{currentScene.name}</span>
-          <ChevronDown size={11} />
+          <ChevronDown size={12} />
         </PixelButton>
 
         {isSceneMenuOpen && (
           <div
             style={{
               position: 'absolute',
-              top: '38px',
+              top: '42px',
               left: 0,
               minWidth: '220px',
               background: 'rgba(25, 20, 22, 0.95)',
@@ -135,8 +135,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                   color: s.id === currentScene.id ? '#ffd166' : '#f5e6d3',
                   border: 'none',
                   borderRadius: '6px',
-                  fontFamily: "'Zen Maru Gothic', sans-serif",
-                  fontSize: '12px',
+                  fontFamily: "'VT323', monospace",
+                  fontSize: '16px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -161,16 +161,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           }}
           title="Chọn mẫu đoàn tàu (12 Themes)"
         >
-          <TrainTrack size={13} color="#e056fd" />
+          <TrainTrack size={14} color="#e056fd" />
           <span>{currentTrain.name}</span>
-          <ChevronDown size={11} />
+          <ChevronDown size={12} />
         </PixelButton>
 
         {isTrainMenuOpen && (
           <div
             style={{
               position: 'absolute',
-              top: '38px',
+              top: '42px',
               left: 0,
               width: '320px',
               maxHeight: '380px',
@@ -203,8 +203,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                   color: t.id === currentTrain.id ? '#ffd166' : '#f5e6d3',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '6px',
-                  fontFamily: "'Zen Maru Gothic', sans-serif",
-                  fontSize: '12px',
+                  fontFamily: "'VT323', monospace",
+                  fontSize: '16px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -238,7 +238,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           onClick={onToggleAutoTour}
           title={isAutoTour ? 'Đang tự chuyển ga (60s/ga). Nhấn để dừng tại ga này' : 'Nhấn để bật tự động chuyển ga'}
         >
-          <Compass size={13} color="#edb08f" />
+          <Compass size={14} color="#edb08f" />
           <span>{isAutoTour ? 'TỰ CHUYỂN GA' : 'DỪNG TẠI GA'}</span>
         </PixelButton>
       )}
