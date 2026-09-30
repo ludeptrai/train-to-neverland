@@ -116,7 +116,7 @@ public/assets/
 > [!TIP]
 > **TỰ ĐỘNG HÓA 100% (ZERO HARDCODE):**
 > Bạn **KHÔNG CẦN sửa code** trong `scenes.ts` hay `trains.ts`! Hệ thống Vite Plugin & Asset Scanner sẽ tự động phát hiện thư mục mới, tạo ra option lựa chọn ga/tàu trên website ngay tức thì.
-> Bạn có thể tùy chọn đặt thêm file `meta.json` trong thư mục để đặt tên tiếng Việt và màu bầu trời tùy thích:
+> Bạn có thể tùy chọn đặt thêm file `meta.json` trong thư mục để đặt tên tiếng Việt, tinh chỉnh tỷ lệ/vị trí đường ray và màu bầu trời tùy thích:
 > ```json
 > {
 >   "name": "Biển Nha Trang",
@@ -124,6 +124,8 @@ public/assets/
 >   "location": "Khánh Hòa, Việt Nam",
 >   "bgSpeed": 0.15,
 >   "mgSpeed": 0.85,
+>   "mgScaleRatio": 1.0,
+>   "mgY": 0,
 >   "skyPresets": {
 >     "dawn": ["#ff9a9e", "#fecfef", "#a1c4fd"],
 >     "day": ["#4facfe", "#00f2fe", "#e0f7fa"],
@@ -132,6 +134,8 @@ public/assets/
 >   }
 > }
 > ```
+> * **`mgScaleRatio`** *(tùy chọn, mặc định `1.0`)*: Hệ số co dãn chiều cao của layer đường ray midground (ví dụ: `1.15` để tăng kích thước ray thêm 15%, hoặc `0.85` để thu nhỏ). Đoàn tàu sẽ tự động tính toán nâng/hạ để bánh xe luôn tiếp xúc chuẩn xác trên mặt ray thép.
+> * **`mgY`** *(tùy chọn, mặc định `0`)*: Độ lệch trục dọc Y của đường ray midground (nhập số pixel như `10`, `-15`, hoặc chuỗi CSS như `"10px"`, `"-2%"`). Khi đường ray nâng lên hoặc hạ xuống, thân tàu cũng sẽ dịch chuyển tương ứng theo trục Y để giữ độ bám khớp hoàn hảo.
 
 ---
 

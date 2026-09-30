@@ -118,6 +118,15 @@ export function scanLandscapes() {
     const bgSpeed = meta.bgSpeed !== undefined ? meta.bgSpeed : 0.15;
     const mgSpeed = meta.mgSpeed !== undefined ? meta.mgSpeed : 0.85;
 
+    // Tham số cấu hình scale ratio & trục Y của midground
+    const mgScaleRatio = meta.mgScaleRatio !== undefined
+      ? Number(meta.mgScaleRatio)
+      : (meta.mgScale !== undefined ? Number(meta.mgScale) : (meta.scaleRatio !== undefined ? Number(meta.scaleRatio) : undefined));
+
+    const mgY = meta.mgY !== undefined
+      ? meta.mgY
+      : (meta.mgOffsetY !== undefined ? meta.mgOffsetY : (meta.yAxis !== undefined ? meta.yAxis : undefined));
+
     const skyPresets = meta.skyPresets || {
       dawn: ['#fbc2eb', '#a6c1ee'],
       day: ['#4facfe', '#00f2fe', '#e0f7fa'],
@@ -132,6 +141,8 @@ export function scanLandscapes() {
       location,
       bgSpeed,
       mgSpeed,
+      ...(mgScaleRatio !== undefined ? { mgScaleRatio } : {}),
+      ...(mgY !== undefined ? { mgY } : {}),
       backgroundUrl: bgUrl,
       ...(bgLightsUrl ? { backgroundLightsUrl: bgLightsUrl } : {}),
       midgroundUrl: mgUrl,

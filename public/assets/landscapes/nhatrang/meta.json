@@ -4,6 +4,8 @@
   "location": "Khánh Hòa, Việt Nam",
   "bgSpeed": 0.15,
   "mgSpeed": 0.85,
+  "mgScaleRatio": 1.0,
+  "mgY": 0,
   "skyPresets": {
     "dawn": ["#ff9a9e", "#fecfef", "#a1c4fd"],
     "day": ["#4facfe", "#00f2fe", "#e0f7fa"],

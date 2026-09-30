@@ -141,6 +141,14 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
     };
   }, [scene, train, isPaused]);
 
+  // Dynamic Midground Scaling & Y-Axis Positioning from Scene Metadata
+  const mgScale = displayedScene.mgScaleRatio ?? 1.0;
+  const mgHeight = `${(32 * mgScale).toFixed(2)}%`;
+  const mgBottom = typeof displayedScene.mgY === 'number'
+    ? `${displayedScene.mgY}px`
+    : (displayedScene.mgY ? String(displayedScene.mgY) : '0px');
+  const trainBottom = `calc(${mgBottom} + ${(5.2 * mgScale).toFixed(2)}%)`;
+
   return (
     <div
       ref={containerRef}
@@ -286,10 +294,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       <div
         style={{
           position: 'absolute',
-          bottom: 0,
+          bottom: mgBottom,
           left: 0,
           width: '100%',
-          height: '32%',
+          height: mgHeight,
           backgroundImage: `url(${displayedScene.midgroundUrl})`,
           backgroundRepeat: 'repeat-x',
           backgroundPosition: `${-mgOffset}px bottom`,
@@ -304,10 +312,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         <div
           style={{
             position: 'absolute',
-            bottom: 0,
+            bottom: mgBottom,
             left: 0,
             width: '100%',
-            height: '32%',
+            height: mgHeight,
             backgroundImage: `url(${displayedScene.midgroundLightsUrl})`,
             backgroundRepeat: 'repeat-x',
             backgroundPosition: `${-mgOffset}px bottom`,
@@ -322,11 +330,11 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         />
       )}
 
-      {/* 4. Layer Đoàn Tàu (Train Theme) - Căn giữa an toàn, không bao giờ tràn lề màn hình */}
+      {/* 4. Layer Đoàn Tàu (Train Theme) - Căn giữa an toàn, bánh xe luôn bám khớp trên mặt ray */}
       <div
         style={{
           position: 'absolute',
-          bottom: '5.2%', // Tiếp xúc hoàn hảo trên mặt ray thép
+          bottom: trainBottom,
           left: '50%',
           transform: `translateX(-50%) translateY(${trainBounce}px)`,
           zIndex: 15,

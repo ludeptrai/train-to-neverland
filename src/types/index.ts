@@ -11,6 +11,8 @@ export interface SceneConfig {
   location: string;
   bgSpeed: number; // 0.15 - 0.25
   mgSpeed: number; // 0.8 - 1.2
+  mgScaleRatio?: number; // Tỉ lệ co dãn midground (mặc định 1.0 = 32% chiều cao khung hình)
+  mgY?: number | string; // Vị trí trục Y của midground (px hoặc %, mặc định 0)
   backgroundUrl: string;
   backgroundLightsUrl?: string;
   midgroundUrl: string;

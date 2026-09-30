@@ -4,6 +4,8 @@
   "location": "Quảng Nam, Việt Nam",
   "bgSpeed": 0.16,
   "mgSpeed": 0.85,
+  "mgScaleRatio": 1.0,
+  "mgY": 0,
   "skyPresets": {
     "dawn": ["#fbc2eb", "#a6c1ee"],
     "day": ["#fddb92", "#d1fdff"],
