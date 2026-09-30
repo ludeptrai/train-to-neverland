@@ -17,7 +17,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
   stationName,
   subtitle,
   trainYOffset = '0px',
-  bgOffset,
+  bgOffset: _bgOffset,
 }) => {
   // Hạt bụi phản quang lơ lửng trong hầm
   const dustParticles = useMemo(() => {
@@ -65,9 +65,29 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
 
         @keyframes tunnelInteriorFlow {
           0% { opacity: 0; }
-          22% { opacity: 1; }
-          76% { opacity: 1; }
+          18% { opacity: 1; }
+          78% { opacity: 1; }
           95%, 100% { opacity: 0; }
+        }
+
+        /* TẦNG 1: ĐÈN TRẦN XA (Ceiling Far Lights) - Lướt nhanh sang trái liên tục không ngừng */
+        @keyframes tunnelCeilingFastLoop {
+          0% {
+            transform: translateX(0px);
+          }
+          100% {
+            transform: translateX(-1600px);
+          }
+        }
+
+        /* TẦNG 2: VỆT ĐÈN TƯỜNG GẦN (Wall Near Motion Streaks) - Siêu tốc độ, xé gió sang trái liên tục */
+        @keyframes tunnelWallStreakFastLoop {
+          0% {
+            transform: translateX(0px);
+          }
+          100% {
+            transform: translateX(-1800px);
+          }
         }
 
         @keyframes tunnelBadgeFlow {
@@ -143,8 +163,10 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
       </div>
 
       {/* 
-        2. Bên trong lòng hầm: Dãy đèn trần tuýp vàng & Đường ray bóng loáng
-        Tồn tại liên tục xuyên suốt hành trình trong hầm tối
+        2. Bên trong lòng hầm: Hệ thống Đèn Thị Sai (Motion Parallax) & Vệt Motion Blur Siêu Tốc
+        - Tầng 1: Đèn trần trên cao (Ceiling Far Lights)
+        - Tầng 2: Dải đèn tường hông gần (Wall Near Motion Streaks) biểu diễn gia tốc xé gió & ảo giác đảo chiều
+        - Thanh ray kim loại phản quang dưới bánh xe
       */}
       <div
         style={{
@@ -154,32 +176,86 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           animation: `tunnelInteriorFlow ${TUNNEL_FLOW_DURATION}ms ease forwards`,
         }}
       >
-        {/* Dãy đèn tuýp vàng gắn trên trần hầm lướt qua */}
+        {/* TẦNG 1: Dãy đèn trần xa trên cao (Ceiling Far Lights) - Lướt nhanh sang trái liên tục */}
         <div
           style={{
             position: 'absolute',
-            top: '10%',
+            top: '7%',
             left: 0,
             width: '100%',
-            height: '10px',
+            height: '8px',
             overflow: 'hidden',
           }}
         >
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((k) => (
-            <div
-              key={k}
-              style={{
-                position: 'absolute',
-                left: `${((k * 340 - bgOffset * 9) % 2720 + 2720) % 2720 - 200}px`,
-                width: '68px',
-                height: '4px',
-                backgroundColor: '#ffd166',
-                boxShadow: '0 0 16px 5px rgba(255, 209, 102, 0.85)',
-                borderRadius: '1px',
-                imageRendering: 'pixelated',
-              }}
-            />
-          ))}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '6000px',
+              height: '100%',
+              animation: 'tunnelCeilingFastLoop 0.85s linear infinite',
+              transformOrigin: 'left center',
+            }}
+          >
+            {Array.from({ length: 28 }).map((_, i) => (
+              <div
+                key={`ceil-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `${i * 200}px`,
+                  top: '2px',
+                  width: '64px',
+                  height: '3px',
+                  background: 'linear-gradient(90deg, #fffde7 0%, #ffeaa7 45%, rgba(255, 234, 167, 0.15) 100%)',
+                  boxShadow: '0 0 12px 3px rgba(255, 234, 167, 0.75)',
+                  borderRadius: '1px',
+                  imageRendering: 'pixelated',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* TẦNG 2: Dải đèn vách tường gần (Wall Near Motion Streaks) - Siêu tốc độ & Vệt Motion Blur xé gió */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '19%',
+            left: 0,
+            width: '100%',
+            height: '16px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '8000px',
+              height: '100%',
+              animation: 'tunnelWallStreakFastLoop 0.38s linear infinite',
+              transformOrigin: 'left center',
+            }}
+          >
+            {Array.from({ length: 26 }).map((_, i) => (
+              <div
+                key={`wall-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `${i * 300}px`,
+                  top: '4px',
+                  width: '150px',
+                  height: '4px',
+                  background: 'linear-gradient(90deg, #ffffff 0%, #ffd166 25%, rgba(255, 209, 102, 0.4) 65%, rgba(255, 209, 102, 0) 100%)',
+                  boxShadow: '0 0 18px 5px rgba(255, 209, 102, 0.95), 0 0 40px 10px rgba(255, 159, 67, 0.5)',
+                  borderRadius: '2px',
+                  imageRendering: 'pixelated',
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Thanh ray bóng loáng dưới hầm tối */}
@@ -191,7 +267,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
             width: '100%',
             height: '3px',
             backgroundColor: '#353347',
-            boxShadow: '0 0 8px rgba(255, 230, 130, 0.45)',
+            boxShadow: '0 0 10px 2px rgba(255, 230, 130, 0.55)',
           }}
         />
       </div>
