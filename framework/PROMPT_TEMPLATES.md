@@ -106,7 +106,7 @@ Hãy viết cho tôi 1 Prompt hoàn chỉnh bằng tiếng Anh (dành cho Midjou
    - Chiều cao thân tàu đồng đều, tỉ lệ siêu rộng: `--ar 8:1` (hoặc `--ar 9:1`).
    - `16-bit retro arcade pixel art, crisp hard pixel edges, clean silhouette against black, limited cohesive color palette`.
    - Negative prompt: `--no tracks, rails, ground, landscape, scenery, passengers outside, night, dark, underexposed, gloomy, drop shadow under wheels, ground shadow, white background, blurry, 3d render, tilted wheels`.
-
+Toàn bộ prompt dưới 100 chữ
 Hãy xuất kết quả dưới dạng Markdown Code block để tôi sử dụng ngay.
 ```
 

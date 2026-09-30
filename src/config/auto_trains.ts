@@ -6,6 +6,17 @@ import { TrainTheme } from '../types';
 
 export const TRAINS: TrainTheme[] = [
   {
+    "id": "futuristic_train",
+    "name": "Tàu Cao Tốc Tương Lai (Futuristic Maglev)",
+    "description": "Đoàn tàu công nghệ cao lướt êm ái trên đệm từ trường tương lai với hệ thống đèn LED cyan neon",
+    "carCount": 3,
+    "bodyUrl": "./assets/trains/templates/futuristic_train/train_body_3car.png",
+    "lightsUrl": "./assets/trains/templates/futuristic_train/train_lights_3car.png",
+    "wheelType": "maglev_glow",
+    "hasPantograph": false,
+    "hasSmoke": false
+  },
+  {
     "id": "train_blue_metro",
     "name": "Tàu Điện Ngầm Xanh Lam",
     "description": "Đoàn tàu Tàu Điện Ngầm Xanh Lam vận hành êm ái trên hành trình",

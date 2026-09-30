@@ -32,6 +32,7 @@ function humanizeName(id) {
     train_orange_tram: 'Tàu Điện Mặt Đất Cam Cổ Điển',
     train_red_white_commuter: 'Tàu Liên Tỉnh Đỏ Trắng Nhật Bản',
     train_monorail: 'Tàu Monorail Treo Tương Lai',
+    futuristic_train: 'Tàu Cao Tốc Tương Lai (Futuristic Maglev)',
   };
 
   if (map[id]) return map[id];

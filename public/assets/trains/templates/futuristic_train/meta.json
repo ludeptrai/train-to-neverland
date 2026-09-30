@@ -1,0 +1,8 @@
+{
+  "name": "Tàu Cao Tốc Tương Lai (Futuristic Maglev)",
+  "description": "Đoàn tàu công nghệ cao lướt êm ái trên đệm từ trường tương lai với hệ thống đèn LED cyan neon",
+  "wheelType": "maglev_glow",
+  "hasPantograph": false,
+  "hasSmoke": false,
+  "carCount": 3
+}
