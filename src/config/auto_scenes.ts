@@ -67,6 +67,41 @@ export const SCENES: SceneConfig[] = [
     }
   },
   {
+    "id": "hochiminhcity",
+    "name": "TP. Hồ Chí Minh",
+    "subtitle": "Hòn Ngọc Viễn Đông & Nhịp Sống Đô Thị Hoa Lệ",
+    "location": "Sài Gòn, Việt Nam",
+    "bgSpeed": 0.15,
+    "mgSpeed": 0.85,
+    "mgScaleRatio": 0.65,
+    "mgY": 0,
+    "backgroundUrl": "./assets/landscapes/hochiminhcity/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/hochiminhcity/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/hochiminhcity/midground_track.png",
+    "skyPresets": {
+      "dawn": [
+        "#fbc2eb",
+        "#a6c1ee",
+        "#fed6e3"
+      ],
+      "day": [
+        "#3a7bd5",
+        "#00d2ff",
+        "#e0f7fa"
+      ],
+      "sunset": [
+        "#e14fad",
+        "#f76b1c",
+        "#fad961"
+      ],
+      "night": [
+        "#0b0e14",
+        "#1a1c2e",
+        "#2c2d4a"
+      ]
+    }
+  },
+  {
     "id": "hoian",
     "name": "Phố Cổ Hội An",
     "subtitle": "Đèn lồng lung linh bên bờ sông Hoài",

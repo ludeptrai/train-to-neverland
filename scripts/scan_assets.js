@@ -21,6 +21,7 @@ function humanizeName(id) {
     hanoi: 'Hà Nội 36 Phố Phường',
     hue: 'Cố Đô Huế',
     phuquoc: 'Đảo Ngọc Phú Quốc',
+    hochiminhcity: 'TP. Hồ Chí Minh',
     train_red_shinkansen: 'Tàu Shinkansen Đỏ Siêu Tốc',
     train_orange_bullet: 'Tàu Cao Tốc Cam Vàng',
     train_blue_metro: 'Tàu Điện Ngầm Xanh Lam',
