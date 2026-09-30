@@ -202,10 +202,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           alt="Landmark Background 1"
           style={{
             position: 'absolute',
-            bottom: '8%',
+            bottom: 0,
             left: `${-bgOffset}px`,
             width: '1920px',
-            height: '75%',
+            height: '100%',
             objectFit: 'fill',
             objectPosition: 'bottom left',
             imageRendering: 'pixelated',
@@ -217,10 +217,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           alt="Landmark Background 2"
           style={{
             position: 'absolute',
-            bottom: '8%',
+            bottom: 0,
             left: `${1920 - bgOffset}px`,
             width: '1920px',
-            height: '75%',
+            height: '100%',
             objectFit: 'fill',
             objectPosition: 'bottom left',
             imageRendering: 'pixelated',
@@ -250,10 +250,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             alt="Background Lights 1"
             style={{
               position: 'absolute',
-              bottom: '8%',
+              bottom: 0,
               left: `${-bgOffset}px`,
               width: '1920px',
-              height: '75%',
+              height: '100%',
               objectFit: 'fill',
               objectPosition: 'bottom left',
               imageRendering: 'pixelated',
@@ -267,10 +267,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             alt="Background Lights 2"
             style={{
               position: 'absolute',
-              bottom: '8%',
+              bottom: 0,
               left: `${1920 - bgOffset}px`,
               width: '1920px',
-              height: '75%',
+              height: '100%',
               objectFit: 'fill',
               objectPosition: 'bottom left',
               imageRendering: 'pixelated',
