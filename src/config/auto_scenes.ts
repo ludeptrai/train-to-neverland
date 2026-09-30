@@ -69,7 +69,8 @@ export const SCENES: SceneConfig[] = [
     "bgSpeed": 0.16,
     "mgSpeed": 0.85,
     "backgroundUrl": "./assets/landscapes/hoian/background.png",
-    "midgroundUrl": "./assets/landscapes/dalat/midground_track.svg",
+    "backgroundLightsUrl": "./assets/landscapes/hoian/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/hoian/midground_track.png",
     "skyPresets": {
       "dawn": [
         "#fbc2eb",

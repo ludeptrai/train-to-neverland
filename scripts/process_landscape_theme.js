@@ -29,10 +29,15 @@ function isFullWhitePixel(r, g, b, threshold = 240) {
 }
 
 export async function processLandscapeFolder(folderPath) {
-  const fullPath = path.resolve(folderPath);
+  let fullPath = path.resolve(folderPath);
   if (!fs.existsSync(fullPath)) {
-    console.error(`❌ Thư mục không tồn tại: ${fullPath}`);
-    return false;
+    const candidate = path.resolve('public/assets/landscapes', folderPath);
+    if (fs.existsSync(candidate)) {
+      fullPath = candidate;
+    } else {
+      console.error(`❌ Thư mục không tồn tại: ${fullPath} (hoặc ${candidate})`);
+      return false;
+    }
   }
 
   const files = fs.readdirSync(fullPath);
