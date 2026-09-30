@@ -59,22 +59,24 @@ Blend: Soft Light '#dca28d33' | Cửa sổ: #dfc5a0 (Hồng đào nhạt)
 
 ## 🪄 4. Cú pháp Prompt Tóm tắt (Midjourney v6 / DALL-E)
 
+> 💡 **Quy tắc viền ảnh (Border Rule)**: Hạn chế bóng đổ (no drop shadow) và hào quang/phát sáng viền (no edge glow/bloom) để thuật toán tách nền trắng đạt độ chính xác 100%.
+
 ### Prompt Phong cảnh Panorama (`--ar 3:1`):
 ```text
-Pixel art horizontal seamless panorama landscape of [ĐỊA DANH], 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, clear horizon line at bottom 75%, warm golden hour tones, crisp clean pixel lines, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating texture, no trains, no tracks, no ground obstruction --ar 3:1 --style raw --v 6.0
+Pixel art horizontal seamless panorama landscape of [ĐỊA DANH], 16-bit retro aesthetic, Studio Ghibli nostalgic vibe, side scrolling 2D view, flat side perspective, clear horizon line at bottom 75%, warm golden hour tones, crisp clean pixel lines, hard silhouette edges, no drop shadow, zero ambient glow, limited palette of 32 colors, ultra wide panoramic ratio 3:1, horizontal repeating texture, no trains, no tracks, no ground obstruction --ar 3:1 --style raw --v 6.0
 ```
 
 ### Prompt Trung cảnh & Đường ray (`--ar 5:1`):
 ```text
-Pixel art horizontal seamless side-scrolling tile of [LOẠI RAY: modern urban elevated concrete railway / rustic countryside track with wildflowers / coastal seawall track], 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% is pure solid white background with NO sky, flat horizontal rail line aligned 40px from bottom edge, seamless repeating left and right borders, crisp pixel art, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0
+Pixel art horizontal seamless side-scrolling tile of [LOẠI RAY: modern urban elevated concrete railway / rustic countryside track with wildflowers / coastal seawall track], 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% is pure solid white background with NO sky, flat horizontal rail line aligned 40px from bottom edge, seamless repeating left and right borders, crisp pixel art, sharp hard borders, no drop shadow, no border glow, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0
 ```
 
 ### Prompt Đoàn tàu 3 Toa (`--ar 9:1`):
 ```text
-Pixel art side view of a 3-car modular train [LOẠI TÀU: Shinkansen / Steam locomotive / City metro], 16-bit arcade video game sprite, perfectly horizontal side-scrolling profile, exactly 1 locomotive engine, 1 passenger middle coach, 1 rear cab, flat wheels on invisible ground line, glowing yellow passenger windows, pure white background, uniform 108px sprite height, sharp borders --ar 9:1 --style raw --v 6.0
+Pixel art side view of a 3-car modular train [LOẠI TÀU: Shinkansen / Steam locomotive / City metro], 16-bit arcade video game sprite, perfectly horizontal side-scrolling profile, exactly 1 locomotive engine, 1 passenger middle coach, 1 rear cab, flat wheels on invisible ground line, glowing yellow passenger windows, pure white background, uniform 108px sprite height, sharp borders, no drop shadow under wheels, zero ground shadow bleed --ar 9:1 --style raw --v 6.0
 ```
 
-### Negative Prompt (Loại trừ):
+### Negative Prompt (Loại trừ toàn diện):
 ```text
---no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature
+--no 3d render, photorealistic, blurry, antialiased, gradients, isometric perspective, front view, train tracks, railroad ties, power lines, ground clutter, text, watermark, signature, drop shadow, cast shadow, ambient occlusion, border glow, outer glow, bloom, rim lighting, atmospheric haze, edge bleed, vignette
 ```

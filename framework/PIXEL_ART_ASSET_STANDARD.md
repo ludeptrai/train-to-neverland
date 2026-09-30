@@ -48,7 +48,7 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 - **File đèn đêm (Emissive Mask):** `background_lights.png` (cùng kích thước với `background.png`, nền 100% trong suốt, chỉ vẽ các chấm vàng/xanh của bóng đèn cửa sổ các tòa nhà).
 
 ### Prompt mẫu tạo Hậu cảnh bằng AI (Midjourney / DALL-E):
-> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills]. Crisp pixels, side-scroller game background asset. Only mountains and city buildings, ISOLATED ON PURE SOLID WHITE BACKGROUND (or transparent), NO SKY, flat horizon line at the bottom, warm ambient aesthetic, authentic pixel art style."*
+> *"16-bit retro pixel art horizontal panoramic skyline of [Tên địa danh: Paris Eiffel Tower / Swiss Alps / Da Lat pine hills]. Crisp pixels, side-scroller game background asset. Only mountains and city buildings, ISOLATED ON PURE SOLID WHITE BACKGROUND #FFFFFF (or transparent), NO SKY, flat horizon line at the bottom, hard crisp silhouette borders, no drop shadow, zero ambient glow, warm ambient aesthetic, authentic pixel art style."*
 
 ---
 
@@ -57,15 +57,16 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 ### Thông số kỹ thuật:
 - **Tên file:** `midground_track.png` (hoặc `.svg`)
 - **Kích thước chuẩn:**
-  - **Chiều rộng (Width):** `1200 px` (hai mép trái - phải **bắt buộc nối khớp mí 100%** để cuộn vô tận liên tục).
+  - **Chiều rộng (Width):** `1200 px` - `1920 px` (hai mép trái - phải **bắt buộc nối khớp mí 100%** để cuộn vô tận liên tục).
   - **Chiều cao (Height):** `240 px`.
 - **TỌA ĐỘ TIẾP XÚC ĐƯỜNG RAY (CỰC KỲ QUAN TRỌNG):**
   - Mặt trên của thanh ray thép **phải nằm cách đáy ảnh đúng `40 px`** (tương ứng `y = 200 px` tính từ đỉnh ảnh).
   - Quy chuẩn này đảm bảo bất kỳ con tàu nào trong hệ thống khi đặt lên ray cũng sẽ tiếp xúc bánh xe hoàn hảo, không bị bay lơ lửng hay chìm vào đá dăm!
 - **Nội dung vẽ:** Lớp đá dăm ba-lát xám, tà-vẹt gỗ/bê tông, ray thép đôi, rào chắn ven đường, hàng cây nhỏ hoặc bờ kè chắn sóng.
+- **Hạn chế bóng đổ & Hào quang viền:** Nền trắng phía trên phải thuần khiết, không có bóng đổ mờ hay vệt hào quang (no drop shadow, no edge glow/bloom) để thuật toán tự động tách nền đạt độ chính xác tuyệt đối.
 
 ### Prompt mẫu tạo Trung cảnh & Đường ray bằng AI (Midjourney / DALL-E):
-> *"Pixel art horizontal seamless side-scrolling tile of a [loại ray: modern urban concrete viaduct / rustic countryside railway with wildflowers / coastal seawall embankment]. 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% IS PURE SOLID WHITE BACKGROUND with NO sky, NO scenery, horizontal rail line aligned 40px from bottom edge, perfectly seamless repeating left and right borders, crisp pixel art, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0"*
+> *"Pixel art horizontal seamless side-scrolling tile of a [loại ray: modern urban concrete viaduct / rustic countryside railway with wildflowers / coastal seawall embankment]. 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% IS PURE SOLID WHITE BACKGROUND with NO sky, NO scenery, horizontal rail line aligned 40px from bottom edge, perfectly seamless repeating left and right borders, sharp hard borders, no drop shadow, no border glow, crisp pixel art, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0"*
 >
 > *(Xem thêm 6 preset chi tiết cho đô thị, nông thôn, cầu thép, ven biển, tuyết phủ, maglev tại [PROMPT_TEMPLATES.md](./PROMPT_TEMPLATES.md#%EF%B8%8F-ph%E1%BA%A7n-2-prompt-t%E1%BA%A1o-trung-c%E1%BA%A3nh--%C4%91%C6%B0%E1%BB%9Dng-ray-midground--track-layer))*
 
