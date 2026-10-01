@@ -75,11 +75,11 @@ Pixel art horizontal seamless panorama landscape of [TÊN ĐỊA DANH, ví dụ:
 ---
 
 ### 🚂 PROMPT MẪU 3: ChatGPT Meta-Prompt Cho Đoàn Tàu
-> **Mục đích:** Dán prompt này vào ChatGPT kèm phong cách tàu bạn muốn tạo. ChatGPT sẽ thiết kế thông số và viết Prompt đoàn tàu 3 toa hoàn hảo với màu sơn ban ngày nguyên bản.
+> **Mục đích:** Dán prompt này vào ChatGPT kèm phong cách tàu bạn muốn tạo. ChatGPT sẽ thiết kế thông số và viết Prompt đoàn tàu 4 toa hoàn hảo với màu sơn ban ngày nguyên bản.
 
 ```markdown
 Bạn là Senior Vehicle Pixel Artist cho tựa game 2D side-scrolling "Chuyến Tàu Không Vội".
-Tôi muốn thiết kế một đoàn tàu 3 toa mới theo phong cách: "[ĐIỀN PHONG CÁCH TÀU Ở ĐÂY, ví dụ: Tàu hơi nước cổ điển Pháp 1900s / Tàu cao tốc Shinkansen đỏ siêu tốc / Tàu điện mặt đất bằng gỗ Đà Lạt / Tàu hàng container Diesel xanh lá / Tàu Cyberpunk Maglev tương lai]".
+Tôi muốn thiết kế một đoàn tàu 4 toa mới theo phong cách: "[ĐIỀN PHONG CÁCH TÀU Ở ĐÂY, ví dụ: Tàu hơi nước cổ điển Pháp 1900s / Tàu cao tốc Shinkansen đỏ siêu tốc / Tàu điện mặt đất bằng gỗ Đà Lạt / Tàu hàng container Diesel xanh lá / Tàu Cyberpunk Maglev tương lai]".
 
 Hãy viết cho tôi 1 Prompt hoàn chỉnh bằng tiếng Anh (dành cho Midjourney v6 / DALL-E 3 / Flux) tuân thủ 100% các tiêu chuẩn kỹ thuật xe lửa của game:
 
@@ -87,11 +87,12 @@ Hãy viết cho tôi 1 Prompt hoàn chỉnh bằng tiếng Anh (dành cho Midjou
    - Đoàn tàu được chiếu sáng dưới ánh sáng ban ngày rõ nét, độ phơi sáng bình thường (`clear bright neutral daylight lighting, natural original livery colors, normal exposure, vibrant clean colors`).
    - Thể hiện rõ màu sơn nguyên bản của thân tàu, kim loại và các chi tiết cơ khí. Cửa sổ kính có ánh sáng nội thất nhẹ nhàng.
 
-2. **Cấu trúc 3 toa cân bằng (3-Car Articulated Train):**
-   - Toa 1 (Đầu tàu/Cabin lái): Có mũi khí động học hoặc đầu máy hơi nước đặc trưng, đèn pha chính phía trước.
-   - Toa 2 (Toa giữa): Toa hành khách hoặc toa hàng với hàng cửa sổ kính (`clear passenger windows`).
-   - Toa 3 (Toa đuôi): Toa hành khách có đuôi bo tròn hoặc buồng quan sát phía sau.
-   - Đoàn tàu nối liền với nhau bằng khớp nối cơ khí (`articulated bellows / gangways`).
+2. **Cấu trúc 4 toa cân bằng (4-Car Articulated Train):**
+   - Toa 1 (Đầu tàu/Cabin lái): Có mũi khí động học hoặc đầu máy hơi nước đặc trưng, đèn pha chính rực sáng phía trước hướng sang phải.
+   - Toa 2 (Toa hành khách giữa 1): Toa hành khách với các ô cửa sổ kính đều đặn (`first passenger coach with clean windows`).
+   - Toa 3 (Toa hành khách giữa 2): Toa hành khách thứ hai đồng bộ liền mạch (`second matching passenger coach with clean windows`).
+   - Toa 4 (Toa đuôi/Cabin sau): Toa hành khách có đuôi bo tròn hoặc buồng quan sát phía sau (`matching rear coach with aerodynamic tail / observation end`).
+   - Giữa các toa nối liền nhau bằng khớp nối cơ khí (`articulated rubber bellows / gangways connecting all 4 cars`).
 
 3. **Góc nhìn & Hướng di chuyển:**
    - 2D Flat side-scrolling profile view (nhìn ngang 100%, không góc chéo isometric, không 3D).
@@ -103,7 +104,7 @@ Hãy viết cho tôi 1 Prompt hoàn chỉnh bằng tiếng Anh (dành cho Midjou
    - **KHÔNG CÓ BÓNG ĐỔ:** `ABSOLUTELY NO drop shadow, zero cast shadow, no shadow under wheels, no ground plane` (để khi gắn vào thanh ray của game không bị bóng đen đè lên thanh ray).
 
 5. **Kích thước & Phong cách:**
-   - Chiều cao thân tàu đồng đều, tỉ lệ siêu rộng: `--ar 8:1` (hoặc `--ar 9:1`).
+   - Chiều cao thân tàu đồng đều, tỉ lệ siêu dài cho 4 toa: `--ar 11:1` (hoặc `--ar 10:1` / `--ar 12:1`).
    - `16-bit retro arcade pixel art, crisp hard pixel edges, clean silhouette against black, limited cohesive color palette`.
    - Negative prompt: `--no tracks, rails, ground, landscape, scenery, passengers outside, night, dark, underexposed, gloomy, drop shadow under wheels, ground shadow, white background, blurry, 3d render, tilted wheels`.
 Toàn bộ prompt dưới 100 chữ
@@ -112,11 +113,11 @@ Hãy xuất kết quả dưới dạng Markdown Code block để tôi sử dụn
 
 ---
 
-### 🚄 PROMPT MẪU 4: Direct Prompt Cho Đoàn Tàu 3 Toa (Dùng Ngay Không Cần Qua ChatGPT)
+### 🚄 PROMPT MẪU 4: Direct Prompt Cho Đoàn Tàu 4 Toa (Dùng Ngay Không Cần Qua ChatGPT)
 > **Mục đích:** Thay đoạn trong ngoặc vuông `[...]` bằng mô tả phong cách và màu sắc tàu, sau đó copy dán thẳng vào AI Generator.
 
 ```text
-Pixel art side view of a modern balanced 3-car train, [MÔ TẢ LOẠI TÀU VÀ MÀU SẮC, ví dụ: classic 19th century vintage black steam locomotive with brass boiler bands and dark green wooden passenger cars / aerodynamic crimson red bullet train with yellow racing stripes / retro mustard orange city tramway streetcar], clear bright neutral daylight lighting, natural original vibrant livery colors, normal balanced exposure, consisting of 1 front locomotive engine facing right, 1 middle passenger carriage with clean passenger windows, and 1 matching rear carriage, side-scrolling 2D game vehicle sprite profile, perfectly level flat steel wheels resting on an invisible horizontal ground line, uniform sprite height, isolated on pure solid pitch black background #000000, hard crisp pixel borders, absolutely no drop shadow, zero shadow under wheels, no ambient occlusion, no tracks, no ground, no scenery, crisp authentic 16-bit arcade pixel art style --ar 8:1 --style raw --v 6.0 --no tracks, rails, ground plane, ballast, landscape, night, dark, gloomy, underexposed, white background, drop shadow under wheels, ground shadow, cast shadow, blurry, 3d render, isometric, tilted perspective
+Pixel art side view of a modern balanced 4-car train, [MÔ TẢ LOẠI TÀU VÀ MÀU SẮC, ví dụ: classic 19th century vintage black steam locomotive with brass boiler bands and dark green wooden passenger cars / aerodynamic crimson red bullet train with yellow racing stripes / retro mustard orange city tramway streetcar], clear bright neutral daylight lighting, natural original vibrant livery colors, normal balanced exposure, consisting of 1 front locomotive engine facing right, 2 identical middle passenger carriages with clean passenger windows, and 1 matching rear carriage, articulated accordion bellows connecting the four cars, side-scrolling 2D game vehicle sprite profile, perfectly level flat steel wheels resting on an invisible horizontal ground line, uniform sprite height, isolated on pure solid pitch black background #000000, hard crisp pixel borders, absolutely no drop shadow, zero shadow under wheels, no ambient occlusion, no tracks, no ground, no scenery, crisp authentic 16-bit arcade pixel art style --ar 11:1 --style raw --v 6.0 --no tracks, rails, ground plane, ballast, landscape, night, dark, gloomy, underexposed, white background, drop shadow under wheels, ground shadow, cast shadow, blurry, 3d render, isometric, tilted perspective
 ```
 
 ---

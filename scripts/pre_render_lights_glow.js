@@ -107,16 +107,18 @@ async function processTrains() {
 
   for (const dir of dirs) {
     const dirPath = path.join(trainsDir, dir);
-    const lightsFile = path.join(dirPath, 'train_lights_3car.png');
-    const rawBackupFile = path.join(dirPath, 'train_lights_3car_raw.png');
+    const candidateFiles = ['train_lights_4car.png', 'train_lights_3car.png', 'train_lights.png'];
+    const activeFileName = candidateFiles.find(f => fs.existsSync(path.join(dirPath, f)));
+    if (!activeFileName) continue;
 
-    if (!fs.existsSync(lightsFile)) continue;
+    const lightsFile = path.join(dirPath, activeFileName);
+    const rawBackupFile = path.join(dirPath, activeFileName.replace('.png', '_raw.png'));
 
     console.log(`\n🚆 Đang xử lý đèn cho tàu: ${dir}...`);
 
     if (!fs.existsSync(rawBackupFile)) {
       fs.copyFileSync(lightsFile, rawBackupFile);
-      console.log(`   💾 Đã lưu bản sao nguyên gốc: train_lights_3car_raw.png`);
+      console.log(`   💾 Đã lưu bản sao nguyên gốc: ${path.basename(rawBackupFile)}`);
     }
 
     const sourceFile = fs.existsSync(rawBackupFile) ? rawBackupFile : lightsFile;

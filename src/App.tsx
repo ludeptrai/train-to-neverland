@@ -266,64 +266,189 @@ export const App: React.FC = () => {
         overflow: 'hidden',
         backgroundColor: '#07080c',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '12px',
+        padding: '12px',
+        boxSizing: 'border-box',
       }}
     >
       {/* 
         Cinema Letterbox Stage (Pure Responsive 21:9 Viewport)
-        Never distorts, fits completely within any browser window with automatic letterboxing!
+        Lớp bao ngoài: overflow: visible để các popup/dropdown của button thoải mái hiển thị ra ngoài khung cảnh!
       */}
       <div
         style={{
           position: 'relative',
-          width: 'min(100vw, calc(100vh * (21 / 9)))',
-          height: 'min(100vh, calc(100vw * (9 / 21)))',
+          width: 'min(98vw, calc((100vh - 100px) * (21 / 9)))',
+          height: 'min(calc(98vw * (9 / 21)), calc(100vh - 100px))',
           aspectRatio: '21 / 9',
-          boxShadow: '0 0 100px rgba(0, 0, 0, 0.95)',
-          overflow: 'hidden',
-          backgroundColor: '#0b0c10',
+          boxShadow: '0 0 80px rgba(0, 0, 0, 0.95)',
+          overflow: 'visible', // Cho phép các popup của button hiện ra ngoài khung cảnh
+          zIndex: 20,
         }}
       >
-        {/* 1. Core Parallax Engine with Dynamic Sky Layer, Background, Track, Train */}
-        <ParallaxEngine
-          scene={currentScene}
-          train={currentTrain}
-          lighting={lighting}
-          timeOfDay={timeOfDay}
-          isPaused={isPaused}
-        />
-
-        {/* 3. Weather Particles Canvas (Rain, Snow, Sakura, Sun specks) */}
-        <WeatherCanvas weather={weather} />
-
-        {/* 4. Bottom-Left Watermark Title ("CHUYẾN TÀU KHÔNG VỘI") */}
+        {/* 1. KHUNG CẢNH NGHỆ THUẬT (Chỉ khung này có overflow: hidden để cắt các lớp parallax cuộn vô tận) */}
         <div
           style={{
             position: 'absolute',
-            bottom: '22px',
-            left: '26px',
-            zIndex: 45,
-            pointerEvents: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '2px',
-            opacity: isZenMode ? 0.35 : 0.85,
-            transition: 'opacity 0.4s ease',
+            inset: 0,
+            overflow: 'hidden',
+            borderRadius: '8px',
+            backgroundColor: '#0b0c10',
+            zIndex: 1,
           }}
         >
+          <ParallaxEngine
+            scene={currentScene}
+            train={currentTrain}
+            lighting={lighting}
+            timeOfDay={timeOfDay}
+            isPaused={isPaused}
+          />
+
+          {/* Weather Particles Canvas (Rain, Snow, Sakura, Sun specks) */}
+          <WeatherCanvas weather={weather} />
+
+          {/* Auto-Tour Progress Bar (Slow Rail style) */}
+          {isAutoTour && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: '3px',
+                backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                zIndex: 48,
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                style={{
+                  width: `${tourProgress}%`,
+                  height: '100%',
+                  backgroundColor: '#edb08f',
+                  boxShadow: '0 0 10px rgba(237, 176, 143, 0.85)',
+                  transition: 'width 0.2s linear',
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 2. GOM HẾT CÁC NÚT LẠI TRONG 1 DIV ĐỂ DỄ CĂN CHỈNH (overflow: visible) */}
+        <div
+          id="hud-controls-container"
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '20px',
+            right: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+            zIndex: 100,
+            overflow: 'visible',
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Cụm nút chuyển đổi (Địa điểm, Tàu, Thời tiết, Thời điểm, Tự chuyển ga) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '8px',
+              opacity: isZenMode ? 0 : 1,
+              pointerEvents: isZenMode ? 'none' : 'auto',
+              transition: 'opacity 0.35s ease',
+              overflow: 'visible',
+            }}
+          >
+            <HeaderBar
+              weather={weather}
+              onWeatherChange={handleWeatherChange}
+              timeOfDay={timeOfDay}
+              onTimeOfDayChange={setTimeOfDay}
+              currentScene={currentScene}
+              onSceneChange={handleSceneChange}
+              scenes={SCENES}
+              currentTrain={currentTrain}
+              onTrainChange={setCurrentTrain}
+              trains={TRAINS}
+              isAutoTour={isAutoTour}
+              onToggleAutoTour={() => setIsAutoTour(!isAutoTour)}
+            />
+          </div>
+
+          {/* Cụm nút công cụ (Pomodoro, Audio Mixer, Zen Mode Toggle) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '8px',
+              pointerEvents: 'auto',
+              overflow: 'visible',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                opacity: isZenMode ? 0 : 1,
+                pointerEvents: isZenMode ? 'none' : 'auto',
+                transition: 'opacity 0.35s ease',
+                overflow: 'visible',
+              }}
+            >
+              <PomodoroTimer />
+              <AudioMixerDrawer />
+            </div>
+
+            {/* Zen Mode Toggle (Luôn có thể tương tác để tắt/bật Zen Mode) */}
+            <ZenModeToggle
+              isZenMode={isZenMode}
+              onToggleZenMode={() => setIsZenMode(!isZenMode)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. TITLE Ở PHÍA DƯỚI BÊN NGOÀI KHUNG CẢNH */}
+      <div
+        id="app-bottom-title"
+        style={{
+          width: 'min(98vw, calc((100vh - 100px) * (21 / 9)))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '2px 8px',
+          opacity: isZenMode ? 0.3 : 0.95,
+          transition: 'opacity 0.4s ease',
+          pointerEvents: 'none',
+          zIndex: 10,
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <span
             className="watermark-glow"
             style={{
               fontFamily: "'VT323', monospace",
-              fontSize: '22px',
-              letterSpacing: '2px',
+              fontSize: '26px',
+              letterSpacing: '3px',
               color: '#f5e6d3',
               fontWeight: 700,
               lineHeight: 1.1,
+              textShadow: '0 0 16px rgba(245, 230, 211, 0.4)',
             }}
           >
-            CHUYẾN TÀU KHÔNG VỘI
+            CHUYẾN TÀU TỚI XỨ SỞ VĨNH HẰNG
           </span>
           <span
             style={{
@@ -337,91 +462,19 @@ export const App: React.FC = () => {
           </span>
         </div>
 
-        {/* 5. HUD Controls */}
-        {/* Top-Left Selectors (fade out during Zen Mode) */}
         <div
           style={{
-            opacity: isZenMode ? 0 : 1,
-            pointerEvents: isZenMode ? 'none' : 'auto',
-            transition: 'opacity 0.35s ease',
-          }}
-        >
-          <HeaderBar
-            weather={weather}
-            onWeatherChange={handleWeatherChange}
-            timeOfDay={timeOfDay}
-            onTimeOfDayChange={setTimeOfDay}
-            currentScene={currentScene}
-            onSceneChange={handleSceneChange}
-            scenes={SCENES}
-            currentTrain={currentTrain}
-            onTrainChange={setCurrentTrain}
-            trains={TRAINS}
-            isAutoTour={isAutoTour}
-            onToggleAutoTour={() => setIsAutoTour(!isAutoTour)}
-          />
-        </div>
-
-        {/* Top-Right Tools & Controls (Pomodoro, Audio Mixer, Zen Mode, Fullscreen) */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '24px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: '8px',
-            zIndex: 50,
+            gap: '12px',
+            fontFamily: "'VT323', monospace",
+            fontSize: '15px',
+            color: '#ffd166',
+            letterSpacing: '1px',
           }}
         >
-          {/* Collapsible tools (fade out in Zen Mode) */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              opacity: isZenMode ? 0 : 1,
-              pointerEvents: isZenMode ? 'none' : 'auto',
-              transition: 'opacity 0.35s ease',
-            }}
-          >
-            <PomodoroTimer />
-            <AudioMixerDrawer />
-          </div>
-
-          {/* Zen Mode Toggle & Fullscreen (Zen Mode button stays interactive to restore UI) */}
-          <ZenModeToggle
-            isZenMode={isZenMode}
-            onToggleZenMode={() => setIsZenMode(!isZenMode)}
-          />
+          <span>🚆 {currentTrain.name}</span>
         </div>
-
-        {/* 6. Auto-Tour Progress Bar (Slow Rail style) */}
-        {isAutoTour && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              width: '100%',
-              height: '3px',
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
-              zIndex: 48,
-              pointerEvents: 'none',
-            }}
-          >
-            <div
-              style={{
-                width: `${tourProgress}%`,
-                height: '100%',
-                backgroundColor: '#edb08f',
-                boxShadow: '0 0 10px rgba(237, 176, 143, 0.85)',
-                transition: 'width 0.2s linear',
-              }}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

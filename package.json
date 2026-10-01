@@ -9,6 +9,10 @@
     "preview": "vite preview",
     "process": "node scripts/process_landscape_theme.js",
     "process:landscape": "node scripts/process_landscape_theme.js",
+    "process:train": "node scripts/process_train_theme.js",
+    "process:all": "node scripts/process_landscape_theme.js && node scripts/process_train_theme.js",
+    "slice:sprites": "node scripts/slice_black_bg_spritesheet.js",
+    "slice:clouds": "node scripts/slice_black_bg_spritesheet.js public/assets/sky/clouds/AaD1_zu2_4ZjPTvL17YG4Q-AaD1_zu214hL0QXKfRohHw.jpg public/assets/sky/clouds cloud",
     "scan:assets": "node scripts/scan_assets.js"
   },
   "dependencies": {

@@ -4,10 +4,39 @@
   "location": "Quảng Ninh, Việt Nam",
   "bgSpeed": 0.14,
   "mgSpeed": 0.85,
+  "mgScaleRatio": 0.5,
+  "mgY": 10,
+  "bgMirror": true,
+  "sun": {
+    "dawn": {
+      "y": "46%",
+      "size": 130
+    },
+    "day": {
+      "y": "12%",
+      "size": 58
+    },
+    "sunset": {
+      "y": "44%",
+      "size": 140
+    }
+  },
   "skyPresets": {
-    "dawn": ["#a8edea", "#fed6e3"],
-    "day": ["#4facfe", "#00f2fe"],
-    "sunset": ["#ff758c", "#ff7eb3"],
-    "night": ["#13547a", "#80d0c7"]
+    "dawn": [
+      "#a8edea",
+      "#fed6e3"
+    ],
+    "day": [
+      "#4facfe",
+      "#00f2fe"
+    ],
+    "sunset": [
+      "#ff758c",
+      "#ff7eb3"
+    ],
+    "night": [
+      "#13547a",
+      "#80d0c7"
+    ]
   }
 }

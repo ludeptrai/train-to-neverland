@@ -7,6 +7,8 @@ import {
   TUNNEL_SWAP_MIDPOINT,
 } from '../components/Effects/TunnelDarknessOverlay';
 import { SkyLayer } from '../components/Effects/SkyLayer';
+import { PixelSkyGradient } from '../components/Effects/PixelSkyGradient';
+import { audioManager } from './AudioManager';
 
 interface ParallaxEngineProps {
   scene: SceneConfig;
@@ -122,6 +124,31 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             ...(meta.midgroundUrl ? { midgroundUrl: meta.midgroundUrl } : {}),
             ...(meta.backgroundLightsUrl ? { backgroundLightsUrl: meta.backgroundLightsUrl } : {}),
             ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
+            ...(meta.bgMirror !== undefined ? { bgMirror: Boolean(meta.bgMirror) } : (meta.mirrorBackground !== undefined ? { bgMirror: Boolean(meta.mirrorBackground) } : {})),
+            ...(Boolean(meta.sun || meta.celestial || meta.sunDawnY !== undefined || meta.sunDayY !== undefined || meta.sunSunsetY !== undefined) ? {
+              sun: {
+                dawn: {
+                  ...((meta.sun && meta.sun.dawn) || (meta.celestial && meta.celestial.dawn) || {}),
+                  ...(meta.sunDawnY !== undefined ? { y: meta.sunDawnY } : {}),
+                  ...(meta.sunDawnSize !== undefined ? { size: Number(meta.sunDawnSize) } : {}),
+                },
+                day: {
+                  ...((meta.sun && meta.sun.day) || (meta.celestial && meta.celestial.day) || {}),
+                  ...(meta.sunDayY !== undefined ? { y: meta.sunDayY } : {}),
+                  ...(meta.sunDaySize !== undefined ? { size: Number(meta.sunDaySize) } : {}),
+                },
+                sunset: {
+                  ...((meta.sun && meta.sun.sunset) || (meta.celestial && meta.celestial.sunset) || {}),
+                  ...(meta.sunSunsetY !== undefined ? { y: meta.sunSunsetY } : {}),
+                  ...(meta.sunSunsetSize !== undefined ? { size: Number(meta.sunSunsetSize) } : {}),
+                },
+                night: {
+                  ...((meta.sun && meta.sun.night) || (meta.celestial && meta.celestial.night) || {}),
+                  ...(meta.sunNightY !== undefined ? { y: meta.sunNightY } : {}),
+                  ...(meta.sunNightSize !== undefined ? { size: Number(meta.sunNightSize) } : {}),
+                },
+              }
+            } : {}),
           };
         });
       } catch {
@@ -149,18 +176,26 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
     });
     setIsTunneling(true);
 
-    // Tráo cảnh nền ngầm khi màn hình tối hoàn toàn ở giữa luồng (1600ms)
+    // Kích hoạt âm thanh tàu đi vào hầm (to dần trong 0.5s)
+    audioManager.enterTunnel(0.5);
+
+    // Tráo cảnh nền ngầm khi màn hình tối hoàn toàn ở giữa luồng (2300ms)
     const tSwap = setTimeout(() => {
       setDisplayedScene(targetScene);
     }, TUNNEL_SWAP_MIDPOINT);
 
-    // Kết thúc luồng hầm khi tàu đã lướt ra cảnh mới (3200ms)
+    // Bắt đầu giảm dần âm thanh khi tàu bắt đầu ra khỏi hầm (74% của hành trình: ~3400ms)
+    const tExitSound = setTimeout(() => {
+      audioManager.exitTunnel(0.8);
+    }, Math.round(TUNNEL_FLOW_DURATION * 0.74));
+
+    // Kết thúc luồng hầm khi tàu đã lướt ra cảnh mới (4600ms)
     const tFinish = setTimeout(() => {
       setIsTunneling(false);
       activeTransitionTargetId.current = null;
     }, TUNNEL_FLOW_DURATION);
 
-    transitionTimersRef.current = [tSwap, tFinish];
+    transitionTimersRef.current = [tSwap, tExitSound, tFinish];
   };
 
   // Kích hoạt chuyển cảnh hầm khi scene thay đổi
@@ -175,6 +210,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
     return () => {
       transitionTimersRef.current.forEach((t) => clearTimeout(t));
       transitionTimersRef.current = [];
+      audioManager.exitTunnel(0.2);
     };
   }, []);
 
@@ -186,8 +222,9 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       lastTime = currentTime;
 
       if (!isPaused) {
-        // Update background offset (slow) with seamless 2-panel mirror cycle
-        const cycleWidth = (panelWidthRef.current || 1920) * 2;
+        // Update background offset (slow) with seamless mirror cycle if enabled, or simple seamless repeat
+        const isMirrorEnabled = displayedScene.bgMirror !== false;
+        const cycleWidth = (panelWidthRef.current || 1920) * (isMirrorEnabled ? 2 : 1);
         bgOffsetRef.current = (bgOffsetRef.current + displayedScene.bgSpeed * 1.5 * delta) % cycleWidth;
         // Update midground track offset (fast) - scrolling smoothly forever
         mgOffsetRef.current = (mgOffsetRef.current + displayedScene.mgSpeed * 5.5 * delta) % 100000;
@@ -341,6 +378,9 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         transition: 'background 1.5s ease',
       }}
     >
+      {/* 0. Authentic Retro Dithered Pixel Sky Gradient */}
+      <PixelSkyGradient timeOfDay={timeOfDay} />
+
       {/* 1. Twinkling Stars (Night only) */}
       <div
         style={{
@@ -376,6 +416,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         timeOfDay={timeOfDay}
         lighting={lighting}
         isPaused={isPaused}
+        scene={displayedScene}
       />
 
       {/* 2. Layer Hậu Cảnh (Landmark Background) - Seamless Parallax Mirror Loop with 100% True Aspect Ratio */}
@@ -393,7 +434,8 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       >
         {tileIndices.map((k) => {
           const drawX = k * panelWidth - bgOffset;
-          const isMirrored = Math.abs(k) % 2 === 1;
+          const isMirrorEnabled = displayedScene.bgMirror !== false;
+          const isMirrored = isMirrorEnabled && Math.abs(k) % 2 === 1;
           return (
             <img
               key={k}
@@ -433,7 +475,8 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         >
           {tileIndices.map((k) => {
             const drawX = k * panelWidth - bgOffset;
-            const isMirrored = Math.abs(k) % 2 === 1;
+            const isMirrorEnabled = displayedScene.bgMirror !== false;
+            const isMirrored = isMirrorEnabled && Math.abs(k) % 2 === 1;
             return (
               <img
                 key={k}

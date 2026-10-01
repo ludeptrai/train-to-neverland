@@ -4,6 +4,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { generateRegistryFiles } from './scripts/scan_assets.js';
 import { processLandscapeFolder } from './scripts/process_landscape_theme.js';
+import { processTrainFolder } from './scripts/process_train_theme.js';
 
 function assetRegistryPlugin(): Plugin {
   return {
@@ -55,20 +56,38 @@ function assetRegistryPlugin(): Plugin {
         console.warn('⚠️ [Vite Watcher Ignored Error]:', err instanceof Error ? err.message : err);
       });
 
-      // Khi người dùng thả thêm file .jpg/.jpeg mới vào bất kỳ thư mục ga nào -> Tự động xử lý tách nền sang PNG!
+      // Khi người dùng thả thêm file ảnh mới vào bất kỳ thư mục ga hoặc tàu nào -> Tự động xử lý tách nền sang PNG!
       let processTimeout: NodeJS.Timeout | null = null;
       server.watcher.on('add', (filePath) => {
         const norm = filePath.replace(/\\/g, '/');
-        if (/public\/assets\/landscapes\/([^/]+)\/.+\.(jpg|jpeg)$/i.test(norm)) {
+
+        // 1. Tự động xử lý khi thả ảnh phong cảnh mới
+        if (/public\/assets\/landscapes\/([^/]+)\/.+\.(jpg|jpeg|webp)$/i.test(norm)) {
           const match = norm.match(/public\/assets\/landscapes\/([^/]+)/i);
           if (match) {
-            console.log(`\n📸 [Auto-Process] Phát hiện ảnh JPG mới: ${filePath}`);
+            console.log(`\n📸 [Auto-Process] Phát hiện ảnh phong cảnh mới: ${filePath}`);
             if (processTimeout) clearTimeout(processTimeout);
             processTimeout = setTimeout(async () => {
               try {
                 await processLandscapeFolder(match[0]);
               } catch (err) {
-                console.error('❌ Lỗi tự động xử lý ảnh:', err);
+                console.error('❌ Lỗi tự động xử lý ảnh phong cảnh:', err);
+              }
+            }, 600);
+          }
+        }
+
+        // 2. Tự động xử lý khi thả ảnh đoàn tàu mới
+        if (/public\/assets\/trains\/templates\/([^/]+)\/.+\.(jpg|jpeg|webp)$/i.test(norm)) {
+          const match = norm.match(/public\/assets\/trains\/templates\/([^/]+)/i);
+          if (match) {
+            console.log(`\n🚄 [Auto-Process] Phát hiện ảnh đoàn tàu mới: ${filePath}`);
+            if (processTimeout) clearTimeout(processTimeout);
+            processTimeout = setTimeout(async () => {
+              try {
+                await processTrainFolder(match[0]);
+              } catch (err) {
+                console.error('❌ Lỗi tự động xử lý ảnh đoàn tàu:', err);
               }
             }, 600);
           }

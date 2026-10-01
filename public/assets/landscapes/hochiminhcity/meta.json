@@ -6,6 +6,21 @@
   "mgSpeed": 0.85,
   "mgScaleRatio": 0.65,
   "mgY": 0,
+  "bgMirror": true,
+  "sun": {
+    "dawn": {
+      "y": "58%",
+      "size": 130
+    },
+    "day": {
+      "y": "12%",
+      "size": 58
+    },
+    "sunset": {
+      "y": "42%",
+      "size": 140
+    }
+  },
   "skyPresets": {
     "dawn": [
       "#fbc2eb",

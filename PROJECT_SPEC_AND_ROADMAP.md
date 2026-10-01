@@ -1,10 +1,10 @@
-# 🚂 CHUYẾN TÀU KHÔNG VỘI (Train to the Neverland)
+# 🚂 Chuyến Tàu tới Xứ Sở Vĩnh Hằng (Train to the Neverland)
 ## Tài Liệu Thiết Kế Kỹ Thuật, Danh Mục Chuẩn Bị & Kế Hoạch Phát Triển
 
 ---
 
 ## 1. TỔNG QUAN DỰ ÁN (Project Overview)
-- **Tên dự án:** Chuyến Tàu Không Vội / Train to the Neverland
+- **Tên dự án:** Chuyến Tàu tới Xứ Sở Vĩnh Hằng / Train to the Neverland
 - **Mục tiêu:** Xây dựng một Web App phong cách Pixel Art thư giãn & tập trung (Chill & Focus Web Station) mang lại cảm giác bình yên, ấm cúng. Người dùng có thể vừa nghe nhạc Lo-fi và âm thanh thiên nhiên, vừa ngắm nhìn đoàn tàu vô tận lướt qua các danh lam thắng cảnh nổi tiếng thế giới.
 - **Đối tượng người dùng:** Học sinh, sinh viên, lập trình viên, designer, người làm việc từ xa cần không gian tập trung làm việc, thư giãn hoặc hỗ trợ giấc ngủ.
 - **Nền tảng triển khai:** Web Single Page Application (SPA), chạy 100% Client-side, không tốn chi phí máy chủ, tương thích hoàn hảo từ laptop, màn hình rời Ultrawide đến máy tính bảng.

@@ -1,0 +1,9 @@
+{
+  "id": "train_shinkansen_high_speed",
+  "name": "Shinkansen High Speed",
+  "description": "Đoàn tàu Shinkansen High Speed thế hệ mới vận hành êm ái trên hành trình",
+  "carCount": 4,
+  "wheelType": "standard",
+  "hasSmoke": false,
+  "hasPantograph": true
+}

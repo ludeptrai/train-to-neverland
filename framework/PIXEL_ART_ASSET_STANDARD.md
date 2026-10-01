@@ -76,21 +76,22 @@ Tài liệu này cung cấp đầy đủ các thông số kích thước, tỷ l
 ## 5. QUY CHUẨN LAYER 4: TEMPLATE ĐOÀN TÀU (Train Theme)
 
 ### Thông số kỹ thuật:
-- **Tên file:** `train_body_3car.png` (chuẩn 3 toa) hoặc `train_body.png`
+- **Tên file:** `train_body_4car.png` (chuẩn 4 toa) / `train_body_3car.png` (chuẩn 3 toa) hoặc `train_body.png`
 - **Nền ảnh:** 100% Trong suốt (Transparent PNG).
 - **Góc nhìn:** Chiều ngang nhìn nghiêng 2D (Side elevation view), đầu tàu hướng về phía bên phải màn hình (hướng tàu chạy).
 - **Chiều dài & Tỉ lệ chiếm chỗ (Occupancy Ratio):**
-  - Chiều dài đoàn tàu chiếm đúng **`50% - 53%` chiều rộng khung hình** (chuẩn vàng 52.8%).
+  - Chiều dài đoàn tàu chiếm đúng **`50% - 55%` chiều rộng khung hình** (chuẩn vàng ~52.8%).
   - Trên màn hình 960px: Tàu dài ~`507 px`.
-  - Trên CSS responsive: Giới hạn `maxWidth: 52%`, căn giữa `left: 50%`, `transform: translateX(-50%)`, đảm bảo chừa đều 24% lề ngắm cảnh bên trái và phải.
+  - Trên CSS responsive: Giới hạn `maxWidth: 55%`, căn giữa `left: 50%`, `transform: translateX(-50%)`, đảm bảo chừa đều 22% - 24% lề ngắm cảnh bên trái và phải.
 - **Chiều cao tiêu chuẩn:**
   - Thân tàu cao: **`36 - 51 px`** (tương ứng `14.3%` chiều cao canvas).
   - Phóng to hiển thị responsive: `clamp(36px, 11vh, 58px)`.
 - **Cấu trúc đoàn tàu:**
+  - Chuẩn 4 toa: `[Đầu máy] + [Toa khách 1] + [Toa khách 2] + [Đuôi tàu cabin]`.
   - Chuẩn 3 toa: `[Đầu máy] + [Toa khách giữa] + [Đuôi tàu cabin]`.
   - Biên độ nhún giảm chấn (Suspension micro-bounce): `0.6 px` (`Math.sin(animTime * 6) * 0.6`).
 - **Quy tắc bánh xe (Wheel Grounding):** Đáy các bánh xe phải chạm sát mép dưới cùng của ảnh PNG (cách viền đáy 1 - 2 px).
-- **File đèn đêm (Emissive Mask):** `train_lights_3car.png` (cùng kích thước với `train_body_3car.png`, nền trong suốt, chỉ chứa các ô kính cửa sổ toa tàu màu vàng hoặc cyan phát sáng).
+- **File đèn đêm (Emissive Mask):** `train_lights_4car.png` / `train_lights_3car.png` (cùng kích thước với `train_body`, nền trong suốt, chỉ chứa các ô kính cửa sổ toa tàu màu vàng hoặc cyan phát sáng).
 
 ---
 
@@ -109,8 +110,8 @@ public/assets/
 └── trains/
     └── templates/
         └── [id_doan_tau]/
-            ├── train_body_3car.png  # (Bắt buộc) Thân tàu 3 toa nền trong suốt
-            ├── train_lights_3car.png# (Bắt buộc) Lớp đèn cửa sổ phát sáng ban đêm
+            ├── train_body_4car.png  # (Khuyên dùng) Thân tàu 4 toa nền trong suốt (hoặc train_body_3car.png)
+            ├── train_lights_4car.png# (Khuyên dùng) Lớp đèn cửa sổ phát sáng ban đêm
             └── train_preview.png    # (Tùy chọn) Ảnh thu nhỏ hiển thị trong menu HUD
 ```
 
@@ -127,6 +128,12 @@ public/assets/
 >   "mgSpeed": 0.85,
 >   "mgScaleRatio": 1.0,
 >   "mgY": 0,
+>   "bgMirror": true,
+>   "sun": {
+>     "dawn": { "y": "46%", "size": 130 },
+>     "day": { "y": "12%", "size": 58 },
+>     "sunset": { "y": "44%", "size": 140 }
+>   },
 >   "skyPresets": {
 >     "dawn": ["#ff9a9e", "#fecfef", "#a1c4fd"],
 >     "day": ["#4facfe", "#00f2fe", "#e0f7fa"],
@@ -135,6 +142,12 @@ public/assets/
 >   }
 > }
 > ```
+> * **`bgMirror`** *(tùy chọn, mặc định `true`)*: Bật/tắt tính năng lật gương ngang background (`scaleX(-1)`) ở các panel xen kẽ để kéo dài hậu cảnh vô tận. Nếu đặt `false`, ảnh nền sẽ lặp xuôi chiều nguyên bản mà không bị đảo chiều.
+> * **`sun`** *(tùy chọn)*: Điều chỉnh độ cao (`y` / `top`), tọa độ ngang (`x` / `left`) và kích thước (`size` / `width` tính bằng pixel) của mặt trời tại các mốc thời gian:
+>   * `dawn`: Bình minh (mặc định: `y: "46%"`, `size: 130px`)
+>   * `day`: Ban trưa / giữa ngày (mặc định: `y: "12%"`, `size: 58px`)
+>   * `sunset`: Hoàng hôn (mặc định: `y: "44%"`, `size: 140px`)
+>   *(Cũng có thể khai báo dạng phẳng tiện lợi: `"sunDawnY": "40%"`, `"sunDawnSize": 120`, `"sunDayY": "10%"`, `"sunDaySize": 60`, `"sunSunsetY": "38%"`, `"sunSunsetSize": 150`)*.
 > * **`mgScaleRatio`** *(tùy chọn, mặc định `1.0`)*: Hệ số co dãn chiều cao của layer đường ray midground (ví dụ: `1.15` để tăng kích thước ray thêm 15%, hoặc `0.85` để thu nhỏ). Đoàn tàu sẽ tự động tính toán nâng/hạ để bánh xe luôn tiếp xúc chuẩn xác trên mặt ray thép.
 > * **`mgY`** *(tùy chọn, mặc định `0`)*: Độ lệch trục dọc Y của đường ray midground (nhập số pixel như `10`, `-15`, hoặc chuỗi CSS như `"10px"`, `"-2%"`). Khi đường ray nâng lên hoặc hạ xuống, thân tàu cũng sẽ dịch chuyển tương ứng theo trục Y để giữ độ bám khớp hoàn hảo.
 

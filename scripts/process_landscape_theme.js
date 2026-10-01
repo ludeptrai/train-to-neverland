@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
-import { generateRegistryFiles } from './scan_assets.js';
+import { generateRegistryFiles, createDefaultLandscapeMeta } from './scan_assets.js';
 
 /**
  * Thuật toán tách nền & chuẩn hóa Asset phong cảnh:
@@ -465,6 +465,19 @@ export async function processLandscapeFolder(folderPath) {
       .toFile(path.join(fullPath, 'midground_track.png'));
 
     console.log(`   ✅ Đã xuất dải ray nối ngang midground_track.png thành công!`);
+  }
+
+  // Tự động tạo meta.json nếu địa điểm mới chưa có
+  const metaPath = path.join(fullPath, 'meta.json');
+  if (!fs.existsSync(metaPath)) {
+    const dirName = path.basename(fullPath);
+    const defaultMeta = createDefaultLandscapeMeta(dirName);
+    try {
+      fs.writeFileSync(metaPath, JSON.stringify(defaultMeta, null, 2), 'utf-8');
+      console.log(`✨ [Auto Meta Generator] Đã tự động tạo file meta.json mặc định cho: ${dirName}`);
+    } catch (err) {
+      console.warn(`⚠️ Không thể tạo meta.json:`, err.message);
+    }
   }
 
   // Cập nhật lại hệ thống asset registry

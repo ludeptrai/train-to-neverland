@@ -74,9 +74,9 @@ Pixel art horizontal seamless panorama landscape of [ĐỊA DANH], 16-bit retro 
 Pixel art horizontal seamless side-scrolling tile of [LOẠI RAY: modern urban elevated concrete railway / rustic countryside track with wildflowers / coastal seawall track], 16-bit retro arcade aesthetic, flat 2D side elevation profile, twin steel rails on gravel ballast, upper 65% is pure solid white background with NO sky, flat horizontal rail line aligned 40px from bottom edge, seamless repeating left and right borders, crisp pixel art, sharp hard borders, no drop shadow, no border glow, no trains, isolated sprite asset --ar 5:1 --style raw --v 6.0
 ```
 
-### Prompt Đoàn tàu 3 Toa (`--ar 9:1`):
+### Prompt Đoàn tàu 4 Toa (`--ar 11:1`):
 ```text
-Pixel art side view of a 3-car modular train [LOẠI TÀU: Shinkansen / Steam locomotive / City metro], 16-bit arcade video game sprite, perfectly horizontal side-scrolling profile, exactly 1 locomotive engine, 1 passenger middle coach, 1 rear cab, flat wheels on invisible ground line, glowing yellow passenger windows, pure white background, uniform 108px sprite height, sharp borders, no drop shadow under wheels, zero ground shadow bleed --ar 9:1 --style raw --v 6.0
+Pixel art side view of a 4-car modular train [LOẠI TÀU: Shinkansen / Steam locomotive / City metro], 16-bit arcade video game sprite, perfectly horizontal side-scrolling profile, consisting of 1 front locomotive engine facing right, 2 middle passenger coaches, and 1 matching rear cab, connected by articulated gangways, flat wheels on invisible ground line, glowing yellow passenger windows, pure solid pitch black background #000000, uniform sprite height, sharp hard borders, no drop shadow under wheels, zero ground shadow bleed --ar 11:1 --style raw --v 6.0
 ```
 
 ### Negative Prompt (Loại trừ toàn diện):

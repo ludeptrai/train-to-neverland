@@ -22,6 +22,7 @@ function humanizeName(id) {
     hue: 'Cố Đô Huế',
     phuquoc: 'Đảo Ngọc Phú Quốc',
     hochiminhcity: 'TP. Hồ Chí Minh',
+    hagiang: 'Hà Giang',
     train_red_shinkansen: 'Tàu Shinkansen Đỏ Siêu Tốc',
     train_orange_bullet: 'Tàu Cao Tốc Cam Vàng',
     train_blue_metro: 'Tàu Điện Ngầm Xanh Lam',
@@ -43,6 +44,58 @@ function humanizeName(id) {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+/**
+ * Tạo nội dung meta.json chuẩn với các giá trị mặc định cho địa điểm mới
+ */
+export function createDefaultLandscapeMeta(id) {
+  const name = humanizeName(id);
+  return {
+    name,
+    subtitle: `Hành trình qua ga ${name}`,
+    location: "Việt Nam",
+    bgSpeed: 0.15,
+    mgSpeed: 0.85,
+    mgScaleRatio: 0.5,
+    mgY: 0,
+    bgMirror: true,
+    sun: {
+      dawn: {
+        y: "46%",
+        size: 130
+      },
+      day: {
+        y: "12%",
+        size: 58
+      },
+      sunset: {
+        y: "44%",
+        size: 140
+      }
+    },
+    skyPresets: {
+      dawn: [
+        "#fbc2eb",
+        "#a6c1ee"
+      ],
+      day: [
+        "#4facfe",
+        "#00f2fe",
+        "#e0f7fa"
+      ],
+      sunset: [
+        "#fa709a",
+        "#fee140",
+        "#f39c12"
+      ],
+      night: [
+        "#09203f",
+        "#1b2a4a",
+        "#2c3e50"
+      ]
+    }
+  };
 }
 
 /**
@@ -68,6 +121,14 @@ export function scanLandscapes() {
         meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
       } catch (e) {
         console.warn(`⚠️ Lỗi đọc ${metaPath}:`, e.message);
+      }
+    } else {
+      meta = createDefaultLandscapeMeta(dir);
+      try {
+        fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+        console.log(`✨ [Auto Meta Generator] Đã tự động tạo file meta.json mặc định cho địa điểm: ${dir}`);
+      } catch (err) {
+        console.warn(`⚠️ Không thể tạo file ${metaPath}:`, err.message);
       }
     }
 
@@ -147,6 +208,45 @@ export function scanLandscapes() {
       ? Number(meta.trainScaleRatio)
       : (meta.trainScale !== undefined ? Number(meta.trainScale) : undefined);
 
+    // Tham số bật/tắt lật gương background để kéo dài (default: true)
+    const bgMirror = meta.bgMirror !== undefined
+      ? Boolean(meta.bgMirror)
+      : (meta.mirrorBackground !== undefined ? Boolean(meta.mirrorBackground) : true);
+
+    // Tham số điều chỉnh độ cao/vị trí & kích thước mặt trời (dawn, day, sunset, night)
+    const rawSun = meta.sun || meta.celestial || {};
+    const hasSunConfig = Boolean(meta.sun || meta.celestial ||
+      meta.sunDawnY !== undefined || meta.sunDawnSize !== undefined ||
+      meta.sunDayY !== undefined || meta.sunDaySize !== undefined ||
+      meta.sunSunsetY !== undefined || meta.sunSunsetSize !== undefined ||
+      meta.sunNightY !== undefined || meta.sunNightSize !== undefined);
+
+    let sun = undefined;
+    if (hasSunConfig) {
+      sun = {
+        dawn: {
+          ...(rawSun.dawn || {}),
+          ...(meta.sunDawnY !== undefined ? { y: meta.sunDawnY } : {}),
+          ...(meta.sunDawnSize !== undefined ? { size: Number(meta.sunDawnSize) } : {}),
+        },
+        day: {
+          ...(rawSun.day || {}),
+          ...(meta.sunDayY !== undefined ? { y: meta.sunDayY } : {}),
+          ...(meta.sunDaySize !== undefined ? { size: Number(meta.sunDaySize) } : {}),
+        },
+        sunset: {
+          ...(rawSun.sunset || {}),
+          ...(meta.sunSunsetY !== undefined ? { y: meta.sunSunsetY } : {}),
+          ...(meta.sunSunsetSize !== undefined ? { size: Number(meta.sunSunsetSize) } : {}),
+        },
+        night: {
+          ...(rawSun.night || {}),
+          ...(meta.sunNightY !== undefined ? { y: meta.sunNightY } : {}),
+          ...(meta.sunNightSize !== undefined ? { size: Number(meta.sunNightSize) } : {}),
+        },
+      };
+    }
+
     const skyPresets = meta.skyPresets || {
       dawn: ['#fbc2eb', '#a6c1ee'],
       day: ['#4facfe', '#00f2fe', '#e0f7fa'],
@@ -161,12 +261,14 @@ export function scanLandscapes() {
       location,
       bgSpeed,
       mgSpeed,
+      bgMirror,
       ...(bgScaleRatio !== undefined ? { bgScaleRatio } : {}),
       ...(bgY !== undefined ? { bgY } : {}),
       ...(mgScaleRatio !== undefined ? { mgScaleRatio } : {}),
       ...(mgY !== undefined ? { mgY } : {}),
       ...(trainY !== undefined ? { trainY } : {}),
       ...(trainScaleRatio !== undefined ? { trainScaleRatio } : {}),
+      ...(sun ? { sun } : {}),
       backgroundUrl: bgUrl,
       ...(bgLightsUrl ? { backgroundLightsUrl: bgLightsUrl } : {}),
       midgroundUrl: mgUrl,
@@ -206,11 +308,14 @@ export function scanTrains() {
 
     const files = fs.readdirSync(dirPath);
 
-    // Ưu tiên bản 3 toa cân bằng train_body_3car.png, nếu không có thì dùng train_body.png
+    // Ưu tiên bản 4 toa cân bằng train_body_4car.png, sau đó train_body_3car.png, nếu không có thì dùng train_body.png
     let bodyUrl = '';
     let carCount = meta.carCount || 4;
 
-    if (files.includes('train_body_3car.png')) {
+    if (files.includes('train_body_4car.png')) {
+      bodyUrl = `./assets/trains/templates/${dir}/train_body_4car.png`;
+      carCount = 4;
+    } else if (files.includes('train_body_3car.png')) {
       bodyUrl = `./assets/trains/templates/${dir}/train_body_3car.png`;
       carCount = 3;
     } else if (files.includes('train_body.png')) {
@@ -221,7 +326,9 @@ export function scanTrains() {
 
     // Tìm file đèn cửa sổ
     let lightsUrl = undefined;
-    if (files.includes('train_lights_3car.png')) {
+    if (files.includes('train_lights_4car.png')) {
+      lightsUrl = `./assets/trains/templates/${dir}/train_lights_4car.png`;
+    } else if (files.includes('train_lights_3car.png')) {
       lightsUrl = `./assets/trains/templates/${dir}/train_lights_3car.png`;
     } else if (files.includes('train_lights.png')) {
       lightsUrl = `./assets/trains/templates/${dir}/train_lights.png`;

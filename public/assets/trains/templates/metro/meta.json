@@ -1,0 +1,9 @@
+{
+  "id": "metro",
+  "name": "Metro",
+  "description": "Đoàn tàu Metro thế hệ mới vận hành êm ái trên hành trình",
+  "carCount": 4,
+  "wheelType": "standard",
+  "hasSmoke": false,
+  "hasPantograph": false
+}

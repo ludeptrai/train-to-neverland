@@ -67,13 +67,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <div
       style={{
-        position: 'absolute',
-        top: '20px',
-        left: '24px',
         display: 'flex',
+        alignItems: 'center',
         flexWrap: 'wrap',
         gap: '8px',
-        zIndex: 50,
+        zIndex: 100,
+        overflow: 'visible',
       }}
     >
       {/* Weather toggle button */}
@@ -119,6 +118,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               flexDirection: 'column',
               gap: '4px',
               boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+              zIndex: 1000,
             }}
           >
             {scenes.map((s) => (
@@ -184,6 +184,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               flexDirection: 'column',
               gap: '6px',
               boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
+              zIndex: 1000,
             }}
           >
             <div style={{ padding: '4px 8px', fontSize: '10px', color: '#ffd166', letterSpacing: '1px' }}>

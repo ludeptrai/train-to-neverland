@@ -25,6 +25,13 @@ class AudioManager {
   private trainAudioElement: HTMLAudioElement | null = null;
   private trainMediaSourceNode: MediaElementAudioSourceNode | null = null;
   private isTrainMediaConnected = false;
+  // Tunnel sound element & Web Audio Gain
+  private tunnelAudioElement: HTMLAudioElement | null = null;
+  private tunnelMediaSourceNode: MediaElementAudioSourceNode | null = null;
+  private tunnelGain: GainNode | null = null;
+  private isTunnelMediaConnected = false;
+  private isTunneling = false;
+  private tunnelFadeIntervalId: number | null = null;
   private rainNode: AudioNode | null = null;
   private windNode: AudioNode | null = null;
   private natureIntervalId: number | null = null;
@@ -154,6 +161,7 @@ class AudioManager {
 
     // 5. Start background procedural ambiance & train sound
     this.setupTrainAudio();
+    this.setupTunnelAudio();
     this.startRainSynthesis();
     this.startWindSynthesis();
     this.startNatureSynthesis();
@@ -471,6 +479,121 @@ class AudioManager {
     }
   }
 
+  // --- Train Tunnel SFX from /assets/sfx/train_tunnel.mp3 ---
+  private setupTunnelAudio() {
+    if (!this.ctx || !this.masterGain) return;
+
+    if (!this.tunnelAudioElement) {
+      this.tunnelAudioElement = new Audio();
+      this.tunnelAudioElement.crossOrigin = 'anonymous';
+      this.tunnelAudioElement.loop = true;
+      this.tunnelAudioElement.src = './assets/sfx/train_tunnel.mp3';
+
+      try {
+        this.tunnelGain = this.ctx.createGain();
+        this.tunnelGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.tunnelMediaSourceNode = this.ctx.createMediaElementSource(this.tunnelAudioElement);
+        this.tunnelMediaSourceNode.connect(this.tunnelGain);
+        this.tunnelGain.connect(this.masterGain);
+        this.isTunnelMediaConnected = true;
+      } catch {
+        this.isTunnelMediaConnected = false;
+        this.tunnelAudioElement.volume = 0;
+      }
+    }
+  }
+
+  /**
+   * Kích hoạt âm thanh khi tàu chui vào hầm (to dần trong fadeDuration giây - mặc định 0.5s)
+   */
+  public enterTunnel(fadeDuration = 0.5) {
+    this.init();
+    this.isTunneling = true;
+    if (!this.tunnelAudioElement) {
+      this.setupTunnelAudio();
+    }
+    if (!this.tunnelAudioElement) return;
+
+    if (this.tunnelFadeIntervalId !== null) {
+      clearInterval(this.tunnelFadeIntervalId);
+      this.tunnelFadeIntervalId = null;
+    }
+
+    const targetVol = Math.min(1.0, (this.settings.trainVolume || 0.6) * 1.25);
+
+    if (this.isTunnelMediaConnected && this.ctx && this.tunnelGain) {
+      const now = this.ctx.currentTime;
+      this.tunnelGain.gain.cancelScheduledValues(now);
+      this.tunnelGain.gain.setValueAtTime(this.tunnelGain.gain.value, now);
+      this.tunnelGain.gain.linearRampToValueAtTime(targetVol, now + fadeDuration);
+    } else {
+      const startVol = this.tunnelAudioElement.volume;
+      const targetElementVol = targetVol * this.settings.masterVolume;
+      const startTime = performance.now();
+      this.tunnelFadeIntervalId = window.setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        const progress = Math.min(1, elapsed / fadeDuration);
+        if (this.tunnelAudioElement) {
+          this.tunnelAudioElement.volume = startVol + (targetElementVol - startVol) * progress;
+        }
+        if (progress >= 1 && this.tunnelFadeIntervalId !== null) {
+          clearInterval(this.tunnelFadeIntervalId);
+          this.tunnelFadeIntervalId = null;
+        }
+      }, 25);
+    }
+
+    this.tunnelAudioElement.currentTime = 0;
+    this.tunnelAudioElement.play().catch(() => {});
+  }
+
+  /**
+   * Giảm dần âm thanh hầm khi tàu ra khỏi hầm rồi tắt hẳn
+   */
+  public exitTunnel(fadeDuration = 0.8) {
+    this.isTunneling = false;
+    if (!this.tunnelAudioElement) return;
+
+    if (this.tunnelFadeIntervalId !== null) {
+      clearInterval(this.tunnelFadeIntervalId);
+      this.tunnelFadeIntervalId = null;
+    }
+
+    if (this.isTunnelMediaConnected && this.ctx && this.tunnelGain) {
+      const now = this.ctx.currentTime;
+      this.tunnelGain.gain.cancelScheduledValues(now);
+      this.tunnelGain.gain.setValueAtTime(this.tunnelGain.gain.value, now);
+      this.tunnelGain.gain.linearRampToValueAtTime(0, now + fadeDuration);
+
+      setTimeout(() => {
+        if (!this.isTunneling && this.tunnelAudioElement) {
+          this.tunnelAudioElement.pause();
+          this.tunnelAudioElement.currentTime = 0;
+        }
+      }, fadeDuration * 1000 + 50);
+    } else {
+      const startVol = this.tunnelAudioElement.volume;
+      const startTime = performance.now();
+      this.tunnelFadeIntervalId = window.setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        const progress = Math.min(1, elapsed / fadeDuration);
+        if (this.tunnelAudioElement) {
+          this.tunnelAudioElement.volume = Math.max(0, startVol * (1 - progress));
+        }
+        if (progress >= 1) {
+          if (this.tunnelFadeIntervalId !== null) {
+            clearInterval(this.tunnelFadeIntervalId);
+            this.tunnelFadeIntervalId = null;
+          }
+          if (this.tunnelAudioElement && !this.isTunneling) {
+            this.tunnelAudioElement.pause();
+            this.tunnelAudioElement.currentTime = 0;
+          }
+        }
+      }, 25);
+    }
+  }
+
   // --- Procedural Rain Noise ---
   private startRainSynthesis() {
     if (!this.ctx || !this.rainGain) return;
@@ -701,6 +824,9 @@ class AudioManager {
         if (!this.isTrainMediaConnected && this.trainAudioElement) {
           this.trainAudioElement.volume = clamped * this.settings.trainVolume;
         }
+        if (!this.isTunnelMediaConnected && this.tunnelAudioElement) {
+          this.tunnelAudioElement.volume = clamped * this.settings.trainVolume * 1.25;
+        }
         break;
       case 'musicVolume':
         if (this.settings.isPlayingMusic) {
@@ -717,6 +843,14 @@ class AudioManager {
             this.trainAudioElement.play().catch(() => {});
           } else if (clamped === 0 && !this.trainAudioElement.paused) {
             this.trainAudioElement.pause();
+          }
+        }
+        if (this.isTunneling) {
+          const targetTunnelVol = Math.min(1.0, clamped * 1.25);
+          if (this.isTunnelMediaConnected && this.tunnelGain) {
+            this.tunnelGain.gain.setValueAtTime(targetTunnelVol, now);
+          } else if (this.tunnelAudioElement) {
+            this.tunnelAudioElement.volume = targetTunnelVol * this.settings.masterVolume;
           }
         }
         break;
@@ -752,6 +886,14 @@ class AudioManager {
       try {
         (this.vinylNoiseNode as AudioScheduledSourceNode).stop();
       } catch {}
+    }
+    if (this.tunnelFadeIntervalId !== null) {
+      clearInterval(this.tunnelFadeIntervalId);
+      this.tunnelFadeIntervalId = null;
+    }
+    if (this.tunnelAudioElement) {
+      this.tunnelAudioElement.pause();
+      this.tunnelAudioElement.src = '';
     }
     if (this.trainAudioElement) {
       this.trainAudioElement.pause();

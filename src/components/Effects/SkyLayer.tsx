@@ -1,11 +1,13 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { TimeOfDay } from '../../types';
+import { TimeOfDay, SceneConfig } from '../../types';
 import { LightingTheme, resolveTimeOfDay } from '../../engines/LightingManager';
+import { PixelSun, PixelCelestialType } from './PixelSun';
 
 interface SkyLayerProps {
   timeOfDay: TimeOfDay;
   lighting: LightingTheme;
   isPaused?: boolean;
+  scene?: SceneConfig;
 }
 
 interface ActiveSkyEvent {
@@ -23,65 +25,72 @@ export const SkyLayer: React.FC<SkyLayerProps> = ({
   timeOfDay,
   lighting: _lighting,
   isPaused = false,
+  scene,
 }) => {
   const resolvedTime = useMemo(() => resolveTimeOfDay(timeOfDay), [timeOfDay]);
 
-interface CelestialItemConfig {
-  type: 'sun_dawn' | 'sun_noon' | 'sun_sunset' | 'moon_crescent';
-  src: string;
-  top: string;
-  left: string;
-  width: number;
-  filter: string;
-  opacity: number;
-}
-
-const getCelestialConfig = (resolvedTime: 'dawn' | 'day' | 'sunset' | 'night'): CelestialItemConfig => {
-  switch (resolvedTime) {
-    case 'dawn':
-      return {
-        type: 'sun_dawn',
-        src: './assets/sky/celestial/sun_dawn.png',
-        top: '47%', // Nằm sát đường chân trời, nhô lên sau rặng núi/hòn đảo
-        left: '72%',
-        width: 115, // Mặt trời bình minh to lớn, hùng vĩ
-        filter: 'drop-shadow(0 0 32px rgba(255, 175, 120, 0.88)) drop-shadow(0 0 60px rgba(255, 140, 80, 0.5))',
-        opacity: 0.96,
-      };
-    case 'day':
-      return {
-        type: 'sun_noon',
-        src: './assets/sky/celestial/sun_noon.png',
-        top: '12%',
-        left: '68%',
-        width: 44, // Giữa trưa trên cao nhỏ gọn, sáng chói
-        filter: 'drop-shadow(0 0 20px rgba(255, 225, 110, 0.85))',
-        opacity: 1,
-      };
-    case 'sunset':
-      return {
-        type: 'sun_sunset',
-        src: './assets/sky/celestial/sun_sunset.png',
-        top: '45%', // Nằm thấp sát chân trời, lặn dần sau đường chân trời
-        left: '24%',
-        width: 125, // Mặt trời hoàng hôn to rực rỡ
-        filter: 'drop-shadow(0 0 36px rgba(255, 95, 40, 0.92)) drop-shadow(0 0 65px rgba(230, 60, 20, 0.55))',
-        opacity: 0.96,
-      };
-    case 'night':
-      return {
-        type: 'moon_crescent',
-        src: './assets/sky/celestial/moon_crescent.png',
-        top: '14%',
-        left: '78%',
-        width: 34,
-        filter: 'drop-shadow(0 0 14px rgba(220, 230, 255, 0.75))',
-        opacity: 0.92,
-      };
+  interface CelestialItemConfig {
+    time: PixelCelestialType;
+    top: string;
+    left: string;
+    width: number;
+    filter: string;
+    opacity: number;
   }
-};
 
-type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
+  const formatCoord = (val: number | string | undefined, defaultVal: string): string => {
+    if (val === undefined || val === null) return defaultVal;
+    if (typeof val === 'number') {
+      if (val <= 1 && val > 0) return `${val * 100}%`;
+      return `${val}%`;
+    }
+    return String(val);
+  };
+
+  const getCelestialConfig = (resolvedTime: 'dawn' | 'day' | 'sunset' | 'night'): CelestialItemConfig => {
+    const sunOverride = scene?.sun?.[resolvedTime];
+
+    switch (resolvedTime) {
+      case 'dawn':
+        return {
+          time: 'dawn',
+          top: formatCoord(sunOverride?.top ?? sunOverride?.y, '46%'), // Nằm sát đường chân trời, nhô lên sau rặng núi/hòn đảo
+          left: formatCoord(sunOverride?.left ?? sunOverride?.x, '72%'),
+          width: Number(sunOverride?.width ?? sunOverride?.size ?? 130), // Mặt trời bình minh pixel art
+          filter: 'drop-shadow(0 0 28px rgba(255, 175, 120, 0.8)) drop-shadow(0 0 52px rgba(255, 140, 80, 0.45))',
+          opacity: 0.98,
+        };
+      case 'day':
+        return {
+          time: 'day',
+          top: formatCoord(sunOverride?.top ?? sunOverride?.y, '12%'),
+          left: formatCoord(sunOverride?.left ?? sunOverride?.x, '68%'),
+          width: Number(sunOverride?.width ?? sunOverride?.size ?? 58), // Mặt trời giữa trưa pixel art
+          filter: 'drop-shadow(0 0 18px rgba(255, 230, 90, 0.85))',
+          opacity: 1,
+        };
+      case 'sunset':
+        return {
+          time: 'sunset',
+          top: formatCoord(sunOverride?.top ?? sunOverride?.y, '44%'), // Nằm thấp sát chân trời, lặn dần sau đường chân trời
+          left: formatCoord(sunOverride?.left ?? sunOverride?.x, '24%'),
+          width: Number(sunOverride?.width ?? sunOverride?.size ?? 140), // Mặt trời hoàng hôn pixel art
+          filter: 'drop-shadow(0 0 32px rgba(255, 95, 40, 0.88)) drop-shadow(0 0 60px rgba(230, 60, 20, 0.5))',
+          opacity: 0.98,
+        };
+      case 'night':
+        return {
+          time: 'night',
+          top: formatCoord(sunOverride?.top ?? sunOverride?.y, '14%'),
+          left: formatCoord(sunOverride?.left ?? sunOverride?.x, '78%'),
+          width: Number(sunOverride?.width ?? sunOverride?.size ?? 38),
+          filter: 'drop-shadow(0 0 14px rgba(220, 230, 255, 0.75))',
+          opacity: 0.92,
+        };
+    }
+  };
+
+  type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
 
   // =========================================================================
   // 1. THIÊN THỂ: HIỆU ỨNG LẶN THẲNG ĐỨNG VÀ MỌC THẲNG ĐỨNG KHI ĐỔI THỜI ĐIỂM
@@ -92,6 +101,13 @@ type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
   const [celestialPhase, setCelestialPhase] = useState<CelestialPhase>('idle');
   const prevResolvedTimeRef = useRef(resolvedTime);
   const celestialTimeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+
+  // Tự động cập nhật vị trí/kích thước khi cấu hình cảnh thay đổi
+  useEffect(() => {
+    if (celestialPhase === 'idle') {
+      setDisplayedCelestial(getCelestialConfig(resolvedTime));
+    }
+  }, [scene?.sun, resolvedTime]);
 
   useEffect(() => {
     if (prevResolvedTimeRef.current === resolvedTime) return;
@@ -134,23 +150,33 @@ type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
   // 2. MÂY THƯA THỚT (Chỉ 2 đám mây nhỏ nhẹ, thanh bình, không bị dày đặc)
   // =========================================================================
   const cloudVariants = useMemo(() => {
-    if (resolvedTime === 'sunset') {
-      return {
-        cloud1: './assets/sky/clouds/cloud_sunset_rose.png',
-        cloud2: './assets/sky/clouds/cloud_sunset_golden.png',
-      };
+    switch (resolvedTime) {
+      case 'sunset':
+        return {
+          cloud1: './assets/sky/clouds/cloud_05_large.png',
+          cloud2: './assets/sky/clouds/cloud_14_huge.png',
+          filter: 'sepia(0.55) saturate(2.2) hue-rotate(-25deg) brightness(0.95)',
+        };
+      case 'night':
+        return {
+          cloud1: './assets/sky/clouds/cloud_04_large.png',
+          cloud2: './assets/sky/clouds/cloud_09_huge.png',
+          filter: 'brightness(0.38) saturate(0.6) hue-rotate(15deg) contrast(1.15)',
+        };
+      case 'dawn':
+        return {
+          cloud1: './assets/sky/clouds/cloud_10_medium.png',
+          cloud2: './assets/sky/clouds/cloud_16_large.png',
+          filter: 'sepia(0.25) saturate(1.4) hue-rotate(-15deg) brightness(1.02)',
+        };
+      case 'day':
+      default:
+        return {
+          cloud1: './assets/sky/clouds/cloud_06_small.png',
+          cloud2: './assets/sky/clouds/cloud_20_large.png',
+          filter: 'brightness(1.05) contrast(1.02)',
+        };
     }
-    if (resolvedTime === 'night') {
-      return {
-        cloud1: './assets/sky/clouds/cloud_cumulus_small.png',
-        cloud2: './assets/sky/clouds/cloud_night_slate.png',
-      };
-    }
-    // Dawn & Day
-    return {
-      cloud1: './assets/sky/clouds/cloud_cumulus_small.png',
-      cloud2: './assets/sky/clouds/cloud_stratus_wide.png',
-    };
   }, [resolvedTime]);
 
   // =========================================================================
@@ -345,16 +371,7 @@ type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
               pointerEvents: 'none',
             }}
           >
-            <img
-              src={displayedCelestial.src}
-              alt={displayedCelestial.type}
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                imageRendering: 'pixelated',
-              }}
-            />
+            <PixelSun time={displayedCelestial.time} />
           </div>
         );
       })()}
@@ -376,7 +393,13 @@ type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
         <img
           src={cloudVariants.cloud1}
           alt="Cloud gentle 1"
-          style={{ width: '100%', height: 'auto', imageRendering: 'pixelated' }}
+          style={{
+            width: '100%',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            filter: cloudVariants.filter,
+            transition: 'filter 1.5s ease',
+          }}
         />
       </div>
 
@@ -396,7 +419,13 @@ type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
         <img
           src={cloudVariants.cloud2}
           alt="Cloud gentle 2"
-          style={{ width: '100%', height: 'auto', imageRendering: 'pixelated' }}
+          style={{
+            width: '100%',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            filter: cloudVariants.filter,
+            transition: 'filter 1.5s ease',
+          }}
         />
       </div>
 

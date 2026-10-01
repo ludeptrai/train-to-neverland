@@ -101,7 +101,7 @@ export const PomodoroTimer: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            zIndex: 60,
+            zIndex: 1000,
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

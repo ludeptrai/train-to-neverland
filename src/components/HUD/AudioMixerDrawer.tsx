@@ -88,7 +88,7 @@ export const AudioMixerDrawer: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '14px',
-            zIndex: 60,
+            zIndex: 1000,
           }}
         >
           {/* Header */}
@@ -361,10 +361,10 @@ export const AudioMixerDrawer: React.FC = () => {
           audioManager.init();
           setIsOpen(!isOpen);
         }}
-        title="Bật/Mở bàn trộn âm thanh và bộ lọc Realtime DSP"
+        title="Bật/Mở bàn trộn âm thanh"
       >
         <Sliders size={14} color="#ffd166" />
-        <span>ÂM THANH & DSP</span>
+        <span>ÂM THANH</span>
       </PixelButton>
 
       <PixelButton

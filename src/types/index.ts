@@ -4,6 +4,22 @@ export type WeatherType = 'clear' | 'rain' | 'snow' | 'sakura';
 
 export type DSPPreset = 'normal' | 'lofi' | 'bit8' | 'vinyl' | 'underwater' | 'telephone' | 'dreamy';
 
+export interface SunTimeConfig {
+  y?: number | string; // Vị trí trục dọc/độ cao (ví dụ: "46%" hoặc 46)
+  top?: number | string; // Bí danh cho y
+  x?: number | string; // Vị trí trục ngang (ví dụ: "72%" hoặc 72)
+  left?: number | string; // Bí danh cho x
+  size?: number; // Kích thước pixel (ví dụ: 130)
+  width?: number; // Bí danh cho size
+}
+
+export interface SunConfig {
+  dawn?: SunTimeConfig;
+  day?: SunTimeConfig;
+  sunset?: SunTimeConfig;
+  night?: SunTimeConfig;
+}
+
 export interface SceneConfig {
   id: string;
   name: string;
@@ -13,10 +29,12 @@ export interface SceneConfig {
   mgSpeed: number; // 0.8 - 1.2
   bgScaleRatio?: number; // Tỉ lệ co dãn background (mặc định 1.0 = 100% chiều cao khung hình)
   bgY?: number | string; // Vị trí trục Y của background (px hoặc %, mặc định 0)
+  bgMirror?: boolean; // Bật/tắt tính năng đảo ngược background để kéo dài (mặc định: true)
   mgScaleRatio?: number; // Tỉ lệ co dãn midground (mặc định 1.0 = 32% chiều cao khung hình)
   mgY?: number | string; // Vị trí trục Y của midground (px hoặc %, mặc định 0)
   trainY?: number | string; // Vị trí trục Y của đoàn tàu (độc lập với midground, mặc định 0)
   trainScaleRatio?: number; // Tỉ lệ phóng to/thu nhỏ đoàn tàu (mặc định 1.0)
+  sun?: SunConfig; // Cấu hình độ cao và kích thước mặt trời theo thời điểm (dawn, day, sunset, night)
   backgroundUrl: string;
   backgroundLightsUrl?: string;
   midgroundUrl: string;
