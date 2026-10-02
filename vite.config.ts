@@ -47,8 +47,13 @@ function assetRegistryPlugin(): Plugin {
       // Quét và cập nhật danh sách ngay khi khởi động dev server
       generateRegistryFiles();
 
-      // Tự động theo dõi các thư mục asset
-      const watchPaths = ['public/assets/landscapes', 'public/assets/trains/templates', 'public/assets/music'];
+      // Tự động theo dõi các thư mục asset & file quản lý tên tập trung
+      const watchPaths = [
+        'public/assets/landscapes',
+        'public/assets/trains',
+        'public/assets/music',
+        'src/config/names.json',
+      ];
       server.watcher.add(watchPaths);
 
       // Bắt lỗi EBUSY / file lock trên Windows để không làm sập server
@@ -98,8 +103,9 @@ function assetRegistryPlugin(): Plugin {
         const norm = filePath.replace(/\\/g, '/');
         if (
           norm.includes('public/assets/landscapes') ||
-          norm.includes('public/assets/trains/templates') ||
-          norm.includes('public/assets/music')
+          norm.includes('public/assets/trains') ||
+          norm.includes('public/assets/music') ||
+          norm.includes('src/config/names.json')
         ) {
           generateRegistryFiles();
           server.ws.send({ type: 'full-reload' });

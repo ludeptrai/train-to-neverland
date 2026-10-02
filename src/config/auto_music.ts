@@ -29,11 +29,5 @@ export const MUSIC_TRACKS: AudioTrack[] = [
     "title": "Khúc Dương Cầm Gió Thoảng (ゆったりピアノ曲)",
     "artist": "MusMus Studio (風)",
     "url": "./assets/music/風 - ゆったりピアノ曲【音楽素材MusMus】.mp3"
-  },
-  {
-    "id": "synth_tokyo_sunset",
-    "title": "Tokyo Sunset Ambient Chords",
-    "artist": "Neverland Lo-Fi Synthesizer",
-    "url": "procedural"
   }
 ];

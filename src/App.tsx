@@ -8,8 +8,11 @@ import { WeatherCanvas } from './engines/WeatherCanvas';
 import { HeaderBar } from './components/HUD/HeaderBar';
 import { PomodoroTimer } from './components/HUD/PomodoroTimer';
 import { AudioMixerDrawer } from './components/HUD/AudioMixerDrawer';
+import { JourneyStatsModal } from './components/HUD/JourneyStatsModal';
+import { FeedbackDonateModal } from './components/HUD/FeedbackDonateModal';
 import { ZenModeToggle } from './components/HUD/ZenModeToggle';
 import { audioManager } from './engines/AudioManager';
+import { analyticsService } from './services/AnalyticsService';
 
 const VALID_TIMES: TimeOfDay[] = ['dawn', 'day', 'sunset', 'night', 'auto'];
 const VALID_WEATHERS: WeatherType[] = ['clear', 'rain', 'snow', 'sakura'];
@@ -86,7 +89,9 @@ export const App: React.FC = () => {
           // Advance to next station
           setCurrentScene((prevScene) => {
             const idx = SCENES.findIndex((s) => s.id === prevScene.id);
-            return SCENES[(idx + 1) % SCENES.length];
+            const nextScene = SCENES[(idx + 1) % SCENES.length];
+            analyticsService.recordSceneChange(nextScene.id, nextScene.name, prevScene.id);
+            return nextScene;
           });
           return 0;
         }
@@ -157,8 +162,22 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Khởi tạo phiên lữ khách lên hệ thống thống kê ngay khi vừa bước lên tàu
+  useEffect(() => {
+    analyticsService.initSession(currentScene.id, currentScene.name, weather);
+  }, []);
+
+  // Đồng bộ trạng thái âm thanh & thời tiết vào analytics
+  useEffect(() => {
+    const unsub = audioManager.subscribe((settings) => {
+      analyticsService.updateContext(weather, !settings.isMuted);
+    });
+    return unsub;
+  }, [weather]);
+
   // Handle manual scene switch (resets progress)
   const handleSceneChange = (scene: SceneConfig) => {
+    analyticsService.recordSceneChange(scene.id, scene.name, currentScene.id);
     setCurrentScene(scene);
     setTourProgress(0);
   };
@@ -170,6 +189,7 @@ export const App: React.FC = () => {
   // When weather changes, naturally harmonize ambient rain sound
   const handleWeatherChange = (newWeather: WeatherType) => {
     setWeather(newWeather);
+    analyticsService.updateContext(newWeather, true);
     if (newWeather === 'rain') {
       audioManager.setChannelVolume('rainVolume', 0.65);
     } else {
@@ -220,23 +240,29 @@ export const App: React.FC = () => {
     };
   }, [currentScene.id]);
 
-  // Auto-unlock audio engine on first user interaction
+  // Auto-unlock audio engine on page load or first user interaction
   useEffect(() => {
+    // Kích hoạt phát nhạc ngay khi vừa vào trang web
+    audioManager.init();
+
     const unlockAudio = () => {
       audioManager.init();
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('keydown', unlockAudio);
-      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio, { capture: true });
+      window.removeEventListener('keydown', unlockAudio, { capture: true });
+      window.removeEventListener('touchstart', unlockAudio, { capture: true });
+      window.removeEventListener('pointerdown', unlockAudio, { capture: true });
     };
 
-    window.addEventListener('click', unlockAudio);
-    window.addEventListener('keydown', unlockAudio);
-    window.addEventListener('touchstart', unlockAudio);
+    window.addEventListener('click', unlockAudio, { capture: true });
+    window.addEventListener('keydown', unlockAudio, { capture: true });
+    window.addEventListener('touchstart', unlockAudio, { capture: true });
+    window.addEventListener('pointerdown', unlockAudio, { capture: true });
 
     return () => {
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('keydown', unlockAudio);
-      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio, { capture: true });
+      window.removeEventListener('keydown', unlockAudio, { capture: true });
+      window.removeEventListener('touchstart', unlockAudio, { capture: true });
+      window.removeEventListener('pointerdown', unlockAudio, { capture: true });
     };
   }, []);
 
@@ -247,6 +273,8 @@ export const App: React.FC = () => {
 
       if (e.key.toLowerCase() === 'z') {
         setIsZenMode((prev) => !prev);
+      } else if (e.key.toLowerCase() === 'm') {
+        audioManager.toggleMute();
       } else if (e.code === 'Space') {
         e.preventDefault();
         setIsPaused((prev) => !prev);
@@ -268,163 +296,154 @@ export const App: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        padding: '12px',
+        justifyContent: 'center', // Căn giữa toàn bộ cụm sát nhau
+        gap: '6px', // Sát mép khung hình
+        padding: '8px',
         boxSizing: 'border-box',
       }}
     >
       {/* 
-        Cinema Letterbox Stage (Pure Responsive 21:9 Viewport)
-        Lớp bao ngoài: overflow: visible để các popup/dropdown của button thoải mái hiển thị ra ngoài khung cảnh!
+        1. CỤM NÚT ĐIỀU KHIỂN NẰM SÁT MÉP TRÊN CỦA KHUNG HÌNH
       */}
-      <div
+      <header
+        id="hud-controls-container"
         style={{
-          position: 'relative',
-          width: 'min(98vw, calc((100vh - 100px) * (21 / 9)))',
-          height: 'min(calc(98vw * (9 / 21)), calc(100vh - 100px))',
-          aspectRatio: '21 / 9',
-          boxShadow: '0 0 80px rgba(0, 0, 0, 0.95)',
-          overflow: 'visible', // Cho phép các popup của button hiện ra ngoài khung cảnh
-          zIndex: 20,
+          width: 'min(98vw, calc((100vh - 105px) * (21 / 9)))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+          zIndex: 100,
+          minHeight: '34px',
         }}
       >
-        {/* 1. KHUNG CẢNH NGHỆ THUẬT (Chỉ khung này có overflow: hidden để cắt các lớp parallax cuộn vô tận) */}
+        {/* Cụm nút chuyển đổi bên trái (Địa điểm, Tàu, Thời tiết, Thời điểm, Tự chuyển ga) */}
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            overflow: 'hidden',
-            borderRadius: '8px',
-            backgroundColor: '#0b0c10',
-            zIndex: 1,
-          }}
-        >
-          <ParallaxEngine
-            scene={currentScene}
-            train={currentTrain}
-            lighting={lighting}
-            timeOfDay={timeOfDay}
-            isPaused={isPaused}
-          />
-
-          {/* Weather Particles Canvas (Rain, Snow, Sakura, Sun specks) */}
-          <WeatherCanvas weather={weather} />
-
-          {/* Auto-Tour Progress Bar (Slow Rail style) */}
-          {isAutoTour && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: '100%',
-                height: '3px',
-                backgroundColor: 'rgba(0, 0, 0, 0.45)',
-                zIndex: 48,
-                pointerEvents: 'none',
-              }}
-            >
-              <div
-                style={{
-                  width: `${tourProgress}%`,
-                  height: '100%',
-                  backgroundColor: '#edb08f',
-                  boxShadow: '0 0 10px rgba(237, 176, 143, 0.85)',
-                  transition: 'width 0.2s linear',
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 2. GOM HẾT CÁC NÚT LẠI TRONG 1 DIV ĐỂ DỄ CĂN CHỈNH (overflow: visible) */}
-        <div
-          id="hud-controls-container"
-          style={{
-            position: 'absolute',
-            top: '16px',
-            left: '20px',
-            right: '20px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '8px',
-            zIndex: 100,
-            overflow: 'visible',
-            pointerEvents: 'none',
+            opacity: isZenMode ? 0 : 1,
+            pointerEvents: isZenMode ? 'none' : 'auto',
+            transition: 'opacity 0.3s ease',
           }}
         >
-          {/* Cụm nút chuyển đổi (Địa điểm, Tàu, Thời tiết, Thời điểm, Tự chuyển ga) */}
+          <HeaderBar
+            weather={weather}
+            onWeatherChange={handleWeatherChange}
+            timeOfDay={timeOfDay}
+            onTimeOfDayChange={setTimeOfDay}
+            currentScene={currentScene}
+            onSceneChange={handleSceneChange}
+            scenes={SCENES}
+            currentTrain={currentTrain}
+            onTrainChange={setCurrentTrain}
+            trains={TRAINS}
+            isAutoTour={isAutoTour}
+            onToggleAutoTour={() => setIsAutoTour(!isAutoTour)}
+          />
+        </div>
+
+        {/* Cụm nút công cụ bên phải (Pomodoro, Audio Mixer, Zen Mode Toggle) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              flexWrap: 'wrap',
               gap: '8px',
               opacity: isZenMode ? 0 : 1,
               pointerEvents: isZenMode ? 'none' : 'auto',
-              transition: 'opacity 0.35s ease',
-              overflow: 'visible',
+              transition: 'opacity 0.3s ease',
             }}
           >
-            <HeaderBar
-              weather={weather}
-              onWeatherChange={handleWeatherChange}
-              timeOfDay={timeOfDay}
-              onTimeOfDayChange={setTimeOfDay}
+            <PomodoroTimer />
+            <AudioMixerDrawer />
+            <JourneyStatsModal
               currentScene={currentScene}
-              onSceneChange={handleSceneChange}
-              scenes={SCENES}
               currentTrain={currentTrain}
-              onTrainChange={setCurrentTrain}
-              trains={TRAINS}
-              isAutoTour={isAutoTour}
-              onToggleAutoTour={() => setIsAutoTour(!isAutoTour)}
+              weather={weather}
+              timeOfDay={timeOfDay}
             />
+            <FeedbackDonateModal />
           </div>
 
-          {/* Cụm nút công cụ (Pomodoro, Audio Mixer, Zen Mode Toggle) */}
+          {/* Zen Mode Toggle (Luôn có thể tương tác để tắt/bật Zen Mode) */}
+          <ZenModeToggle
+            isZenMode={isZenMode}
+            onToggleZenMode={() => setIsZenMode(!isZenMode)}
+          />
+        </div>
+      </header>
+
+      {/* 
+        2. KHUNG HÌNH NGHỆ THUẬT (CINEMA LETTERBOX 21:9 - HOÀN TOÀN THOÁNG ĐÃNG)
+      */}
+      <main
+        id="cinema-stage"
+        style={{
+          position: 'relative',
+          width: 'min(98vw, calc((100vh - 105px) * (21 / 9)))',
+          height: 'min(calc(98vw * (9 / 21)), calc(100vh - 105px))',
+          aspectRatio: '21 / 9',
+          boxShadow: '0 0 80px rgba(0, 0, 0, 0.95), 0 20px 50px rgba(0,0,0,0.8)',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          backgroundColor: '#0b0c10',
+          zIndex: 20,
+        }}
+      >
+        <ParallaxEngine
+          scene={currentScene}
+          train={currentTrain}
+          lighting={lighting}
+          timeOfDay={timeOfDay}
+          isPaused={isPaused}
+        />
+
+        {/* Weather Particles Canvas (Rain, Snow, Sakura, Sun specks) */}
+        <WeatherCanvas weather={weather} />
+
+        {/* Auto-Tour Progress Bar (Slow Rail style) */}
+        {isAutoTour && (
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '8px',
-              pointerEvents: 'auto',
-              overflow: 'visible',
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              height: '3px',
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              zIndex: 48,
+              pointerEvents: 'none',
             }}
           >
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                opacity: isZenMode ? 0 : 1,
-                pointerEvents: isZenMode ? 'none' : 'auto',
-                transition: 'opacity 0.35s ease',
-                overflow: 'visible',
+                width: `${tourProgress}%`,
+                height: '100%',
+                backgroundColor: '#edb08f',
+                boxShadow: '0 0 10px rgba(237, 176, 143, 0.85)',
+                transition: 'width 0.2s linear',
               }}
-            >
-              <PomodoroTimer />
-              <AudioMixerDrawer />
-            </div>
-
-            {/* Zen Mode Toggle (Luôn có thể tương tác để tắt/bật Zen Mode) */}
-            <ZenModeToggle
-              isZenMode={isZenMode}
-              onToggleZenMode={() => setIsZenMode(!isZenMode)}
             />
           </div>
-        </div>
-      </div>
+        )}
+      </main>
 
-      {/* 3. TITLE Ở PHÍA DƯỚI BÊN NGOÀI KHUNG CẢNH */}
-      <div
+      {/* 3. TITLE Ở PHÍA DƯỚI SÁT MÉP DƯỚI KHUNG CẢNH */}
+      <footer
         id="app-bottom-title"
         style={{
-          width: 'min(98vw, calc((100vh - 100px) * (21 / 9)))',
+          width: 'min(98vw, calc((100vh - 105px) * (21 / 9)))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -475,7 +494,7 @@ export const App: React.FC = () => {
         >
           <span>🚆 {currentTrain.name}</span>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };

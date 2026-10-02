@@ -40,6 +40,7 @@ class AudioManager {
   // --- HTML5 Audio Element for Real Music Tracks ---
   private audioElement: HTMLAudioElement | null = null;
   private mediaSourceNode: MediaElementAudioSourceNode | null = null;
+  private isMusicMediaConnected = false;
 
   // --- Realtime DSP Nodes ---
   private bitcrusherNode: ScriptProcessorNode | null = null;
@@ -65,12 +66,13 @@ class AudioManager {
 
   public settings: AudioSettings = {
     masterVolume: 0.85,
-    musicVolume: 0.8,
+    musicVolume: 0.3,
     trainVolume: 0.5,
     rainVolume: 0.0,
     windVolume: 0.25,
     natureVolume: 0.35,
-    isPlayingMusic: false,
+    isPlayingMusic: true,
+    isMuted: false,
     currentTrackIndex: 0,
     dspPreset: 'normal',
   };
@@ -95,12 +97,26 @@ class AudioManager {
 
   private loadFromStorage() {
     try {
+      const isDefaultMusicApplied = localStorage.getItem('neverland_audio_default_music_v1');
       const saved = localStorage.getItem('neverland_audio_settings');
       if (saved) {
         this.settings = { ...this.settings, ...JSON.parse(saved) };
         if (this.settings.currentTrackIndex < 0 || this.settings.currentTrackIndex >= this.tracks.length) {
           this.settings.currentTrackIndex = 0;
         }
+      }
+
+      if (typeof this.settings.isMuted !== 'boolean') {
+        this.settings.isMuted = false;
+      }
+
+      // Đảm bảo cấu hình mặc định (bật nhạc, âm lượng 30%, không mute) được áp dụng lần đầu
+      if (!isDefaultMusicApplied) {
+        this.settings.isPlayingMusic = true;
+        this.settings.musicVolume = 0.3;
+        this.settings.isMuted = false;
+        localStorage.setItem('neverland_audio_default_music_v1', 'true');
+        this.saveToStorage();
       }
     } catch {
       // fallback
@@ -118,8 +134,9 @@ class AudioManager {
   public async init() {
     if (this.isInitialized && this.ctx) {
       if (this.ctx.state === 'suspended') {
-        await this.ctx.resume();
+        await this.ctx.resume().catch(() => {});
       }
+      this.ensurePlayback();
       return;
     }
 
@@ -129,7 +146,8 @@ class AudioManager {
 
     // 1. Master Output Gain
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(this.settings.masterVolume, this.ctx.currentTime);
+    const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
+    this.masterGain.gain.setValueAtTime(effectiveMaster, this.ctx.currentTime);
     this.masterGain.connect(this.ctx.destination);
 
     // 2. Channel Gains
@@ -170,6 +188,9 @@ class AudioManager {
 
     // Apply the saved DSP preset
     this.setDSPPreset(this.settings.dspPreset);
+
+    // Đảm bảo nhạc và SFX tự động phát nếu cấu hình đang bật
+    this.ensurePlayback();
   }
 
   // --- Realtime DSP Chain Construction ---
@@ -335,8 +356,10 @@ class AudioManager {
     try {
       this.mediaSourceNode = this.ctx.createMediaElementSource(this.audioElement);
       this.mediaSourceNode.connect(this.bitcrusherNode);
+      this.isMusicMediaConnected = true;
     } catch {
-      // already connected
+      this.isMusicMediaConnected = false;
+      this.audioElement.volume = this.settings.musicVolume * this.settings.masterVolume;
     }
   }
 
@@ -728,6 +751,45 @@ class AudioManager {
     }
   }
 
+  /**
+   * Đảm bảo phát nhạc và hiệu ứng nếu trạng thái isPlayingMusic đang bật
+   */
+  public ensurePlayback() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+
+    if (this.settings.isPlayingMusic) {
+      if (this.musicGain && this.ctx) {
+        this.musicGain.gain.setValueAtTime(this.settings.musicVolume, this.ctx.currentTime);
+      }
+      const currentTrack = this.tracks[this.settings.currentTrackIndex] || this.tracks[0];
+      if (currentTrack && currentTrack.url !== 'procedural') {
+        if (this.audioElement) {
+          if (!this.audioElement.src || this.audioElement.src === window.location.href) {
+            this.audioElement.src = currentTrack.url;
+          }
+          if (this.audioElement.paused) {
+            const playPromise = this.audioElement.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {
+                // Autoplay policy: sẽ tự động mở tiếng khi người dùng tương tác với trang
+              });
+            }
+          }
+        }
+      } else {
+        if (!this.musicChordIntervalId) {
+          this.startMusicSynthesis();
+        }
+      }
+    }
+
+    if (this.settings.trainVolume > 0 && this.trainAudioElement && this.trainAudioElement.paused) {
+      this.trainAudioElement.play().catch(() => {});
+    }
+  }
+
   // --- Public Controls ---
   public toggleMusic(): boolean {
     this.init();
@@ -758,6 +820,33 @@ class AudioManager {
 
     this.notify();
     return nextState;
+  }
+
+  public applyMasterGain() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const effective = this.settings.isMuted ? 0 : this.settings.masterVolume;
+    this.masterGain?.gain.setValueAtTime(effective, now);
+
+    if (!this.isTrainMediaConnected && this.trainAudioElement) {
+      this.trainAudioElement.volume = effective * this.settings.trainVolume;
+    }
+    if (!this.isTunnelMediaConnected && this.tunnelAudioElement) {
+      this.tunnelAudioElement.volume = effective * this.settings.trainVolume * 1.25;
+    }
+    if (!this.isMusicMediaConnected && this.audioElement) {
+      this.audioElement.volume = effective * this.settings.musicVolume;
+    }
+  }
+
+  public toggleMute(): boolean {
+    this.init();
+    const nextMuted = !this.settings.isMuted;
+    this.settings.isMuted = nextMuted;
+
+    this.applyMasterGain();
+    this.notify();
+    return nextMuted;
   }
 
   public setTrack(index: number) {
@@ -820,24 +909,26 @@ class AudioManager {
 
     switch (channel) {
       case 'masterVolume':
-        this.masterGain?.gain.setValueAtTime(clamped, now);
-        if (!this.isTrainMediaConnected && this.trainAudioElement) {
-          this.trainAudioElement.volume = clamped * this.settings.trainVolume;
+        if (this.settings.isMuted && clamped > 0) {
+          this.settings.isMuted = false;
         }
-        if (!this.isTunnelMediaConnected && this.tunnelAudioElement) {
-          this.tunnelAudioElement.volume = clamped * this.settings.trainVolume * 1.25;
-        }
+        this.applyMasterGain();
         break;
       case 'musicVolume':
         if (this.settings.isPlayingMusic) {
           this.musicGain?.gain.setValueAtTime(clamped, now);
+        }
+        if (!this.isMusicMediaConnected && this.audioElement) {
+          const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
+          this.audioElement.volume = clamped * effectiveMaster;
         }
         break;
       case 'trainVolume':
         this.trainGain?.gain.setValueAtTime(clamped, now);
         if (this.trainAudioElement) {
           if (!this.isTrainMediaConnected) {
-            this.trainAudioElement.volume = clamped * this.settings.masterVolume;
+            const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
+            this.trainAudioElement.volume = clamped * effectiveMaster;
           }
           if (clamped > 0 && this.trainAudioElement.paused) {
             this.trainAudioElement.play().catch(() => {});
@@ -850,7 +941,8 @@ class AudioManager {
           if (this.isTunnelMediaConnected && this.tunnelGain) {
             this.tunnelGain.gain.setValueAtTime(targetTunnelVol, now);
           } else if (this.tunnelAudioElement) {
-            this.tunnelAudioElement.volume = targetTunnelVol * this.settings.masterVolume;
+            const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
+            this.tunnelAudioElement.volume = targetTunnelVol * effectiveMaster;
           }
         }
         break;

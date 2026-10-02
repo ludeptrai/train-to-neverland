@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
-import { generateRegistryFiles } from './scan_assets.js';
+import { generateRegistryFiles, humanizeName } from './scan_assets.js';
 import { bakeGlowToImage } from './pre_render_lights_glow.js';
 
 /**
@@ -27,14 +27,6 @@ function isFullWhitePixel(r, g, b, threshold = 235) {
   if (r < threshold || g < threshold || b < threshold) return false;
   const diff = Math.max(r, g, b) - Math.min(r, g, b);
   return diff <= 14;
-}
-
-function humanizeName(id) {
-  return id
-    .replace(/^train_/, '')
-    .split('_')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
 }
 
 export async function processTrainFolder(folderPath) {
@@ -327,7 +319,7 @@ export async function processTrainFolder(folderPath) {
   const isHighSpeed = folderName.includes('shinkansen') || folderName.includes('bullet') || folderName.includes('high_speed');
 
   meta.id = meta.id || folderName;
-  meta.name = meta.name || humanizeName(folderName);
+  meta.name = meta.name || humanizeName(folderName, 'trains');
   meta.description = meta.description || `Đoàn tàu ${meta.name} thế hệ mới vận hành êm ái trên hành trình`;
   meta.carCount = carCount;
   meta.wheelType = meta.wheelType || (isSteam ? 'spoke' : 'standard');

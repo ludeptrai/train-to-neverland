@@ -3,6 +3,25 @@
 
 ---
 
+## 🌟 Giới Thiệu Về Trang Web "Chuyến Tàu Không Vội" (Train to the Neverland)
+
+**Chuyến Tàu Không Vội (Train to the Neverland)** là một trạm không gian trực tuyến phong cách Pixel Art thư giãn & tập trung (**Chill & Focus Lo-Fi Web Station**), được sáng tạo nhằm mang đến một chốn dừng chân bình yên, ấm cúng giữa nhịp sống hối hả. 
+
+Trang web mô phỏng một chuyến tàu vô tận lướt êm đềm qua các vùng đất thơ mộng khắp thế giới, kết hợp hài hòa giữa hình ảnh hoài niệm cổ điển, âm thanh tự nhiên và nhịp điệu Lo-Fi nhẹ nhàng:
+
+* 🚂 **Hành trình vô tận (Infinite Parallax Journey):** Đoàn tàu pixel chuyển động nhịp nhàng qua hơn 10 danh lam thắng cảnh biểu tượng (Sài Gòn, Hà Nội, Đà Lạt sương mù, Phố cổ Hội An, Vịnh Hạ Long, Tokyo lung linh, Cố đô Kyoto, Paris hoa lệ, Venice sông nước...).
+* 🎧 **Trình phát & Bộ trộn âm thanh đa kênh (Multi-Channel Soundscape Mixer):**
+  * Tự động phát nhạc Lo-fi / Synthwave êm dịu ngay khi vào trang web (âm lượng mặc định 30%).
+  * Hòa âm 5 tầng âm thanh chân thực: tiếng bánh sắt rập rình trên thanh ray (*Train Clatter*), tiếng mưa rơi (*Rainfall*), tiếng gió thoảng (*Breeze*), tiếng chim hót ban ngày hoặc dế rỉ rả ban đêm (*Nature Birds & Crickets*).
+  * Nút Mute tổng và phím tắt `M` giúp tắt/bật toàn bộ âm thanh của trang web chỉ trong một thao tác.
+* 🌅 **Chu kỳ Ngày / Đêm & Đèn đêm rực rỡ (Dynamic Hybrid Lighting & Emissive Mask):**
+  * 4 sắc thái thời gian sống động: *Bình minh (Dawn)* ửng hồng, *Ban ngày (Day)* trong trẻo, *Hoàng hôn (Sunset)* rực rỡ và *Ban đêm (Night)* huyền ảo với ngàn sao lấp lánh (hỗ trợ đồng bộ theo đồng hồ thực tế).
+  * Công nghệ mặt nạ phát sáng (*Emissive Lights Mask*): khi màn đêm buông xuống, các ô cửa sổ toa tàu và đèn nhà phố tự động thắp sáng ánh vàng ấm áp.
+* ⏳ **Góc làm việc & Học tập lý tưởng (Focus Tools):** Tích hợp đồng hồ Pomodoro (25/5 phút), chế độ toàn màn hình Zen Mode ẩn hoàn toàn thanh điều khiển (`phím Z`) biến màn hình máy tính thành một bức tranh động tuyệt đẹp.
+* ⚡ **Kiến trúc Zero-Code Mở rộng:** Mọi phong cảnh, đoàn tàu và bản nhạc mới được nạp vào hệ thống tự động thông qua Vite Asset Scanner và các tệp cấu hình tập trung.
+
+---
+
 ## 🗂️ Danh mục tài liệu trong thư mục này
 
 1. 📘 [SLOW_RAIL_FRAMEWORK.md](./SLOW_RAIL_FRAMEWORK.md)  
