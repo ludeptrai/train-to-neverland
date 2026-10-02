@@ -70,9 +70,3 @@ Nếu bạn không muốn dùng terminal, bạn có thể click chuột trực t
    ```
 
 ---
-
-## 🛡️ Cam Kết Bảo Mật & Hiệu Năng
-- Không lưu trữ địa chỉ IP của người dùng.
-- Định danh bằng UUID phiên ẩn danh (`sessionStorage`).
-- Tự động xóa các phiên hết hạn sau 90 giây không có tín hiệu.
-- Gói tin heartbeat định kỳ 45s siêu nhỏ (< 100 bytes), không ảnh hưởng đến chuyển động 60 FPS.
