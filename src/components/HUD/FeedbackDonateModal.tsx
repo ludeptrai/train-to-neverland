@@ -656,9 +656,6 @@ export const FeedbackDonateModal: React.FC = () => {
                             display: 'block',
                             borderRadius: '4px',
                           }}
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = './assets/donate/momo.jpg';
-                          }}
                         />
 
                         {/* Subtle zoom badge on corner */}
