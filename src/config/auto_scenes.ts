@@ -417,6 +417,10 @@ export const SCENES: SceneConfig[] = [
         "#1b2a4a",
         "#2c3e50"
       ]
-    }
+    },
+    "ambientFilter": {
+      "night": "brightness(0.68) contrast(1.15) saturate(0.8) hue-rotate(35deg)"
+    },
+    "nightFilter": "brightness(0.68) contrast(1.15) saturate(0.8) hue-rotate(35deg)"
   }
 ];

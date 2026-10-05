@@ -34,36 +34,49 @@ export interface PersonalStats {
 class AnalyticsService {
   private sessionId: string;
   private currentSessionSeconds: number = 0;
-  private currentSceneId: string = 'dalat';
+  private lastSavedLifetimeSeconds: number = 0;
+  private lastHeartbeatTimestamp: number = Date.now();
+  private currentSceneId: string = 'hochiminhcity';
   private currentWeather: string = 'clear';
-  private isAudioPlaying: boolean = true;
+  private isAudioPlaying: boolean = false;
   private apiUrl: string =
     (typeof import.meta !== 'undefined' &&
       (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_STATS_API_URL) ||
     '';
 
-  // Base community stats (khởi điểm từ 0)
-  private baseStats: CommunityStats = {
-    travelers: 0,
-    journeys: 0,
-    totalMinutes: 0,
-    activeNow: 1,
-    rainMinutes: 0,
-    musicHours: 0,
+  // Seeded Community Stats khi chưa có backend hoặc khi offline (Đồng nhất với thiết kế thongke.md)
+  private fallbackCommunityStats: CommunityStats = {
+    travelers: 12482,
+    journeys: 38721,
+    totalMinutes: 284620,
+    activeNow: 127,
+    rainMinutes: 42380,
+    musicHours: 3140,
+    musicMinutes: 188400,
     topDestinations: [
-      { id: 'hochiminhcity', name: 'TP. Hồ Chí Minh', visits: 0, percentage: 0 },
-      { id: 'dalat', name: 'Đà Lạt Sương Mù', visits: 0, percentage: 0 },
-      { id: 'hoian', name: 'Phố Cổ Hội An', visits: 0, percentage: 0 },
-      { id: 'halong', name: 'Vịnh Hạ Long', visits: 0, percentage: 0 },
-      { id: 'hagiang', name: 'Hà Giang Hùng Vĩ', visits: 0, percentage: 0 },
-      { id: 'nhatrang', name: 'Nha Trang Biển Xanh', visits: 0, percentage: 0 },
+      { id: 'hochiminhcity', name: 'TP. Hồ Chí Minh', visits: 9382, percentage: 21 },
+      { id: 'dalat', name: 'Đà Lạt', visits: 8421, percentage: 19 },
+      { id: 'hoian', name: 'Phố Cổ Hội An', visits: 7231, percentage: 16 },
+      { id: 'hanoi', name: 'Hà Nội 36 Phố Phường', visits: 6410, percentage: 14 },
+      { id: 'halong', name: 'Vịnh Hạ Long', visits: 5120, percentage: 11 },
+      { id: 'hagiang', name: 'Hà Giang', visits: 4680, percentage: 10 },
+      { id: 'ninhbinh', name: 'Ninh Bình', visits: 4190, percentage: 9 },
+      { id: 'nhatrang', name: 'Biển Nha Trang', visits: 3887, percentage: 9 },
     ],
     timeDistribution: {
-      dawn: 25,
-      day: 25,
-      sunset: 25,
-      night: 25,
+      dawn: 14,
+      day: 39,
+      sunset: 21,
+      night: 26,
     },
+  };
+
+  // Tích lũy cục bộ cho phiên hiện tại khi chạy không có backend
+  private localSessionAccumulator = {
+    addedJourneys: 0,
+    addedRainMinutes: 0,
+    addedMusicMinutes: 0,
+    sceneVisits: {} as Record<string, number>,
   };
 
   constructor() {
@@ -96,15 +109,31 @@ class AnalyticsService {
   private initHeartbeat() {
     if (typeof window === 'undefined') return;
 
-    // Tăng thời gian cá nhân mỗi 1 giây (rất nhẹ)
+    // Tăng thời gian cá nhân mỗi 1 giây
     setInterval(() => {
       this.currentSessionSeconds += 1;
     }, 1000);
 
-    // Heartbeat gửi về server mỗi 45 giây
+    // Heartbeat định kỳ gửi về server
     window.setInterval(() => {
       this.sendHeartbeat();
     }, 45000);
+  }
+
+  /**
+   * Lưu thời gian tích lũy vào localStorage mà không bị nhân bản khi chuyển tab
+   */
+  private saveLifetimeSeconds() {
+    try {
+      const delta = this.currentSessionSeconds - this.lastSavedLifetimeSeconds;
+      if (delta > 0) {
+        const lifetime = parseInt(localStorage.getItem('train_lifetime_seconds') || '0', 10);
+        localStorage.setItem('train_lifetime_seconds', String(lifetime + delta));
+        this.lastSavedLifetimeSeconds = this.currentSessionSeconds;
+      }
+    } catch {
+      // ignore
+    }
   }
 
   /**
@@ -114,6 +143,8 @@ class AnalyticsService {
     if (typeof window === 'undefined') return;
 
     const handleLeave = () => {
+      this.saveLifetimeSeconds();
+
       const payload = JSON.stringify({
         event: 'session_end',
         sessionId: this.sessionId,
@@ -123,14 +154,6 @@ class AnalyticsService {
 
       if (this.apiUrl && navigator.sendBeacon) {
         navigator.sendBeacon(`${this.apiUrl}/api/events`, payload);
-      }
-
-      // Lưu thời gian tích lũy vào localStorage của thiết bị
-      try {
-        const lifetime = parseInt(localStorage.getItem('train_lifetime_seconds') || '0', 10);
-        localStorage.setItem('train_lifetime_seconds', String(lifetime + this.currentSessionSeconds));
-      } catch {
-        // ignore
       }
     };
 
@@ -150,9 +173,32 @@ class AnalyticsService {
    * - +1 chuyến đi (journeys)
    * - +1 lượt ghé thăm ga tàu xuất phát (location_stats)
    */
-  public initSession(sceneId: string, sceneName?: string, weather?: string) {
+  public initSession(
+    sceneId: string,
+    sceneName?: string,
+    weather?: string,
+    allScenes?: Array<{ id: string; name: string }>
+  ) {
     this.currentSceneId = sceneId;
     if (weather) this.currentWeather = weather;
+
+    // Tự động đồng bộ danh sách địa điểm vào chế độ fallback nếu có ga mới
+    if (Array.isArray(allScenes)) {
+      for (const s of allScenes) {
+        if (!this.fallbackCommunityStats.topDestinations.some((d) => d.id === s.id)) {
+          this.fallbackCommunityStats.topDestinations.push({
+            id: s.id,
+            name: s.name || s.id,
+            visits: 0,
+            percentage: 0,
+          });
+        }
+      }
+    }
+
+    // Ghi nhận cục bộ cho fallback
+    this.localSessionAccumulator.sceneVisits[sceneId] = (this.localSessionAccumulator.sceneVisits[sceneId] || 0) + 1;
+    this.localSessionAccumulator.addedJourneys += 1;
 
     if (!this.apiUrl) return;
 
@@ -167,6 +213,7 @@ class AnalyticsService {
           sceneName: sceneName || sceneId,
           weather: this.currentWeather,
           isAudioPlaying: this.isAudioPlaying,
+          scenes: allScenes || [],
         }),
         keepalive: true,
       }).catch(() => {});
@@ -176,9 +223,22 @@ class AnalyticsService {
   }
 
   /**
-   * Gửi gói tin heartbeat siêu nhẹ (< 100 bytes)
+   * Gửi gói tin heartbeat siêu nhẹ (< 100 bytes) với thời gian thực tế đã trôi qua
    */
   public sendHeartbeat() {
+    const now = Date.now();
+    const elapsedSeconds = Math.max(1, Math.round((now - this.lastHeartbeatTimestamp) / 1000));
+    this.lastHeartbeatTimestamp = now;
+
+    // Cập nhật tích lũy cục bộ
+    const elapsedMinutes = elapsedSeconds / 60;
+    if (this.currentWeather === 'rain') {
+      this.localSessionAccumulator.addedRainMinutes += elapsedMinutes;
+    }
+    if (this.isAudioPlaying) {
+      this.localSessionAccumulator.addedMusicMinutes += elapsedMinutes;
+    }
+
     if (!this.apiUrl) return;
 
     try {
@@ -191,12 +251,10 @@ class AnalyticsService {
           sceneId: this.currentSceneId,
           weather: this.currentWeather,
           isAudioPlaying: this.isAudioPlaying,
-          seconds: 45,
+          seconds: elapsedSeconds,
         }),
         keepalive: true,
-      }).catch(() => {
-        // Thất bại trong âm thầm, không bao giờ văng lỗi lên UI
-      });
+      }).catch(() => {});
     } catch {
       // ignore
     }
@@ -207,6 +265,8 @@ class AnalyticsService {
    */
   public recordSceneChange(newSceneId: string, toSceneName?: string, fromSceneId?: string) {
     this.currentSceneId = newSceneId;
+    this.localSessionAccumulator.sceneVisits[newSceneId] = (this.localSessionAccumulator.sceneVisits[newSceneId] || 0) + 1;
+    this.localSessionAccumulator.addedJourneys += 1;
 
     if (!this.apiUrl) return;
 
@@ -260,19 +320,43 @@ class AnalyticsService {
       }
     }
 
-    // Khi chưa có backend, tạo hiệu ứng số lữ khách dao động nhẹ tự nhiên (120 - 135 người)
+    // Chế độ Giả lập Sống động (Seeded Live Simulation) khi chưa kết nối backend hoặc offline
     const jitter = Math.floor(Math.sin(Date.now() / 60000) * 8);
     const activeNow = Math.max(115, 127 + jitter);
-
-    // Tính thêm thời gian của chính phiên người dùng hiện tại
     const userMinutes = Math.floor(this.currentSessionSeconds / 60);
 
+    const base = this.fallbackCommunityStats;
+    const addedRain = Math.round(this.localSessionAccumulator.addedRainMinutes);
+    const addedMusic = Math.round(this.localSessionAccumulator.addedMusicMinutes);
+
+    // Ghép các lượt ghé thăm ga tàu trong phiên vào bảng xếp hạng
+    const mergedDestinations = base.topDestinations.map((dest) => {
+      const extraVisits = this.localSessionAccumulator.sceneVisits[dest.id] || 0;
+      return {
+        ...dest,
+        visits: dest.visits + extraVisits,
+      };
+    });
+
+    const totalVisits = mergedDestinations.reduce((sum, d) => sum + d.visits, 0);
+    const topDestinationsWithPercentage = mergedDestinations.map((dest) => ({
+      ...dest,
+      percentage: totalVisits > 0 ? Math.round((dest.visits / totalVisits) * 100) : 0,
+    }));
+
+    const totalMusicMinutes = (base.musicMinutes || (base.musicHours * 60)) + addedMusic;
+    const musicHours = Math.round((totalMusicMinutes / 60) * 10) / 10;
+
     return {
-      ...this.baseStats,
-      travelers: Math.max(1, this.baseStats.travelers),
-      journeys: Math.max(1, this.baseStats.journeys + (userMinutes > 0 ? 1 : 0)),
+      travelers: base.travelers,
+      journeys: base.journeys + this.localSessionAccumulator.addedJourneys,
+      totalMinutes: base.totalMinutes + userMinutes,
       activeNow,
-      totalMinutes: this.baseStats.totalMinutes + userMinutes,
+      rainMinutes: base.rainMinutes + addedRain,
+      musicHours,
+      musicMinutes: totalMusicMinutes,
+      topDestinations: topDestinationsWithPercentage,
+      timeDistribution: base.timeDistribution,
     };
   }
 
@@ -287,12 +371,12 @@ class AnalyticsService {
       lifetimeSeconds = 0;
     }
 
-    const totalSeconds = lifetimeSeconds + this.currentSessionSeconds;
+    const totalSeconds = lifetimeSeconds + (this.currentSessionSeconds - this.lastSavedLifetimeSeconds);
 
     return {
       currentSessionSeconds: this.currentSessionSeconds,
       totalLifetimeMinutes: Math.floor(totalSeconds / 60),
-      totalVisitedScenes: 6,
+      totalVisitedScenes: Object.keys(this.localSessionAccumulator.sceneVisits).length || 1,
     };
   }
 }

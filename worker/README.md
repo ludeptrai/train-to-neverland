@@ -48,25 +48,22 @@ Chạy lại `npm run build` hoặc `npm run dev`. Website sẽ tự động k�
 
 ---
 
-## 🌐 LỰA CHỌN 2: Triển khai qua Giao diện Web (Cloudflare Dashboard)
+## 🔍 API Kiểm Tra & Debug Nhật Ký Phiên (Session Logs)
 
-Nếu bạn không muốn dùng terminal, bạn có thể click chuột trực tiếp trên giao diện web:
+Backend cung cấp sẵn các endpoint để bạn trực tiếp kiểm tra và xác minh luồng dữ liệu trên trình duyệt:
 
-1. Đăng nhập [dash.cloudflare.com](https://dash.cloudflare.com/).
-2. Chọn menu **Workers & Pages** ➔ **D1 SQL Database** ➔ Bấm **Create database**:
-   - Đặt tên: `neverland-stats-db` ➔ Bấm **Create**.
-   - Chuyển sang tab **Console** của database vừa tạo, mở file [`worker/schema.sql`](./schema.sql), sao chép toàn bộ nội dung và dán vào ô SQL rồi bấm **Execute**.
-3. Quay lại menu **Workers & Pages** ➔ Bấm **Create application** ➔ Chọn **Create Worker**:
-   - Đặt tên: `train-neverland-stats` ➔ Bấm **Deploy**.
-   - Bấm **Edit code**, xóa code mặc định và sao chép toàn bộ nội dung trong file [`worker/src/index.js`](./src/index.js) dán vào, sau đó bấm **Save and Deploy**.
-4. Liên kết Database vào Worker:
-   - Trong trang chi tiết của Worker vừa tạo, vào tab **Settings** ➔ **Bindings** ➔ Bấm **Add** ➔ Chọn **D1 database**.
-   - Đặt **Variable name** chính xác là: `DB`
-   - Chọn database: `neverland-stats-db`
-   - Bấm **Save and Deploy**.
-5. Sao chép URL của Worker dán vào file `.env` ở frontend:
-   ```env
-   VITE_STATS_API_URL=https://train-neverland-stats.your-subdomain.workers.dev
-   ```
+1. **Xem tổng quan cộng đồng**: `GET /api/stats`
+2. **Xem danh sách 50 phiên lữ khách gần nhất**: `GET /api/sessions?limit=50`
+   - Hiển thị chi tiết: `session_id`, thời gian bắt đầu, thời lượng trên tàu (`duration_seconds`), ga ban đầu, danh sách các ga đã ghé (`scenes_visited`), số chuyến đi (`journey_count`), quốc gia, thiết bị (desktop/mobile) và trạng thái.
+3. **Xem dòng thời gian sự kiện của 1 session**: `GET /api/sessions/timeline?sessionId=traveler_...`
+   - Xem từng bước của session: lúc bước lên tàu (`arrival`), lúc chuyển cảnh qua các ga (`scene_change`), lúc rời tàu (`session_end`).
+4. **Xem danh sách góp ý**: `GET /api/feedback`
+5. **Reset an toàn (Yêu cầu mật khẩu)**: `POST /api/reset` kèm header `Authorization: Bearer <ADMIN_SECRET>` hoặc query `?secret=<ADMIN_SECRET>`.
 
 ---
+
+## 🛡️ Cam Kết Bảo Mật & Quyền Riêng Tư (Zero Tracking)
+- Không thu thập địa chỉ IP, không dùng GPS hay cookie theo dõi cá nhân.
+- Định danh hoàn toàn ẩn danh theo UUID phiên (`sessionStorage`).
+- Tự động dọn dẹp các phiên không còn hoạt động.
+- Dữ liệu hoàn toàn thuộc quyền sở hữu của bạn trên Cloudflare D1.

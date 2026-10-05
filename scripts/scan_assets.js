@@ -337,6 +337,9 @@ export function scanLandscapes() {
       ...(fgY !== undefined ? { fgY } : {}),
       ...(fgOpacity !== undefined ? { fgOpacity } : {}),
       skyPresets,
+      ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : {}),
+      ...(meta.nightFilter !== undefined ? { nightFilter: meta.nightFilter } : {}),
+      ...(meta.nightOverlayBlend !== undefined ? { nightOverlayBlend: meta.nightOverlayBlend } : {}),
     });
   }
 

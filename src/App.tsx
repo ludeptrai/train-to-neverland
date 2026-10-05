@@ -175,13 +175,15 @@ export const App: React.FC = () => {
 
   // Khởi tạo phiên lữ khách lên hệ thống thống kê ngay khi vừa bước lên tàu
   useEffect(() => {
-    analyticsService.initSession(currentScene.id, currentScene.name, weather);
+    const sceneList = SCENES.map((s) => ({ id: s.id, name: s.name }));
+    analyticsService.initSession(currentScene.id, currentScene.name, weather, sceneList);
   }, []);
 
   // Đồng bộ trạng thái âm thanh & thời tiết vào analytics
   useEffect(() => {
     const unsub = audioManager.subscribe((settings) => {
-      analyticsService.updateContext(weather, !settings.isMuted);
+      const isMusicActive = Boolean(settings.isPlayingMusic && !settings.isMuted && settings.musicVolume > 0 && settings.masterVolume > 0);
+      analyticsService.updateContext(weather, isMusicActive);
     });
     return unsub;
   }, [weather]);
@@ -200,7 +202,9 @@ export const App: React.FC = () => {
   // When weather changes, naturally harmonize ambient rain sound
   const handleWeatherChange = (newWeather: WeatherType) => {
     setWeather(newWeather);
-    analyticsService.updateContext(newWeather, true);
+    const audioSettings = audioManager.settings;
+    const isMusicActive = Boolean(audioSettings.isPlayingMusic && !audioSettings.isMuted && audioSettings.musicVolume > 0 && audioSettings.masterVolume > 0);
+    analyticsService.updateContext(newWeather, isMusicActive);
     if (newWeather === 'rain') {
       audioManager.setChannelVolume('rainVolume', 0.65);
     } else {
@@ -255,6 +259,9 @@ export const App: React.FC = () => {
                 : (meta.foregroundY !== undefined ? { fgY: meta.foregroundY } : {}))),
           ...(meta.fgOpacity !== undefined ? { fgOpacity: Number(meta.fgOpacity) } : {}),
           ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
+          ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : {}),
+          ...(meta.nightFilter !== undefined ? { nightFilter: meta.nightFilter } : {}),
+          ...(meta.nightOverlayBlend !== undefined ? { nightOverlayBlend: meta.nightOverlayBlend } : {}),
         }));
       } catch {
         // Fallback to auto_scenes.ts defaults

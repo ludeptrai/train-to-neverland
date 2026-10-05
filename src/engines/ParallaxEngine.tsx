@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TimeOfDay, SceneConfig, TrainTheme } from '../types';
-import { LightingTheme } from './LightingManager';
+import { LightingTheme, resolveTimeOfDay } from './LightingManager';
 import {
   TunnelDarknessOverlay,
   TunnelPhase,
@@ -143,6 +143,9 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
                   : (meta.foregroundY !== undefined ? { fgY: meta.foregroundY } : {}))),
             ...(meta.fgOpacity !== undefined ? { fgOpacity: Number(meta.fgOpacity) } : {}),
             ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
+            ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : {}),
+            ...(meta.nightFilter !== undefined ? { nightFilter: meta.nightFilter } : {}),
+            ...(meta.nightOverlayBlend !== undefined ? { nightOverlayBlend: meta.nightOverlayBlend } : {}),
             ...(meta.bgMirror !== undefined ? { bgMirror: Boolean(meta.bgMirror) } : (meta.mirrorBackground !== undefined ? { bgMirror: Boolean(meta.mirrorBackground) } : {})),
             ...(Boolean(meta.sun || meta.celestial || meta.sunDawnY !== undefined || meta.sunDayY !== undefined || meta.sunSunsetY !== undefined) ? {
               sun: {
@@ -414,6 +417,13 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   const beamBulbOffsetX = Math.round(beamWidth * (36 / 640));
   const beamBulbOffsetY = Math.round(beamHeight * (110 / 220));
 
+  const effectiveTime = resolveTimeOfDay(timeOfDay);
+  const sceneFilter = typeof displayedScene.ambientFilter === 'string'
+    ? displayedScene.ambientFilter
+    : displayedScene.ambientFilter?.[effectiveTime];
+  const effectiveAmbientFilter = sceneFilter || (effectiveTime === 'night' && displayedScene.nightFilter ? displayedScene.nightFilter : lighting.ambientFilter);
+  const effectiveOverlayBlend = (effectiveTime === 'night' && displayedScene.nightOverlayBlend) || lighting.overlayBlend;
+
   return (
     <div
       ref={containerRef}
@@ -475,7 +485,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          filter: lighting.ambientFilter,
+          filter: effectiveAmbientFilter,
           transition: 'filter 1.5s ease',
           zIndex: 2,
         }}
@@ -561,7 +571,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           backgroundPosition: `${-mgOffset}px bottom`,
           backgroundSize: 'auto 100%',
           imageRendering: 'pixelated',
-          filter: lighting.ambientFilter,
+          filter: effectiveAmbientFilter,
           transition: 'filter 1.5s ease',
           zIndex: 10,
         }}
@@ -611,7 +621,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
               top: '5px',
               right: '60px',
               pointerEvents: 'none',
-              filter: lighting.ambientFilter,
+              filter: effectiveAmbientFilter,
               transition: 'filter 1.5s ease',
             }}
           >
@@ -650,7 +660,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
               imageRendering: 'pixelated',
               filter: isTunnelLighting
                 ? 'brightness(0.92) contrast(1.15)'
-                : lighting.ambientFilter,
+                : effectiveAmbientFilter,
               transition: 'filter 0.6s ease',
             }}
           />
@@ -772,7 +782,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             backgroundPosition: `${-fgOffset}px bottom`,
             backgroundSize: 'auto 100%',
             imageRendering: 'pixelated',
-            filter: lighting.ambientFilter,
+            filter: effectiveAmbientFilter,
             transition: 'filter 1.5s ease',
           }}
         />
@@ -807,7 +817,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundColor: lighting.overlayBlend,
+          backgroundColor: effectiveOverlayBlend,
           mixBlendMode: 'color',
           pointerEvents: 'none',
           transition: 'background-color 1.5s ease',
