@@ -14,6 +14,7 @@ import { ZenModeToggle } from './components/HUD/ZenModeToggle';
 import { audioManager } from './engines/AudioManager';
 import { analyticsService } from './services/AnalyticsService';
 import { usePageSeo } from './hooks/usePageSeo';
+import { InitialLoadingScreen } from './components/HUD/InitialLoadingScreen';
 
 const VALID_TIMES: TimeOfDay[] = ['dawn', 'day', 'sunset', 'night', 'auto'];
 const VALID_WEATHERS: WeatherType[] = ['clear', 'rain', 'snow', 'sakura'];
@@ -73,6 +74,7 @@ export const App: React.FC = () => {
   });
 
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(false);
 
   // Tự động tối ưu Title, Meta tags, Canonical URL và Open Graph cho từng địa điểm + thời gian
   usePageSeo({ currentScene, timeOfDay });
@@ -86,7 +88,7 @@ export const App: React.FC = () => {
 
   // Auto-tour progression timer
   useEffect(() => {
-    if (!isAutoTour || isPaused) return;
+    if (!isAutoTour || isPaused || !isInitialLoaded) return;
 
     const interval = setInterval(() => {
       setTourProgress((prev) => {
@@ -236,6 +238,22 @@ export const App: React.FC = () => {
           ...(meta.mgY !== undefined ? { mgY: meta.mgY } : (meta.mgOffsetY !== undefined ? { mgY: meta.mgOffsetY } : (meta.yAxis !== undefined ? { mgY: meta.yAxis } : {}))),
           ...(meta.trainY !== undefined ? { trainY: meta.trainY } : (meta.trainOffsetY !== undefined ? { trainY: meta.trainOffsetY } : {})),
           ...(meta.trainScaleRatio !== undefined ? { trainScaleRatio: Number(meta.trainScaleRatio) } : (meta.trainScale !== undefined ? { trainScaleRatio: Number(meta.trainScale) } : {})),
+          ...(meta.foregroundUrl ? { foregroundUrl: meta.foregroundUrl } : {}),
+          ...(meta.foregroundLightsUrl ? { foregroundLightsUrl: meta.foregroundLightsUrl } : {}),
+          ...(meta.fgSpeed !== undefined ? { fgSpeed: Number(meta.fgSpeed) } : {}),
+          ...(meta.fgScaleRatio !== undefined
+            ? { fgScaleRatio: Number(meta.fgScaleRatio) }
+            : (meta.fgRatio !== undefined
+                ? { fgScaleRatio: Number(meta.fgRatio) }
+                : (meta.fgScale !== undefined
+                    ? { fgScaleRatio: Number(meta.fgScale) }
+                    : (meta.foregroundRatio !== undefined ? { fgScaleRatio: Number(meta.foregroundRatio) } : {})))),
+          ...(meta.fgY !== undefined
+            ? { fgY: meta.fgY }
+            : (meta.fgOffsetY !== undefined
+                ? { fgY: meta.fgOffsetY }
+                : (meta.foregroundY !== undefined ? { fgY: meta.foregroundY } : {}))),
+          ...(meta.fgOpacity !== undefined ? { fgOpacity: Number(meta.fgOpacity) } : {}),
           ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
         }));
       } catch {
@@ -311,6 +329,15 @@ export const App: React.FC = () => {
         boxSizing: 'border-box',
       }}
     >
+      {/* Màn hình chờ tải toàn bộ asset khi mới vào trang web */}
+      {!isInitialLoaded && (
+        <InitialLoadingScreen
+          scene={currentScene}
+          train={currentTrain}
+          onLoaded={() => setIsInitialLoaded(true)}
+        />
+      )}
+
       {/* 
         1. CỤM NÚT ĐIỀU KHIỂN NẰM SÁT MÉP TRÊN CỦA KHUNG HÌNH
       */}

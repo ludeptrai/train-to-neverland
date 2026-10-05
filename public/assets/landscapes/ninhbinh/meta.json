@@ -1,0 +1,48 @@
+{
+  "name": "Ninh Bình",
+  "subtitle": "Hành trình qua ga Tràng An Ninh Bình",
+  "location": "Việt Nam",
+  "bgSpeed": 0.15,
+  "mgSpeed": 0.85,
+  "fgSpeed": 1.35,
+  "fgScaleRatio": 0.1,
+  "fgY": -10,
+  "mgScaleRatio": 0.5,
+  "mgY": -80,
+  "bgMirror": true,
+  "sun": {
+    "dawn": {
+      "y": "46%",
+      "size": 130
+    },
+    "day": {
+      "y": "12%",
+      "size": 128
+    },
+    "sunset": {
+      "y": "44%",
+      "size": 140
+    }
+  },
+  "skyPresets": {
+    "dawn": [
+      "#fbc2eb",
+      "#a6c1ee"
+    ],
+    "day": [
+      "#4facfe",
+      "#00f2fe",
+      "#e0f7fa"
+    ],
+    "sunset": [
+      "#fa709a",
+      "#fee140",
+      "#f39c12"
+    ],
+    "night": [
+      "#09203f",
+      "#1b2a4a",
+      "#2c3e50"
+    ]
+  }
+}

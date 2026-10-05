@@ -52,18 +52,23 @@ export async function processLandscapeFolder(folderPath) {
   console.log(`🚀 Đang quét và xử lý thư mục: ${path.basename(fullPath)}`);
   console.log(`======================================================`);
 
-  // Tìm file background
-  const bgFile = files.find(f => /^background\.(jpg|jpeg|webp)$/i.test(f)) ||
-                 files.find(f => /^(bg|haucang)\.(jpg|jpeg|webp)$/i.test(f)) ||
-                 files.find(f => /(skyline|panorama|background)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f)) ||
-                 files.find(f => /\.(jpg|jpeg|webp)$/i.test(f) && !/(midground|track|rail|trungcanh)/i.test(f));
+  // Tìm file foreground (tiền cảnh)
+  const fgFile = files.find(f => /^foreground\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /^(fg|tiencanh|prop|props)\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /(foreground|tiencanh)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f));
 
   // Tìm file midground track
   const mgFile = files.find(f => /^midground\.(jpg|jpeg|webp)$/i.test(f)) ||
                  files.find(f => /^(track|rail|trungcanh)\.(jpg|jpeg|webp)$/i.test(f)) ||
                  files.find(f => /(midground|track|rail|trungcanh)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f));
 
-  if (!bgFile && !mgFile) {
+  // Tìm file background
+  const bgFile = files.find(f => /^background\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /^(bg|haucang)\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /(skyline|panorama|background)/i.test(f) && /\.(jpg|jpeg|webp)$/i.test(f)) ||
+                 files.find(f => /\.(jpg|jpeg|webp)$/i.test(f) && !/(midground|track|rail|trungcanh|foreground|tiencanh|prop)/i.test(f));
+
+  if (!bgFile && !mgFile && !fgFile) {
     console.log(`ℹ️ Không tìm thấy file JPG/JPEG nào cần xử lý trong ${path.basename(fullPath)}.`);
     return false;
   }
@@ -465,6 +470,207 @@ export async function processLandscapeFolder(folderPath) {
       .toFile(path.join(fullPath, 'midground_track.png'));
 
     console.log(`   ✅ Đã xuất dải ray nối ngang midground_track.png thành công!`);
+  }
+
+  // =======================================================================
+  // --- 3. XỬ LÝ FOREGROUND (TIỀN CẢNH: CỘT ĐIỆN, DÂY ĐIỆN, BIỂN BÁO, PROPS) ---
+  // =======================================================================
+  if (fgFile) {
+    const fgInput = path.join(fullPath, fgFile);
+    console.log(`⚡ 3. Đang xử lý Foreground: ${fgFile}...`);
+
+    const img = sharp(fs.readFileSync(fgInput));
+    const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
+    const w = info.width;
+    const h = info.height;
+
+    // Phân tích màu nền: Kiểm tra 4 viền xung quanh (trên, dưới, trái, phải)
+    let whiteSeedCount = 0;
+    let blackSeedCount = 0;
+
+    for (let x = 0; x < w; x++) {
+      const topIdx = (0 * w + x) * info.channels;
+      if (isFullWhitePixel(data[topIdx], data[topIdx + 1], data[topIdx + 2])) whiteSeedCount++;
+      if (isFullBlackPixel(data[topIdx], data[topIdx + 1], data[topIdx + 2])) blackSeedCount++;
+
+      const botIdx = ((h - 1) * w + x) * info.channels;
+      if (isFullWhitePixel(data[botIdx], data[botIdx + 1], data[botIdx + 2])) whiteSeedCount++;
+      if (isFullBlackPixel(data[botIdx], data[botIdx + 1], data[botIdx + 2])) blackSeedCount++;
+    }
+
+    for (let y = 0; y < h; y++) {
+      const lIdx = (y * w + 0) * info.channels;
+      if (isFullWhitePixel(data[lIdx], data[lIdx + 1], data[lIdx + 2])) whiteSeedCount++;
+      if (isFullBlackPixel(data[lIdx], data[lIdx + 1], data[lIdx + 2])) blackSeedCount++;
+
+      const rIdx = (y * w + (w - 1)) * info.channels;
+      if (isFullWhitePixel(data[rIdx], data[rIdx + 1], data[rIdx + 2])) whiteSeedCount++;
+      if (isFullBlackPixel(data[rIdx], data[rIdx + 1], data[rIdx + 2])) blackSeedCount++;
+    }
+
+    const fgBgMode = blackSeedCount >= whiteSeedCount ? 'black' : 'white';
+    console.log(`   🔍 Nhận diện màu nền Foreground: ${fgBgMode === 'black' ? 'MÀU ĐEN (#000000)' : 'MÀU TRẮNG (#FFFFFF)'} (Hạt giống Đen: ${blackSeedCount}, Trắng: ${whiteSeedCount})`);
+
+    const isFgBgPixel = fgBgMode === 'black'
+      ? (r, g, b) => isFullBlackPixel(r, g, b, 24)
+      : (r, g, b) => isFullWhitePixel(r, g, b, 240);
+
+    // BFS Flood Fill từ 4 viền để loại bỏ nền ngoài trời, bảo vệ toàn bộ chi tiết nội cảnh
+    const isFgBg = new Uint8Array(w * h);
+    const queue = new Int32Array(w * h);
+    let qHead = 0, qTail = 0;
+
+    // Hạt giống: Viền trên & dưới
+    for (let x = 0; x < w; x++) {
+      const topIdx = (0 * w + x) * info.channels;
+      if (isFgBgPixel(data[topIdx], data[topIdx + 1], data[topIdx + 2])) {
+        isFgBg[x] = 1;
+        queue[qTail++] = x;
+      }
+      const botIdx = ((h - 1) * w + x) * info.channels;
+      if (isFgBgPixel(data[botIdx], data[botIdx + 1], data[botIdx + 2]) && !isFgBg[(h - 1) * w + x]) {
+        isFgBg[(h - 1) * w + x] = 1;
+        queue[qTail++] = (h - 1) * w + x;
+      }
+    }
+
+    // Hạt giống: Viền trái & phải
+    for (let y = 0; y < h; y++) {
+      const lIdx = (y * w + 0) * info.channels;
+      if (isFgBgPixel(data[lIdx], data[lIdx + 1], data[lIdx + 2]) && !isFgBg[y * w + 0]) {
+        isFgBg[y * w + 0] = 1;
+        queue[qTail++] = y * w + 0;
+      }
+      const rIdx = (y * w + (w - 1)) * info.channels;
+      if (isFgBgPixel(data[rIdx], data[rIdx + 1], data[rIdx + 2]) && !isFgBg[y * w + (w - 1)]) {
+        isFgBg[y * w + (w - 1)] = 1;
+        queue[qTail++] = y * w + (w - 1);
+      }
+    }
+
+    // BFS lan truyền
+    while (qHead < qTail) {
+      const curr = queue[qHead++];
+      const cx = curr % w;
+      const cy = Math.floor(curr / w);
+
+      const neighbors = [
+        [cx + 1, cy],
+        [cx - 1, cy],
+        [cx, cy + 1],
+        [cx, cy - 1]
+      ];
+
+      for (let i = 0; i < 4; i++) {
+        const nx = neighbors[i][0];
+        const ny = neighbors[i][1];
+        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+          const nIdx = ny * w + nx;
+          if (!isFgBg[nIdx]) {
+            const srcIdx = nIdx * info.channels;
+            if (isFgBgPixel(data[srcIdx], data[srcIdx + 1], data[srcIdx + 2])) {
+              isFgBg[nIdx] = 1;
+              queue[qTail++] = nIdx;
+            }
+          }
+        }
+      }
+    }
+
+    const fgRgba = Buffer.alloc(w * h * 4);
+    const fgLightsRgba = Buffer.alloc(w * h * 4);
+    let keptPixels = 0;
+    let fgLightsCount = 0;
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const srcIdx = (y * w + x) * info.channels;
+        const destIdx = (y * w + x) * 4;
+
+        if (isFgBg[y * w + x]) {
+          fgRgba[destIdx + 3] = 0;
+          fgLightsRgba[destIdx + 3] = 0;
+        } else {
+          const r = data[srcIdx];
+          const g = data[srcIdx + 1];
+          const b = data[srcIdx + 2];
+
+          // Khử viền 1px (Anti-Halo Defringe)
+          let isBorder = false;
+          if (y > 0 && isFgBg[(y - 1) * w + x]) isBorder = true;
+          else if (y < h - 1 && isFgBg[(y + 1) * w + x]) isBorder = true;
+          else if (x > 0 && isFgBg[y * w + (x - 1)]) isBorder = true;
+          else if (x < w - 1 && isFgBg[y * w + (x + 1)]) isBorder = true;
+
+          if (isBorder) {
+            if (fgBgMode === 'black' && r < 30 && g < 30 && b < 30) {
+              fgRgba[destIdx + 3] = 0;
+              fgLightsRgba[destIdx + 3] = 0;
+              continue;
+            }
+            if (fgBgMode === 'white' && r > 230 && g > 230 && b > 230) {
+              fgRgba[destIdx + 3] = 0;
+              fgLightsRgba[destIdx + 3] = 0;
+              continue;
+            }
+          }
+
+          // Lượng tử hóa màu pixel art
+          fgRgba[destIdx] = Math.min(255, Math.round(r / 4) * 4);
+          fgRgba[destIdx + 1] = Math.min(255, Math.round(g / 4) * 4);
+          fgRgba[destIdx + 2] = Math.min(255, Math.round(b / 4) * 4);
+          fgRgba[destIdx + 3] = 255;
+          keptPixels++;
+
+          // Tách ánh sáng đèn đêm (đèn đường, lồng đèn, đèn tín hiệu)
+          const isWarmLight = (r > 200 && g > 160 && b < 140);
+          const isLanternRed = (r > 180 && r > g * 1.3 && r > b * 1.3);
+          const isSignalGreen = (g > 180 && g > r * 1.2 && g > b * 1.2);
+          const isBrightWindow = (r > 220 && g > 215 && b > 190);
+
+          if (isWarmLight || isLanternRed || isSignalGreen || isBrightWindow) {
+            fgLightsCount++;
+            fgLightsRgba[destIdx] = r;
+            fgLightsRgba[destIdx + 1] = g;
+            fgLightsRgba[destIdx + 2] = b;
+            fgLightsRgba[destIdx + 3] = 255;
+          } else {
+            fgLightsRgba[destIdx + 3] = 0;
+          }
+        }
+      }
+    }
+
+    console.log(`   🛡️ Đã giữ lại ${keptPixels.toLocaleString()} pixel chi tiết tiền cảnh sắc nét!`);
+
+    // Chuẩn hóa kích thước
+    // Nếu ảnh rộng (>= 1200px hoặc tỷ lệ ngang >= 1.5): scale chuẩn 1920px
+    const targetW = w >= 1200 || (w / h) >= 1.5 ? 1920 : w;
+    const targetH = w >= 1200 || (w / h) >= 1.5 ? Math.round(h * (targetW / w)) : h;
+
+    console.log(`   📐 Đang lưu foreground.png kích thước: ${targetW}px x ${targetH}px`);
+
+    await sharp(fgRgba, { raw: { width: w, height: h, channels: 4 } })
+      .resize(targetW, targetH, { kernel: 'nearest' })
+      .png({ compressionLevel: 9 })
+      .toFile(path.join(fullPath, 'foreground.png'));
+
+    // Nếu có đèn đêm trên tiền cảnh, tạo foreground_lights.png với glow nhẹ
+    if (fgLightsCount > 50) {
+      console.log(`   ✨ Phát hiện ${fgLightsCount.toLocaleString()} pixel đèn tiền cảnh -> Đang tạo foreground_lights.png...`);
+      const rawFgLights = await sharp(fgLightsRgba, { raw: { width: w, height: h, channels: 4 } })
+        .resize(targetW, targetH, { kernel: 'nearest' })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+
+      const fgGlow = await sharp(rawFgLights).blur(6).toBuffer();
+      await sharp(fgGlow)
+        .composite([{ input: rawFgLights, blend: 'over' }])
+        .png({ compressionLevel: 9 })
+        .toFile(path.join(fullPath, 'foreground_lights.png'));
+    }
+
+    console.log(`   ✅ Đã xuất foreground.png thành công!`);
   }
 
   // Tự động tạo meta.json nếu địa điểm mới chưa có

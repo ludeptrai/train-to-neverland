@@ -65,12 +65,12 @@ class AudioManager {
   public tracks: AudioTrack[] = [...MUSIC_TRACKS];
 
   public settings: AudioSettings = {
-    masterVolume: 0.85,
-    musicVolume: 0.3,
-    trainVolume: 0.5,
+    masterVolume: 0.9,
+    musicVolume: 0.85,
+    trainVolume: 0.35,
     rainVolume: 0.0,
-    windVolume: 0.25,
-    natureVolume: 0.35,
+    windVolume: 0.05,
+    natureVolume: 0.15,
     isPlayingMusic: true,
     isMuted: false,
     currentTrackIndex: 0,
@@ -97,7 +97,7 @@ class AudioManager {
 
   private loadFromStorage() {
     try {
-      const isDefaultMusicApplied = localStorage.getItem('neverland_audio_default_music_v1');
+      const isV3Applied = localStorage.getItem('neverland_audio_default_music_v3');
       const saved = localStorage.getItem('neverland_audio_settings');
       if (saved) {
         this.settings = { ...this.settings, ...JSON.parse(saved) };
@@ -110,12 +110,16 @@ class AudioManager {
         this.settings.isMuted = false;
       }
 
-      // Đảm bảo cấu hình mặc định (bật nhạc, âm lượng 30%, không mute) được áp dụng lần đầu
-      if (!isDefaultMusicApplied) {
+      // Tự động nâng cấp âm lượng nhạc và giảm tiếng ồn môi trường cho cả người dùng mới và người dùng cũ có cài đặt âm lượng nhạc quá thấp (< 60%)
+      if (!isV3Applied || (typeof this.settings.musicVolume === 'number' && this.settings.musicVolume < 0.6)) {
         this.settings.isPlayingMusic = true;
-        this.settings.musicVolume = 0.3;
+        this.settings.musicVolume = 0.85;
+        this.settings.masterVolume = Math.max(0.85, this.settings.masterVolume || 0.9);
+        this.settings.windVolume = 0.05; // Gió êm dịu, không rít
+        this.settings.trainVolume = Math.min(0.35, this.settings.trainVolume || 0.35); // Tiếng xình xịch vừa phải
+        this.settings.natureVolume = Math.min(0.2, this.settings.natureVolume || 0.15);
         this.settings.isMuted = false;
-        localStorage.setItem('neverland_audio_default_music_v1', 'true');
+        localStorage.setItem('neverland_audio_default_music_v3', 'true');
         this.saveToStorage();
       }
     } catch {
@@ -340,15 +344,21 @@ class AudioManager {
     if (!this.ctx || !this.bitcrusherNode) return;
 
     this.audioElement = new Audio();
-    this.audioElement.crossOrigin = 'anonymous';
+    // Không gán crossOrigin cố định cho local relative URL (tránh bị block / mute bởi CORS)
     this.audioElement.loop = false;
     this.audioElement.onended = () => {
       this.nextTrack();
+    };
+    this.audioElement.onerror = (e) => {
+      console.warn('[AudioManager] Audio element playback error:', e);
     };
 
     // Load initial track URL
     const track = this.tracks[this.settings.currentTrackIndex];
     if (track && track.url !== 'procedural') {
+      if (track.url.startsWith('http://') || track.url.startsWith('https://')) {
+        this.audioElement.crossOrigin = 'anonymous';
+      }
       this.audioElement.src = track.url;
     }
 
@@ -357,6 +367,7 @@ class AudioManager {
       this.mediaSourceNode = this.ctx.createMediaElementSource(this.audioElement);
       this.mediaSourceNode.connect(this.bitcrusherNode);
       this.isMusicMediaConnected = true;
+      this.audioElement.volume = 1.0;
     } catch {
       this.isMusicMediaConnected = false;
       this.audioElement.volume = this.settings.musicVolume * this.settings.masterVolume;
@@ -480,7 +491,6 @@ class AudioManager {
 
     if (!this.trainAudioElement) {
       this.trainAudioElement = new Audio();
-      this.trainAudioElement.crossOrigin = 'anonymous';
       this.trainAudioElement.loop = true;
       this.trainAudioElement.src = './assets/sfx/train_default.mp3';
 
@@ -488,6 +498,7 @@ class AudioManager {
         this.trainMediaSourceNode = this.ctx.createMediaElementSource(this.trainAudioElement);
         this.trainMediaSourceNode.connect(this.trainGain);
         this.isTrainMediaConnected = true;
+        this.trainAudioElement.volume = 1.0;
       } catch {
         // Fallback direct volume control if Web Audio element source is restricted
         this.isTrainMediaConnected = false;
@@ -508,7 +519,6 @@ class AudioManager {
 
     if (!this.tunnelAudioElement) {
       this.tunnelAudioElement = new Audio();
-      this.tunnelAudioElement.crossOrigin = 'anonymous';
       this.tunnelAudioElement.loop = true;
       this.tunnelAudioElement.src = './assets/sfx/train_tunnel.mp3';
 
@@ -519,6 +529,7 @@ class AudioManager {
         this.tunnelMediaSourceNode.connect(this.tunnelGain);
         this.tunnelGain.connect(this.masterGain);
         this.isTunnelMediaConnected = true;
+        this.tunnelAudioElement.volume = 1.0;
       } catch {
         this.isTunnelMediaConnected = false;
         this.tunnelAudioElement.volume = 0;
@@ -651,18 +662,18 @@ class AudioManager {
       const white = Math.random() * 2 - 1;
       data[i] = (lastOut + 0.02 * white) / 1.02;
       lastOut = data[i];
-      data[i] *= 3.5;
+      data[i] *= 0.6; // Giảm biên độ gió từ 3.5 xuống 0.6 để gió êm dịu, không rít hay gây tiếng rào rào
     }
     const windSource = this.ctx.createBufferSource();
     windSource.buffer = buffer;
     windSource.loop = true;
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+    filter.frequency.setValueAtTime(220, this.ctx.currentTime); // Lọc tần số thấp êm đềm
     const lfo = this.ctx.createOscillator();
-    lfo.frequency.setValueAtTime(0.15, this.ctx.currentTime);
+    lfo.frequency.setValueAtTime(0.12, this.ctx.currentTime);
     const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(180, this.ctx.currentTime);
+    lfoGain.gain.setValueAtTime(80, this.ctx.currentTime);
     lfo.connect(lfoGain);
     lfoGain.connect(filter.frequency);
     lfo.start();
@@ -830,12 +841,18 @@ class AudioManager {
 
     if (!this.isTrainMediaConnected && this.trainAudioElement) {
       this.trainAudioElement.volume = effective * this.settings.trainVolume;
+    } else if (this.trainAudioElement) {
+      this.trainAudioElement.volume = 1.0;
     }
     if (!this.isTunnelMediaConnected && this.tunnelAudioElement) {
       this.tunnelAudioElement.volume = effective * this.settings.trainVolume * 1.25;
+    } else if (this.tunnelAudioElement) {
+      this.tunnelAudioElement.volume = 1.0;
     }
     if (!this.isMusicMediaConnected && this.audioElement) {
       this.audioElement.volume = effective * this.settings.musicVolume;
+    } else if (this.audioElement) {
+      this.audioElement.volume = 1.0;
     }
   }
 
@@ -858,6 +875,11 @@ class AudioManager {
     if (this.audioElement) {
       this.audioElement.pause();
       if (track.url !== 'procedural') {
+        if (track.url.startsWith('http://') || track.url.startsWith('https://')) {
+          this.audioElement.crossOrigin = 'anonymous';
+        } else {
+          this.audioElement.removeAttribute('crossOrigin');
+        }
         this.audioElement.src = track.url;
         if (this.settings.isPlayingMusic) {
           this.audioElement.play().catch(() => {});
@@ -918,9 +940,13 @@ class AudioManager {
         if (this.settings.isPlayingMusic) {
           this.musicGain?.gain.setValueAtTime(clamped, now);
         }
-        if (!this.isMusicMediaConnected && this.audioElement) {
-          const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
-          this.audioElement.volume = clamped * effectiveMaster;
+        if (this.audioElement) {
+          if (!this.isMusicMediaConnected) {
+            const effectiveMaster = this.settings.isMuted ? 0 : this.settings.masterVolume;
+            this.audioElement.volume = clamped * effectiveMaster;
+          } else {
+            this.audioElement.volume = 1.0;
+          }
         }
         break;
       case 'trainVolume':

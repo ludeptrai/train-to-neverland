@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
 
-export const TUNNEL_FLOW_DURATION = 4600; // ms: tăng thời lượng trải nghiệm hành trình trong hầm lên 4.6s
-export const TUNNEL_SWAP_MIDPOINT = 2300; // ms: thời điểm giữa hầm tối 100% để tráo cảnh nền
+export type TunnelPhase = 'entering' | 'inside' | 'exiting' | 'idle';
+
+export const TUNNEL_FLOW_DURATION = 4600; // ms (dành cho fallback khi không truyền phase)
+export const TUNNEL_SWAP_MIDPOINT = 2300;
 
 export interface TunnelDarknessOverlayProps {
   isActive: boolean;
+  phase?: TunnelPhase;
   stationName: string;
   subtitle: string;
   trainYOffset?: string;
@@ -14,6 +17,7 @@ export interface TunnelDarknessOverlayProps {
 
 export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
   isActive,
+  phase,
   stationName,
   subtitle,
   trainYOffset = '0px',
@@ -31,7 +35,103 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
     ];
   }, []);
 
-  if (!isActive) return null;
+  if (!isActive || phase === 'idle') return null;
+
+  // Xác định các animation theo Phase hoặc Fallback
+  const isPhaseDriven = Boolean(phase);
+
+  const getCurtainAnimation = () => {
+    if (!isPhaseDriven) {
+      return `tunnelShadowSweepFlow ${TUNNEL_FLOW_DURATION}ms forwards`;
+    }
+    if (phase === 'entering') {
+      return 'tunnelEnterSweep 1000ms cubic-bezier(0.25, 0.85, 0.35, 1) forwards';
+    }
+    if (phase === 'exiting') {
+      return 'tunnelExitSweep 1100ms cubic-bezier(0.35, 0, 0.25, 1) forwards';
+    }
+    return 'none';
+  };
+
+  const getCurtainTransform = () => {
+    if (isPhaseDriven && phase === 'inside') {
+      return 'translateX(0%)';
+    }
+    return undefined;
+  };
+
+  const getInteriorStyle = (): React.CSSProperties => {
+    if (!isPhaseDriven) {
+      return {
+        animation: `tunnelInteriorFlow ${TUNNEL_FLOW_DURATION}ms ease forwards`,
+      };
+    }
+    if (phase === 'entering') {
+      return {
+        animation: 'tunnelInteriorFadeIn 700ms ease 150ms forwards',
+        opacity: 0,
+      };
+    }
+    if (phase === 'inside') {
+      return {
+        opacity: 1,
+      };
+    }
+    if (phase === 'exiting') {
+      return {
+        animation: 'tunnelInteriorFadeOut 700ms ease forwards',
+        opacity: 1,
+      };
+    }
+    return { opacity: 0 };
+  };
+
+  const getBadgeStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: 'absolute',
+      top: '38%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      textAlign: 'center',
+      padding: '20px 42px',
+      borderRadius: '8px',
+      backgroundColor: 'rgba(15, 14, 22, 0.92)',
+      border: '1.5px solid rgba(237, 176, 143, 0.45)',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 14px rgba(237, 176, 143, 0.12)',
+      zIndex: 42,
+      pointerEvents: 'none',
+    };
+
+    if (!isPhaseDriven) {
+      return {
+        ...base,
+        animation: `tunnelBadgeFlow ${TUNNEL_FLOW_DURATION}ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`,
+      };
+    }
+    if (phase === 'entering') {
+      return {
+        ...base,
+        animation: 'tunnelBadgeEnter 750ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms forwards',
+        opacity: 0,
+      };
+    }
+    if (phase === 'inside') {
+      return {
+        ...base,
+        opacity: 1,
+        transform: 'translate(-50%, -50%) scale(1)',
+      };
+    }
+    if (phase === 'exiting') {
+      return {
+        ...base,
+        animation: 'tunnelBadgeExit 550ms ease forwards',
+        opacity: 1,
+      };
+    }
+    return { ...base, opacity: 0 };
+  };
 
   return (
     <div
@@ -45,6 +145,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
       }}
     >
       <style>{`
+        /* Pha Fallback cũ */
         @keyframes tunnelShadowSweepFlow {
           0% {
             transform: translateX(115%);
@@ -61,6 +162,36 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           100% {
             transform: translateX(-130%);
           }
+        }
+
+        /* Pha tách bạch: Vào Hầm */
+        @keyframes tunnelEnterSweep {
+          0% {
+            transform: translateX(115%);
+          }
+          100% {
+            transform: translateX(0%);
+          }
+        }
+
+        /* Pha tách bạch: Ra Khỏi Hầm */
+        @keyframes tunnelExitSweep {
+          0% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(-130%);
+          }
+        }
+
+        /* Độ sáng nội thất lòng hầm */
+        @keyframes tunnelInteriorFadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes tunnelInteriorFadeOut {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
         }
 
         @keyframes tunnelInteriorFlow {
@@ -87,6 +218,28 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           }
           100% {
             transform: translateX(-1800px);
+          }
+        }
+
+        @keyframes tunnelBadgeEnter {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.92);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        @keyframes tunnelBadgeExit {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.96);
           }
         }
 
@@ -118,9 +271,9 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
 
       {/* 
         1. Màn bóng tối hầm với viền bóng mờ đối xứng (Soft Shadow Tunnel Curtain)
-        - Vào hầm (0% -> 26%): Viền bóng mờ quét từ phải sang trái, êm ái phủ đen màn hình
-        - Trong hầm (26% -> 74%): Che phủ 100% lòng hầm, hiển thị đèn trần, tia lửa bánh xe, bụi phản quang và bảng ga
-        - Ra hầm (74% -> 100%): Viền bóng mờ quét tiếp sang trái, hé lộ êm ái phong cảnh ga mới
+        - Vào hầm (entering): Viền bóng mờ quét từ phải sang trái, êm ái phủ đen màn hình
+        - Trong hầm (inside): Che phủ 100% lòng hầm, hiển thị đèn trần, tia lửa bánh xe, bụi phản quang và bảng ga
+        - Ra hầm (exiting): Viền bóng mờ quét tiếp sang trái, hé lộ êm ái phong cảnh ga mới
       */}
       <div
         style={{
@@ -131,7 +284,8 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           height: '100%',
           backgroundColor: '#05060a',
           boxShadow: '-80px 0 120px rgba(5, 6, 10, 0.95), 80px 0 120px rgba(5, 6, 10, 0.95)',
-          animation: `tunnelShadowSweepFlow ${TUNNEL_FLOW_DURATION}ms forwards`,
+          animation: getCurtainAnimation(),
+          transform: getCurtainTransform(),
           pointerEvents: 'none',
         }}
       >
@@ -165,7 +319,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
       {/* 
         2. Bên trong lòng hầm: Hệ thống Đèn Thị Sai (Motion Parallax) & Vệt Motion Blur Siêu Tốc
         - Tầng 1: Đèn trần trên cao (Ceiling Far Lights)
-        - Tầng 2: Dải đèn tường hông gần (Wall Near Motion Streaks) biểu diễn gia tốc xé gió & ảo giác đảo chiều
+        - Tầng 2: Dải đèn tường hông gần (Wall Near Motion Streaks)
         - Thanh ray kim loại phản quang dưới bánh xe
       */}
       <div
@@ -173,7 +327,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          animation: `tunnelInteriorFlow ${TUNNEL_FLOW_DURATION}ms ease forwards`,
+          ...getInteriorStyle(),
         }}
       >
         {/* TẦNG 1: Dãy đèn trần xa trên cao (Ceiling Far Lights) - Lướt êm ái sang trái liên tục */}
@@ -278,7 +432,9 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          animation: `tunnelDustFlow ${TUNNEL_FLOW_DURATION}ms ease-in-out forwards`,
+          ...(isPhaseDriven
+            ? { opacity: phase === 'inside' ? 1 : 0.5, transition: 'opacity 0.5s ease' }
+            : { animation: `tunnelDustFlow ${TUNNEL_FLOW_DURATION}ms ease-in-out forwards` }),
         }}
       >
         {dustParticles.map((p) => (
@@ -302,24 +458,7 @@ export const TunnelDarknessOverlay: React.FC<TunnelDarknessOverlayProps> = ({
         4. Bảng thông báo ga đến (Station Callout Announcement Badge)
         Nổi bật trang trọng giữa màn hình tối trong lúc tàu đang chạy trong hầm
       */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '38%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          animation: `tunnelBadgeFlow ${TUNNEL_FLOW_DURATION}ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`,
-          textAlign: 'center',
-          padding: '20px 42px',
-          borderRadius: '8px',
-          backgroundColor: 'rgba(15, 14, 22, 0.92)',
-          border: '1.5px solid rgba(237, 176, 143, 0.45)',
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 14px rgba(237, 176, 143, 0.12)',
-          zIndex: 42,
-          pointerEvents: 'none',
-        }}
-      >
+      <div style={getBadgeStyle()}>
         <div
           style={{
             fontFamily: "'VT323', monospace",

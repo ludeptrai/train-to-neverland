@@ -77,6 +77,9 @@ export function createDefaultLandscapeMeta(id) {
     location: "Việt Nam",
     bgSpeed: 0.15,
     mgSpeed: 0.85,
+    fgSpeed: 1.35,
+    fgScaleRatio: 1.0,
+    fgY: 0,
     mgScaleRatio: 0.5,
     mgY: 0,
     bgMirror: true,
@@ -195,11 +198,45 @@ export function scanLandscapes() {
       mgLightsUrl = `./assets/landscapes/${dir}/midground_lights.png`;
     }
 
+    // Tìm file foreground (tiền cảnh: optional, nếu không có thì lấy hình default)
+    let fgUrl = './assets/landscapes/default_foreground.png';
+    let fgLightsUrl = undefined;
+
+    if (files.includes('foreground.png')) {
+      fgUrl = `./assets/landscapes/${dir}/foreground.png`;
+    } else if (files.includes('foreground.svg')) {
+      fgUrl = `./assets/landscapes/${dir}/foreground.svg`;
+    } else if (meta.foregroundUrl) {
+      fgUrl = meta.foregroundUrl;
+    }
+
+    if (files.includes('foreground_lights.png')) {
+      fgLightsUrl = `./assets/landscapes/${dir}/foreground_lights.png`;
+    } else if (meta.foregroundLightsUrl) {
+      fgLightsUrl = meta.foregroundLightsUrl;
+    }
+
     const name = meta.name || humanizeName(dir, 'landscapes');
     const subtitle = meta.subtitle || `Chuyến tàu qua ga ${name}`;
     const location = meta.location || 'Việt Nam';
     const bgSpeed = meta.bgSpeed !== undefined ? meta.bgSpeed : 0.15;
     const mgSpeed = meta.mgSpeed !== undefined ? meta.mgSpeed : 0.85;
+
+    // Tham số cấu hình tiền cảnh (foreground)
+    const fgSpeed = meta.fgSpeed !== undefined ? Number(meta.fgSpeed) : 1.35;
+    const fgScaleRatio = meta.fgScaleRatio !== undefined
+      ? Number(meta.fgScaleRatio)
+      : (meta.fgRatio !== undefined
+          ? Number(meta.fgRatio)
+          : (meta.fgScale !== undefined
+              ? Number(meta.fgScale)
+              : (meta.foregroundRatio !== undefined ? Number(meta.foregroundRatio) : undefined)));
+    const fgY = meta.fgY !== undefined
+      ? meta.fgY
+      : (meta.fgOffsetY !== undefined
+          ? meta.fgOffsetY
+          : (meta.foregroundY !== undefined ? meta.foregroundY : undefined));
+    const fgOpacity = meta.fgOpacity !== undefined ? Number(meta.fgOpacity) : undefined;
 
     // Tham số cấu hình scale ratio & trục Y của background
     const bgScaleRatio = meta.bgScaleRatio !== undefined
@@ -293,6 +330,12 @@ export function scanLandscapes() {
       ...(bgLightsUrl ? { backgroundLightsUrl: bgLightsUrl } : {}),
       midgroundUrl: mgUrl,
       ...(mgLightsUrl ? { midgroundLightsUrl: mgLightsUrl } : {}),
+      foregroundUrl: fgUrl,
+      ...(fgLightsUrl ? { foregroundLightsUrl: fgLightsUrl } : {}),
+      fgSpeed,
+      ...(fgScaleRatio !== undefined ? { fgScaleRatio } : {}),
+      ...(fgY !== undefined ? { fgY } : {}),
+      ...(fgOpacity !== undefined ? { fgOpacity } : {}),
       skyPresets,
     });
   }

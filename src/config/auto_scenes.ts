@@ -33,6 +33,8 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/dalat/background.png",
     "backgroundLightsUrl": "./assets/landscapes/dalat/background_lights.png",
     "midgroundUrl": "./assets/landscapes/dalat/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#fbc2eb",
@@ -81,6 +83,8 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/hagiang/background.png",
     "backgroundLightsUrl": "./assets/landscapes/hagiang/background_lights.png",
     "midgroundUrl": "./assets/landscapes/hagiang/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#a8edea",
@@ -128,6 +132,8 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/halong/background.png",
     "backgroundLightsUrl": "./assets/landscapes/halong/background_lights.png",
     "midgroundUrl": "./assets/landscapes/halong/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#a8edea",
@@ -144,6 +150,61 @@ export const SCENES: SceneConfig[] = [
       "night": [
         "#13547a",
         "#80d0c7"
+      ]
+    }
+  },
+  {
+    "id": "hanoi",
+    "name": "Hà Nội 36 Phố Phường",
+    "subtitle": "Hành trình qua ga Hà Nội 36 Phố Phường",
+    "location": "Việt Nam",
+    "bgSpeed": 0.15,
+    "mgSpeed": 0.85,
+    "bgMirror": true,
+    "mgScaleRatio": 0.5,
+    "mgY": -20,
+    "sun": {
+      "dawn": {
+        "y": "30%",
+        "size": 90
+      },
+      "day": {
+        "y": "12%",
+        "size": 58
+      },
+      "sunset": {
+        "y": "24%",
+        "size": 100
+      },
+      "night": {}
+    },
+    "backgroundUrl": "./assets/landscapes/hanoi/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/hanoi/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/hanoi/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/hanoi/foreground.png",
+    "foregroundLightsUrl": "./assets/landscapes/hanoi/foreground_lights.png",
+    "fgSpeed": 1.35,
+    "fgScaleRatio": 0.3,
+    "fgY": -20,
+    "skyPresets": {
+      "dawn": [
+        "#fbc2eb",
+        "#a6c1ee"
+      ],
+      "day": [
+        "#4facfe",
+        "#00f2fe",
+        "#e0f7fa"
+      ],
+      "sunset": [
+        "#fa709a",
+        "#fee140",
+        "#f39c12"
+      ],
+      "night": [
+        "#09203f",
+        "#1b2a4a",
+        "#2c3e50"
       ]
     }
   },
@@ -175,6 +236,8 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/hochiminhcity/background.png",
     "backgroundLightsUrl": "./assets/landscapes/hochiminhcity/background_lights.png",
     "midgroundUrl": "./assets/landscapes/hochiminhcity/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#fbc2eb",
@@ -226,6 +289,8 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/hoian/background.png",
     "backgroundLightsUrl": "./assets/landscapes/hoian/background_lights.png",
     "midgroundUrl": "./assets/landscapes/hoian/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#fbc2eb",
@@ -274,11 +339,68 @@ export const SCENES: SceneConfig[] = [
     "backgroundUrl": "./assets/landscapes/nhatrang/background.png",
     "backgroundLightsUrl": "./assets/landscapes/nhatrang/background_lights.png",
     "midgroundUrl": "./assets/landscapes/nhatrang/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/default_foreground.png",
+    "fgSpeed": 1.35,
     "skyPresets": {
       "dawn": [
         "#ff9a9e",
         "#fecfef",
         "#a1c4fd"
+      ],
+      "day": [
+        "#4facfe",
+        "#00f2fe",
+        "#e0f7fa"
+      ],
+      "sunset": [
+        "#fa709a",
+        "#fee140",
+        "#f39c12"
+      ],
+      "night": [
+        "#09203f",
+        "#1b2a4a",
+        "#2c3e50"
+      ]
+    }
+  },
+  {
+    "id": "ninhbinh",
+    "name": "Ninh Bình",
+    "subtitle": "Hành trình qua ga Tràng An Ninh Bình",
+    "location": "Việt Nam",
+    "bgSpeed": 0.15,
+    "mgSpeed": 0.85,
+    "bgMirror": true,
+    "mgScaleRatio": 0.5,
+    "mgY": -80,
+    "sun": {
+      "dawn": {
+        "y": "46%",
+        "size": 130
+      },
+      "day": {
+        "y": "12%",
+        "size": 128
+      },
+      "sunset": {
+        "y": "44%",
+        "size": 140
+      },
+      "night": {}
+    },
+    "backgroundUrl": "./assets/landscapes/ninhbinh/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/ninhbinh/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/ninhbinh/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/ninhbinh/foreground.png",
+    "foregroundLightsUrl": "./assets/landscapes/ninhbinh/foreground_lights.png",
+    "fgSpeed": 1.35,
+    "fgScaleRatio": 0.1,
+    "fgY": -10,
+    "skyPresets": {
+      "dawn": [
+        "#fbc2eb",
+        "#a6c1ee"
       ],
       "day": [
         "#4facfe",

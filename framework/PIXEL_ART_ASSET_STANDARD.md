@@ -150,6 +150,9 @@ public/assets/
 >   *(Cũng có thể khai báo dạng phẳng tiện lợi: `"sunDawnY": "40%"`, `"sunDawnSize": 120`, `"sunDayY": "10%"`, `"sunDaySize": 60`, `"sunSunsetY": "38%"`, `"sunSunsetSize": 150`)*.
 > * **`mgScaleRatio`** *(tùy chọn, mặc định `1.0`)*: Hệ số co dãn chiều cao của layer đường ray midground (ví dụ: `1.15` để tăng kích thước ray thêm 15%, hoặc `0.85` để thu nhỏ). Đoàn tàu sẽ tự động tính toán nâng/hạ để bánh xe luôn tiếp xúc chuẩn xác trên mặt ray thép.
 > * **`mgY`** *(tùy chọn, mặc định `0`)*: Độ lệch trục dọc Y của đường ray midground (nhập số pixel như `10`, `-15`, hoặc chuỗi CSS như `"10px"`, `"-2%"`). Khi đường ray nâng lên hoặc hạ xuống, thân tàu cũng sẽ dịch chuyển tương ứng theo trục Y để giữ độ bám khớp hoàn hảo.
+> * **`fgScaleRatio`** *(hoặc `fgRatio` / `fgScale`, tùy chọn, mặc định `1.0`)*: Hệ số co dãn chiều cao của layer tiền cảnh foreground (cột điện, biển báo, dây điện). Ví dụ: `0.9` để thu nhỏ bớt 10%, `1.2` để phóng to thêm 20%.
+> * **`fgY`** *(hoặc `fgOffsetY`, tùy chọn, mặc định `0`)*: Độ lệch trục dọc Y của layer tiền cảnh foreground (nhập số pixel như `15`, `-30`, hoặc chuỗi CSS như `"20px"`, `"-5%"`). Giúp điều chỉnh chân cột điện và dây cáp tiếp xúc đúng mép dưới màn hình.
+> * **`fgSpeed`** *(tùy chọn, mặc định `1.35`)*: Hệ số tốc độ cuộn của tiền cảnh so với midground, tạo chiều sâu parallax 3D lướt qua phía trước đoàn tàu.
 
 ---
 

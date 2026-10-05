@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { audioManager } from '../../engines/AudioManager';
 import { AudioSettings, DSPPreset } from '../../types';
 import { PixelButton } from '../Shared/PixelButton';
@@ -31,18 +32,64 @@ export const AudioMixerDrawer: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
 
-  // Tự động đóng popup khi click ra bên ngoài
+  const [coords, setCoords] = useState<{ top: number; right: number; isNarrow: boolean }>({
+    top: 50,
+    right: 10,
+    isNarrow: false,
+  });
+
+  const updatePosition = () => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const popupWidth = 330;
+    const isNarrow = vw <= 360;
+
+    // Khoảng cách từ lề phải màn hình tới nút kích hoạt
+    const idealRight = Math.max(8, vw - rect.right);
+    // Đảm bảo cạnh trái của popup luôn cách lề trái màn hình tối thiểu 8px
+    // left = vw - right - popupWidth >= 8 => right <= vw - popupWidth - 8
+    const maxRight = Math.max(8, vw - popupWidth - 8);
+    const right = Math.min(maxRight, idealRight);
+    const top = Math.min(rect.bottom + 6, Math.max(10, window.innerHeight - 80));
+
+    setCoords({
+      top,
+      right,
+      isNarrow,
+    });
+  };
+
+  // Tự động đóng popup khi click ra bên ngoài & cập nhật tọa độ chính xác
   useEffect(() => {
     if (!isOpen) return;
+    updatePosition();
+
+    const handleResizeOrScroll = () => {
+      updatePosition();
+    };
+
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        popupRef.current &&
+        !popupRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
+
+    window.addEventListener('resize', handleResizeOrScroll);
+    window.addEventListener('scroll', handleResizeOrScroll, true);
     const timer = setTimeout(() => {
       document.addEventListener('click', handleClickOutside);
     }, 0);
+
     return () => {
+      window.removeEventListener('resize', handleResizeOrScroll);
+      window.removeEventListener('scroll', handleResizeOrScroll, true);
       clearTimeout(timer);
       document.removeEventListener('click', handleClickOutside);
     };
@@ -87,33 +134,38 @@ export const AudioMixerDrawer: React.FC = () => {
         gap: '8px',
       }}
     >
-      {/* Drawer Dropdown Content */}
-      {isOpen && (
-        <div
-          ref={popupRef}
-          className="custom-scrollbar"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            right: 0,
-            width: '330px',
-            maxWidth: 'calc(100vw - 20px)',
-            maxHeight: 'min(480px, calc(100vh - 120px))',
-            overflowY: 'auto',
-            zIndex: 1000,
-            background: 'rgba(20, 16, 20, 0.96)',
-            backdropFilter: 'blur(16px)',
-            border: '2px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '12px',
-            padding: '16px',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
-            color: '#f5e6d3',
-            fontFamily: "'VT323', monospace",
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '14px',
-          }}
-        >
+      {/* Drawer Dropdown Content (Được render qua Portal để không bao giờ bị tràn lề hoặc bị khuất bởi sidebar) */}
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={popupRef}
+            className="custom-scrollbar"
+            style={{
+              position: 'fixed',
+              top: `${coords.top}px`,
+              ...(coords.isNarrow
+                ? { left: '8px', right: '8px', width: 'auto' }
+                : { right: `${coords.right}px`, width: '330px' }),
+              maxWidth: 'calc(100vw - 16px)',
+              maxHeight: 'min(480px, calc(100vh - 70px))',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              boxSizing: 'border-box',
+              zIndex: 99999,
+              background: 'rgba(20, 16, 20, 0.96)',
+              backdropFilter: 'blur(16px)',
+              border: '2px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '12px',
+              padding: '16px',
+              boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+              color: '#f5e6d3',
+              fontFamily: "'VT323', monospace",
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+            }}
+          >
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '16px', color: '#ffd166', letterSpacing: '1px' }}>AUDIO DSP & MIXER</span>
@@ -389,7 +441,8 @@ export const AudioMixerDrawer: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Floating Toggle Button */}

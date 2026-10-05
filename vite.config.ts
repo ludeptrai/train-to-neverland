@@ -40,6 +40,9 @@ function assetRegistryPlugin(): Plugin {
               res.setHeader('Content-Type', mimeMap[ext]);
             }
             res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', '*');
             return fs.createReadStream(filePath).pipe(res);
           }
         }

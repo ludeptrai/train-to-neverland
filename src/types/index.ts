@@ -39,6 +39,12 @@ export interface SceneConfig {
   backgroundLightsUrl?: string;
   midgroundUrl: string;
   midgroundLightsUrl?: string;
+  foregroundUrl?: string; // URL ảnh tiền cảnh (optional, fallback default_foreground.png)
+  foregroundLightsUrl?: string; // URL đèn đêm tiền cảnh
+  fgSpeed?: number; // Tốc độ cuộn tiền cảnh (mặc định 1.35x)
+  fgScaleRatio?: number; // Tỉ lệ co dãn tiền cảnh (mặc định 1.0)
+  fgY?: number | string; // Vị trí trục Y của tiền cảnh (px hoặc %, mặc định 0)
+  fgOpacity?: number; // Độ trong suốt của tiền cảnh (mặc định 1.0)
   skyPresets?: {
     dawn?: string[];
     day?: string[];

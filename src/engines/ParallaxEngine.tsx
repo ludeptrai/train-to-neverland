@@ -3,12 +3,12 @@ import { TimeOfDay, SceneConfig, TrainTheme } from '../types';
 import { LightingTheme } from './LightingManager';
 import {
   TunnelDarknessOverlay,
-  TUNNEL_FLOW_DURATION,
-  TUNNEL_SWAP_MIDPOINT,
+  TunnelPhase,
 } from '../components/Effects/TunnelDarknessOverlay';
 import { SkyLayer } from '../components/Effects/SkyLayer';
 import { PixelSkyGradient } from '../components/Effects/PixelSkyGradient';
 import { audioManager } from './AudioManager';
+import { preloadSceneAssets } from '../utils/assetLoader';
 
 interface ParallaxEngineProps {
   scene: SceneConfig;
@@ -30,10 +30,12 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   // Position offsets
   const bgOffsetRef = useRef(0);
   const mgOffsetRef = useRef(0);
+  const fgOffsetRef = useRef(0);
   const animFrameRef = useRef<number | null>(null);
 
   const [bgOffset, setBgOffset] = useState(0);
   const [mgOffset, setMgOffset] = useState(0);
+  const [fgOffset, setFgOffset] = useState(0);
   const [trainBounce, setTrainBounce] = useState(0);
 
   // Background True Aspect Ratio & Responsive Viewport Tracking
@@ -75,9 +77,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   // Wheel sparks inside tunnel
   const [sparks, setSparks] = useState<Array<{ id: number; x: number; y: number; alpha: number; color: string }>>([]);
 
-  // 1-Flow Seamless Tunnel Transition
+  // 1-Flow Seamless Tunnel Transition with Dynamic Asset Preloading
   const [displayedScene, setDisplayedScene] = useState<SceneConfig>(scene);
-  const [isTunneling, setIsTunneling] = useState(false);
+  const [tunnelPhase, setTunnelPhase] = useState<TunnelPhase>('idle');
+  const isTunneling = tunnelPhase !== 'idle';
   const [targetStation, setTargetStation] = useState({ name: '', subtitle: '' });
 
   useEffect(() => {
@@ -123,6 +126,22 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             ...(meta.backgroundUrl ? { backgroundUrl: meta.backgroundUrl } : {}),
             ...(meta.midgroundUrl ? { midgroundUrl: meta.midgroundUrl } : {}),
             ...(meta.backgroundLightsUrl ? { backgroundLightsUrl: meta.backgroundLightsUrl } : {}),
+            ...(meta.foregroundUrl ? { foregroundUrl: meta.foregroundUrl } : {}),
+            ...(meta.foregroundLightsUrl ? { foregroundLightsUrl: meta.foregroundLightsUrl } : {}),
+            ...(meta.fgSpeed !== undefined ? { fgSpeed: Number(meta.fgSpeed) } : {}),
+            ...(meta.fgScaleRatio !== undefined
+              ? { fgScaleRatio: Number(meta.fgScaleRatio) }
+              : (meta.fgRatio !== undefined
+                  ? { fgScaleRatio: Number(meta.fgRatio) }
+                  : (meta.fgScale !== undefined
+                      ? { fgScaleRatio: Number(meta.fgScale) }
+                      : (meta.foregroundRatio !== undefined ? { fgScaleRatio: Number(meta.foregroundRatio) } : {})))),
+            ...(meta.fgY !== undefined
+              ? { fgY: meta.fgY }
+              : (meta.fgOffsetY !== undefined
+                  ? { fgY: meta.fgOffsetY }
+                  : (meta.foregroundY !== undefined ? { fgY: meta.foregroundY } : {}))),
+            ...(meta.fgOpacity !== undefined ? { fgOpacity: Number(meta.fgOpacity) } : {}),
             ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
             ...(meta.bgMirror !== undefined ? { bgMirror: Boolean(meta.bgMirror) } : (meta.mirrorBackground !== undefined ? { bgMirror: Boolean(meta.mirrorBackground) } : {})),
             ...(Boolean(meta.sun || meta.celestial || meta.sunDawnY !== undefined || meta.sunDayY !== undefined || meta.sunSunsetY !== undefined) ? {
@@ -162,40 +181,61 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   }, [displayedScene.id]);
 
   const activeTransitionTargetId = useRef<string | null>(null);
-  const transitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const transitionSeqRef = useRef<number>(0);
 
-  const startTunnelTransition = (targetScene: SceneConfig) => {
-    // Clear any previous transition timers
-    transitionTimersRef.current.forEach((t) => clearTimeout(t));
-    transitionTimersRef.current = [];
-
+  const startTunnelTransition = async (targetScene: SceneConfig) => {
+    const seq = ++transitionSeqRef.current;
     activeTransitionTargetId.current = targetScene.id;
+
     setTargetStation({
       name: targetScene.name,
       subtitle: `${targetScene.location} • ${targetScene.subtitle}`,
     });
-    setIsTunneling(true);
 
-    // Kích hoạt âm thanh tàu đi vào hầm (to dần trong 0.5s)
+    // 1. Pha 1: Bắt đầu vào hầm (quét bóng đen phủ màn hình - 1000ms)
+    setTunnelPhase('entering');
     audioManager.enterTunnel(0.5);
 
-    // Tráo cảnh nền ngầm khi màn hình tối hoàn toàn ở giữa luồng (2300ms)
-    const tSwap = setTimeout(() => {
-      setDisplayedScene(targetScene);
-    }, TUNNEL_SWAP_MIDPOINT);
+    // Kích hoạt tải ngầm ngay lập tức toàn bộ ảnh nền của ga mới trong khi đang vào hầm
+    const preloadPromise = preloadSceneAssets(targetScene, 9000);
 
-    // Bắt đầu giảm dần âm thanh khi tàu bắt đầu ra khỏi hầm (74% của hành trình: ~3400ms)
-    const tExitSound = setTimeout(() => {
-      audioManager.exitTunnel(0.8);
-    }, Math.round(TUNNEL_FLOW_DURATION * 0.74));
+    // Chờ 1000ms để màn đen phủ kín 100% màn hình
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (seq !== transitionSeqRef.current) return;
 
-    // Kết thúc luồng hầm khi tàu đã lướt ra cảnh mới (4600ms)
-    const tFinish = setTimeout(() => {
-      setIsTunneling(false);
-      activeTransitionTargetId.current = null;
-    }, TUNNEL_FLOW_DURATION);
+    // 2. Pha 2: Trong lòng hầm tối (Inside)
+    setTunnelPhase('inside');
+    const insideStartTime = Date.now();
+    const MIN_INSIDE_DURATION = 1600; // Ít nhất 1.6s để tạo cảm giác chạy trong hầm và đọc tên ga
 
-    transitionTimersRef.current = [tSwap, tExitSound, tFinish];
+    // CHỜ CHO ASSET GA MỚI TẢI XONG 100% TRONG LÒNG HẦM (không lo bị pop-in hay giật hình)
+    await preloadPromise;
+    if (seq !== transitionSeqRef.current) return;
+
+    // Nếu mạng tải nhanh hơn MIN_INSIDE_DURATION thì vẫn giữ trong hầm đủ 1.6s cho mượt mắt
+    const elapsed = Date.now() - insideStartTime;
+    if (elapsed < MIN_INSIDE_DURATION) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_INSIDE_DURATION - elapsed));
+    }
+    if (seq !== transitionSeqRef.current) return;
+
+    // Tráo cảnh nền mới khi màn hình đang được che phủ 100% trong hầm
+    setDisplayedScene(targetScene);
+
+    // Nhịp nghỉ nhỏ 80ms để trình duyệt render xong cảnh nền mới
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    if (seq !== transitionSeqRef.current) return;
+
+    // 3. Pha 3: Bắt đầu ra khỏi hầm (quét mở bóng đen sang trái - 1100ms)
+    setTunnelPhase('exiting');
+    audioManager.exitTunnel(0.8);
+
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    if (seq !== transitionSeqRef.current) return;
+
+    // 4. Hoàn tất hành trình hầm
+    setTunnelPhase('idle');
+    activeTransitionTargetId.current = null;
   };
 
   // Kích hoạt chuyển cảnh hầm khi scene thay đổi
@@ -208,8 +248,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   // Cleanup chỉ chạy khi unmount ParallaxEngine
   useEffect(() => {
     return () => {
-      transitionTimersRef.current.forEach((t) => clearTimeout(t));
-      transitionTimersRef.current = [];
+      transitionSeqRef.current++;
       audioManager.exitTunnel(0.2);
     };
   }, []);
@@ -228,9 +267,13 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         bgOffsetRef.current = (bgOffsetRef.current + displayedScene.bgSpeed * 1.5 * delta) % cycleWidth;
         // Update midground track offset (fast) - scrolling smoothly forever
         mgOffsetRef.current = (mgOffsetRef.current + displayedScene.mgSpeed * 5.5 * delta) % 100000;
+        // Update foreground offset (fastest, parallax in front of train)
+        const fgSpeedMultiplier = displayedScene.fgSpeed ?? 1.35;
+        fgOffsetRef.current = (fgOffsetRef.current + displayedScene.mgSpeed * 5.5 * fgSpeedMultiplier * delta) % 100000;
 
         setBgOffset(bgOffsetRef.current);
         setMgOffset(mgOffsetRef.current);
+        setFgOffset(fgOffsetRef.current);
 
         // Train micro-bounce (gentle 0.6px suspension oscillation like Slow Rail)
         const bounce = Math.sin(currentTime * 0.008) * 0.6;
@@ -345,6 +388,11 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   const mgScale = displayedScene.mgScaleRatio ?? 1.0;
   const mgHeight = `${(32 * mgScale).toFixed(2)}%`;
   const mgBottom = parseProportionalY(displayedScene.mgY, '0px');
+
+  // Dynamic Foreground Scaling & Proportional Y-Axis Positioning
+  const fgScale = displayedScene.fgScaleRatio ?? 1.0;
+  const fgHeight = `${(100 * fgScale).toFixed(2)}%`;
+  const fgBottom = parseProportionalY(displayedScene.fgY, '0px');
 
   // Vị trí đoàn tàu: bánh xe luôn bám khớp trên mặt ray tại mọi kích thước browser width/height
   const trainYStr = parseProportionalY(displayedScene.trainY, '0px');
@@ -697,111 +745,58 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
         </div>
       </div>
 
-      {/* 5. Layer Tiền Cảnh: Cột Điện & Dây Điện Cao Thế (Foreground Utility Poles & Catenary) */}
+      {/* 5. Layer Tiền Cảnh: Cột Điện & Dây Điện Cao Thế (Foreground Utility Poles, Wires & Props) */}
       <div
         style={{
           position: 'absolute',
-          top: 0,
+          bottom: fgBottom,
           left: 0,
           width: '100%',
-          height: '100%',
+          height: fgHeight,
           zIndex: 38, // Nằm ở phía trước đoàn tàu (zIndex 35), tạo chiều sâu 3D Parallax chân thực
-          opacity: isTunneling ? 0 : 1, // Tự động ẩn cột điện ngoài trời khi tàu chui vào hầm
+          opacity: isTunneling ? 0 : (displayedScene.fgOpacity ?? 1), // Tự động ẩn tiền cảnh ngoài trời khi tàu chui vào hầm
           transition: 'opacity 0.4s ease',
           pointerEvents: 'none',
         }}
       >
-        {/* Dây điện cao thế chạy ngang nóc tàu */}
+        {/* Lớp hình ảnh tiền cảnh (Tự động lấy ảnh riêng của địa điểm hoặc fallback về default_foreground.png) */}
         <div
           style={{
             position: 'absolute',
-            bottom: '22%',
+            top: 0,
             left: 0,
             width: '100%',
-            height: '2px',
-            backgroundColor: '#282333',
-            opacity: 0.65,
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '26%',
-            left: 0,
-            width: '100%',
-            height: '1px',
-            backgroundColor: '#342e40',
-            opacity: 0.45,
+            height: '100%',
+            backgroundImage: `url(${displayedScene.foregroundUrl || './assets/landscapes/default_foreground.png'})`,
+            backgroundRepeat: 'repeat-x',
+            backgroundPosition: `${-fgOffset}px bottom`,
+            backgroundSize: 'auto 100%',
+            imageRendering: 'pixelated',
+            filter: lighting.ambientFilter,
+            transition: 'filter 1.5s ease',
           }}
         />
 
-        {/* Các cột điện pixel art lướt qua phía trước màn hình */}
-        {[0, 1, 2, 3].map((i) => {
-          const poleSpacing = 580;
-          // Tốc độ lướt qua phía trước nhanh hơn đoàn tàu (Foreground Parallax)
-          const poleX = ((i * poleSpacing - mgOffset * 1.35) % (poleSpacing * 4) + (poleSpacing * 4)) % (poleSpacing * 4) - 80;
-
-          return (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: `${poleX}px`,
-                width: '8px',
-                height: '40%',
-                backgroundColor: '#242030',
-                filter: lighting.ambientFilter,
-                imageRendering: 'pixelated',
-              }}
-            >
-              {/* Xà ngang đỡ sứ cách điện 1 */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '12px',
-                  left: '-30px',
-                  width: '68px',
-                  height: '5px',
-                  backgroundColor: '#2f2a3d',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                }}
-              >
-                <div style={{ position: 'absolute', top: '-5px', left: '4px', width: '5px', height: '5px', backgroundColor: '#e2d8c9' }} />
-                <div style={{ position: 'absolute', top: '-5px', right: '4px', width: '5px', height: '5px', backgroundColor: '#e2d8c9' }} />
-              </div>
-
-              {/* Xà ngang đỡ sứ cách điện 2 */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '32px',
-                  left: '-18px',
-                  width: '44px',
-                  height: '4px',
-                  backgroundColor: '#2f2a3d',
-                }}
-              >
-                <div style={{ position: 'absolute', top: '-4px', left: '4px', width: '4px', height: '4px', backgroundColor: '#e2d8c9' }} />
-                <div style={{ position: 'absolute', top: '-4px', right: '4px', width: '4px', height: '4px', backgroundColor: '#e2d8c9' }} />
-              </div>
-
-              {/* Hộp biến áp nhỏ trên thân cột */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '52px',
-                  right: '-12px',
-                  width: '12px',
-                  height: '22px',
-                  backgroundColor: '#1b1926',
-                  border: '1px solid #36324a',
-                }}
-              />
-            </div>
-          );
-        })}
+        {/* Ánh sáng tiền cảnh ban đêm (nếu địa điểm có file foreground_lights.png) */}
+        {displayedScene.foregroundLightsUrl && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundImage: `url(${displayedScene.foregroundLightsUrl})`,
+              backgroundRepeat: 'repeat-x',
+              backgroundPosition: `${-fgOffset}px bottom`,
+              backgroundSize: 'auto 100%',
+              imageRendering: 'pixelated',
+              opacity: isTunneling ? 0 : lighting.emissiveOpacity,
+              transition: 'opacity 1.5s ease',
+              zIndex: 39,
+            }}
+          />
+        )}
       </div>
 
       {/* 6. Ambient Mood Overlay Color (Warm tone or deep night tint cho cảnh quan) */}
@@ -823,6 +818,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
       {/* 7. Tunnel Darkness Effect & Entrance Portal */}
       <TunnelDarknessOverlay
         isActive={isTunneling}
+        phase={tunnelPhase}
         stationName={targetStation.name}
         subtitle={targetStation.subtitle}
         trainYOffset={trainYStr}

@@ -90,24 +90,30 @@ export const SkyLayer: React.FC<SkyLayerProps> = ({
     }
   };
 
-  type CelestialPhase = 'idle' | 'sinking' | 'rising-prep' | 'rising';
+  // =========================================================================
+  // 1. THIÊN THỂ: HIỆU ỨNG T1 LẶN XUỐNG VÀ T2 MỌC LÊN KHI ĐỔI THỜI ĐIỂM
+  // Khi đổi thời gian:
+  // - Thiên thể t1 (thời điểm cũ) giữ nguyên vị trí của t1 và lặn thẳng đứng xuống sau chân trời.
+  // - Thiên thể t2 (thời điểm mới) xuất hiện từ dưới chân trời tại vị trí của t2 và mọc thẳng đứng lên.
+  // =========================================================================
+  const [currentCelestial, setCurrentCelestial] = useState<CelestialItemConfig>(() => getCelestialConfig(resolvedTime));
+  const [isCurrentRising, setIsCurrentRising] = useState(true);
 
-  // =========================================================================
-  // 1. THIÊN THỂ: HIỆU ỨNG LẶN THẲNG ĐỨNG VÀ MỌC THẲNG ĐỨNG KHI ĐỔI THỜI ĐIỂM
-  // Khi đổi thời gian: mặt trời/trăng cũ chìm thẳng đứng xuống sau chân trời,
-  // sau đó mặt trời/trăng mới mọc thẳng đứng lên từ chân trời tại vị trí mới.
-  // =========================================================================
-  const [displayedCelestial, setDisplayedCelestial] = useState<CelestialItemConfig>(() => getCelestialConfig(resolvedTime));
-  const [celestialPhase, setCelestialPhase] = useState<CelestialPhase>('idle');
+  const [departingCelestial, setDepartingCelestial] = useState<CelestialItemConfig | null>(null);
+  const [isDepartingSinking, setIsDepartingSinking] = useState(false);
+
   const prevResolvedTimeRef = useRef(resolvedTime);
+  const currentConfigRef = useRef(currentCelestial);
+  currentConfigRef.current = currentCelestial;
+
   const celestialTimeoutsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
-  // Tự động cập nhật vị trí/kích thước khi cấu hình cảnh thay đổi
+  // Tự động cập nhật toạ độ/kích thước khi cấu hình cảnh thay đổi nhưng không đổi thời điểm
   useEffect(() => {
-    if (celestialPhase === 'idle') {
-      setDisplayedCelestial(getCelestialConfig(resolvedTime));
+    if (!departingCelestial) {
+      setCurrentCelestial(getCelestialConfig(resolvedTime));
     }
-  }, [scene?.sun, resolvedTime]);
+  }, [scene?.sun]);
 
   useEffect(() => {
     if (prevResolvedTimeRef.current === resolvedTime) return;
@@ -117,28 +123,35 @@ export const SkyLayer: React.FC<SkyLayerProps> = ({
     celestialTimeoutsRef.current.forEach(clearTimeout);
     celestialTimeoutsRef.current = [];
 
+    const oldConfig = currentConfigRef.current;
     const targetConfig = getCelestialConfig(resolvedTime);
 
-    // Giai đoạn 1: Lặn thẳng đứng xuống sau dãy núi/chân trời (1.2s)
-    setCelestialPhase('sinking');
+    // Bước 1: t1 bắt đầu lặn xuống (bắt đầu tại vị trí cũ của t1)
+    setDepartingCelestial(oldConfig);
+    setIsDepartingSinking(false);
 
-    const t1 = setTimeout(() => {
-      // Giai đoạn 2: Hoán đổi tọa độ X và asset mới khi đang ở dưới đáy (tức thời, không animation ngang)
-      setDisplayedCelestial(targetConfig);
-      setCelestialPhase('rising-prep');
+    // Bước 2: Chuẩn bị t2 nằm ẩn bên dưới chân trời tại vị trí mới của t2
+    setCurrentCelestial(targetConfig);
+    setIsCurrentRising(false);
 
-      const t2 = setTimeout(() => {
-        // Giai đoạn 3: Bắt đầu nhô thẳng đứng lên từ chân trời lên vị trí mới (1.6s)
-        setCelestialPhase('rising');
+    // Frame tiếp theo (20ms): Cho t1 trượt thẳng đứng xuống sau chân trời (1.2s)
+    const tSink = setTimeout(() => {
+      setIsDepartingSinking(true);
+    }, 20);
+    celestialTimeoutsRef.current.push(tSink);
 
-        const t3 = setTimeout(() => {
-          setCelestialPhase('idle');
-        }, 1600);
-        celestialTimeoutsRef.current.push(t3);
-      }, 50);
-      celestialTimeoutsRef.current.push(t2);
+    // Bước 3: Sau 400ms (khi t1 đang lặn dần), t2 bắt đầu mọc thẳng đứng lên vị trí mới (1.5s)
+    const tRise = setTimeout(() => {
+      setIsCurrentRising(true);
+    }, 400);
+    celestialTimeoutsRef.current.push(tRise);
+
+    // Bước 4: Sau 1200ms: t1 đã hoàn toàn chìm xuống dưới chân trời -> dọn dẹp departingCelestial
+    const tClean = setTimeout(() => {
+      setDepartingCelestial(null);
+      setIsDepartingSinking(false);
     }, 1200);
-    celestialTimeoutsRef.current.push(t1);
+    celestialTimeoutsRef.current.push(tClean);
 
     return () => {
       celestialTimeoutsRef.current.forEach(clearTimeout);
@@ -147,34 +160,35 @@ export const SkyLayer: React.FC<SkyLayerProps> = ({
   }, [resolvedTime]);
 
   // =========================================================================
-  // 2. MÂY THƯA THỚT (Chỉ 2 đám mây nhỏ nhẹ, thanh bình, không bị dày đặc)
+  // =========================================================================
+  // 2. MÂY THƯA THỚT (Sử dụng bộ asset mây anime Studio Ghibli mới, thanh bình, sắc nét)
   // =========================================================================
   const cloudVariants = useMemo(() => {
     switch (resolvedTime) {
       case 'sunset':
         return {
-          cloud1: './assets/sky/clouds/cloud_05_large.png',
-          cloud2: './assets/sky/clouds/cloud_14_huge.png',
+          cloud1: './assets/sky/clouds/ghibli_cloud_02.png',
+          cloud2: './assets/sky/clouds/ghibli_cloud_05.png',
           filter: 'sepia(0.55) saturate(2.2) hue-rotate(-25deg) brightness(0.95)',
         };
       case 'night':
         return {
-          cloud1: './assets/sky/clouds/cloud_04_large.png',
-          cloud2: './assets/sky/clouds/cloud_09_huge.png',
+          cloud1: './assets/sky/clouds/ghibli_cloud_06.png',
+          cloud2: './assets/sky/clouds/ghibli_cloud_03.png',
           filter: 'brightness(0.38) saturate(0.6) hue-rotate(15deg) contrast(1.15)',
         };
       case 'dawn':
         return {
-          cloud1: './assets/sky/clouds/cloud_10_medium.png',
-          cloud2: './assets/sky/clouds/cloud_16_large.png',
-          filter: 'sepia(0.25) saturate(1.4) hue-rotate(-15deg) brightness(1.02)',
+          cloud1: './assets/sky/clouds/ghibli_cloud_03.png',
+          cloud2: './assets/sky/clouds/ghibli_cloud_07.png',
+          filter: 'sepia(0.48) saturate(2.4) hue-rotate(-42deg) brightness(0.96) drop-shadow(0 0 16px rgba(242, 171, 149, 0.45))',
         };
       case 'day':
       default:
         return {
-          cloud1: './assets/sky/clouds/cloud_06_small.png',
-          cloud2: './assets/sky/clouds/cloud_20_large.png',
-          filter: 'brightness(1.05) contrast(1.02)',
+          cloud1: './assets/sky/clouds/ghibli_cloud_01.png',
+          cloud2: './assets/sky/clouds/ghibli_cloud_04.png',
+          filter: 'brightness(1.04) contrast(1.02)',
         };
     }
   }, [resolvedTime]);
@@ -336,93 +350,96 @@ export const SkyLayer: React.FC<SkyLayerProps> = ({
         }
       `}</style>
 
-      {/* 1. Mặt Trời hoặc Mặt Trăng (Lặn thẳng đứng xuống sau chân trời, rồi mọc thẳng đứng lên ở vị trí mới) */}
-      {(() => {
-        let celestialTransform = 'translateY(0px)';
-        let celestialOpacity = displayedCelestial.opacity;
-        let celestialTransition = 'none';
+      {/* 1. Mặt Trời hoặc Mặt Trăng: t1 lặn xuống, t2 mọc lên */}
+      {/* Thiên thể cũ t1 (Lặn thẳng đứng xuống sau chân trời tại vị trí của t1) */}
+      {departingCelestial && (
+        <div
+          key={`departing-${departingCelestial.time}`}
+          style={{
+            position: 'absolute',
+            top: departingCelestial.top,
+            left: departingCelestial.left,
+            width: `${departingCelestial.width}px`,
+            height: 'auto',
+            opacity: isDepartingSinking ? 0 : departingCelestial.opacity,
+            filter: departingCelestial.filter,
+            transform: isDepartingSinking ? 'translateY(55vh)' : 'translateY(0px)',
+            transition: isDepartingSinking
+              ? 'transform 1.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.9s ease-in, filter 1.0s ease'
+              : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <PixelSun time={departingCelestial.time} />
+        </div>
+      )}
 
-        if (celestialPhase === 'sinking') {
-          celestialTransform = 'translateY(55vh)';
-          celestialOpacity = 0;
-          celestialTransition = 'transform 1.2s cubic-bezier(0.4, 0, 1, 1), opacity 1.0s ease-in, filter 1.0s ease';
-        } else if (celestialPhase === 'rising-prep') {
-          celestialTransform = 'translateY(55vh)';
-          celestialOpacity = 0;
-          celestialTransition = 'none';
-        } else if (celestialPhase === 'rising') {
-          celestialTransform = 'translateY(0px)';
-          celestialOpacity = displayedCelestial.opacity;
-          celestialTransition = 'transform 1.6s cubic-bezier(0, 0, 0.2, 1), opacity 1.4s ease-out, filter 1.6s ease';
-        }
+      {/* Thiên thể mới t2 (Mọc thẳng đứng lên từ sau chân trời tại vị trí của t2) */}
+      <div
+        key={`current-${currentCelestial.time}`}
+        style={{
+          position: 'absolute',
+          top: currentCelestial.top,
+          left: currentCelestial.left,
+          width: `${currentCelestial.width}px`,
+          height: 'auto',
+          opacity: isCurrentRising ? currentCelestial.opacity : 0,
+          filter: currentCelestial.filter,
+          transform: isCurrentRising ? 'translateY(0px)' : 'translateY(55vh)',
+          transition: isCurrentRising
+            ? 'transform 1.5s cubic-bezier(0, 0, 0.2, 1), opacity 1.2s ease-out, filter 1.4s ease'
+            : 'none',
+          pointerEvents: 'none',
+        }}
+      >
+        <PixelSun time={currentCelestial.time} />
+      </div>
 
-        return (
-          <div
-            style={{
-              position: 'absolute',
-              top: displayedCelestial.top,
-              left: displayedCelestial.left,
-              width: `${displayedCelestial.width}px`,
-              height: 'auto',
-              opacity: celestialOpacity,
-              filter: displayedCelestial.filter,
-              transform: celestialTransform,
-              transition: celestialTransition,
-              pointerEvents: 'none',
-            }}
-          >
-            <PixelSun time={displayedCelestial.time} />
-          </div>
-        );
-      })()}
-
-      {/* 2. Mây thưa thớt (Chỉ 2 cụm mây nhỏ lướt chậm, tạo không gian thoáng đãng) */}
-      {/* Đám mây 1 (Tầng cao nhỏ nhẹ) */}
+      {/* 2. Mây thưa thớt (Chỉ 2 cụm mây anime Studio Ghibli lướt chậm, tạo không gian thoáng đãng) */}
+      {/* Đám mây 1 (Tầng cao nhẹ nhàng) */}
       <div
         style={{
           position: 'absolute',
-          top: '8%',
+          top: '7%',
           left: 0,
-          width: '95px',
-          animation: `skyCloudDrift1 135s linear infinite`,
+          width: '120px',
+          animation: `skyCloudDrift1 140s linear infinite`,
           animationDelay: '-40s',
           animationPlayState: animPlayState,
-          opacity: 0.72,
+          opacity: 0.85,
         }}
       >
         <img
           src={cloudVariants.cloud1}
-          alt="Cloud gentle 1"
+          alt="Cloud Ghibli 1"
           style={{
             width: '100%',
             height: 'auto',
-            imageRendering: 'pixelated',
             filter: cloudVariants.filter,
             transition: 'filter 1.5s ease',
           }}
         />
       </div>
 
-      {/* Đám mây 2 (Tầng trung bình dài mỏng) */}
+      {/* Đám mây 2 (Tầng trung bình bồng bềnh) */}
       <div
         style={{
           position: 'absolute',
-          top: '18%',
+          top: '16%',
           left: 0,
-          width: '135px',
-          animation: `skyCloudDrift2 105s linear infinite`,
+          width: '165px',
+          animation: `skyCloudDrift2 110s linear infinite`,
           animationDelay: '-90s',
           animationPlayState: animPlayState,
-          opacity: 0.76,
+          opacity: 0.88,
         }}
       >
         <img
           src={cloudVariants.cloud2}
-          alt="Cloud gentle 2"
+          alt="Cloud Ghibli 2"
           style={{
             width: '100%',
             height: 'auto',
-            imageRendering: 'pixelated',
             filter: cloudVariants.filter,
             transition: 'filter 1.5s ease',
           }}

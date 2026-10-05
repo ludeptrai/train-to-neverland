@@ -7,7 +7,7 @@ import path from 'path';
  * Ưu tiên: TP. Hồ Chí Minh hoàng hôn làm trang chủ (Priority 1.0)
  */
 
-const BASE_URL = (process.env.SITE_URL || 'https://ludeptrai.github.io/train-to-neverland').replace(/\/+$/, '');
+const BASE_URL = (process.env.SITE_URL || 'https://dikhapvietnam.luu.name.vn').replace(/\/+$/, '');
 const TIMES = ['sunset', 'night', 'dawn', 'day'];
 
 export function generateSeoFiles() {

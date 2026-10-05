@@ -57,7 +57,7 @@ Hãy phân tích kiến trúc, cảnh quan và tông màu đặc trưng nhất c
 
 ---
 ### 3. PROMPT BIỂN BÁO & CHI TIẾT CẬN CẢNH (FOREGROUND PROPS):
-- **Nội dung:** 1 sprite chi tiết đặt cạnh đường ray mang nét văn hóa của địa danh (ví dụ: biển tên ga bằng gỗ/đồng cổ điển, cột đèn tín hiệu retro, cột điện dây cáp, hàng hoa dại bản địa).
+- **Nội dung:** 1 sprite chi tiết đặt cạnh đường ray mang nét văn hóa của địa danh (ví dụ: biển bằng gỗ/đồng cổ điển, cột đèn tín hiệu retro, cột điện dây cáp, hàng hoa dại bản địa), hình ảnh nhỏ và continously connected between left and right (và dài nếu có đường dây diện) để khi ghép lặp lại các object cách xa nhau và liền mạch.
 - **Quy cách:** `2D side view, 16-bit pixel art sprite, clear daylight, natural colors, isolated on pure solid pitch black background #000000, no shadow, crisp clean edges --ar 1:1 --style raw --v 6.0`.
 
 Hãy xuất kết quả dưới dạng Markdown với từng khối Code block rõ ràng để tôi chỉ việc copy chạy ngay.
