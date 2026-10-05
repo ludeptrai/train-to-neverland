@@ -64,12 +64,22 @@ export function usePageSeo({ currentScene, timeOfDay }: PageSeoProps) {
     }
     canonicalLink.setAttribute('href', canonicalUrl);
 
-    // 4. Cập nhật Open Graph tags (Hiển thị thẻ xem trước khi chia sẻ link lên Facebook, Zalo, Discord, ...)
+    // 4. Cập nhật Open Graph & Twitter tags (Hiển thị thẻ xem trước khi chia sẻ link lên Facebook, LinkedIn, Twitter, Zalo, Discord, ...)
     const setMetaTag = (property: string, content: string) => {
       let meta = document.querySelector(`meta[property="${property}"]`);
       if (!meta) {
         meta = document.createElement('meta');
         meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    const setNameMetaTag = (name: string, content: string) => {
+      let meta = document.querySelector(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', name);
         document.head.appendChild(meta);
       }
       meta.setAttribute('content', content);
@@ -81,14 +91,21 @@ export function usePageSeo({ currentScene, timeOfDay }: PageSeoProps) {
     setMetaTag('og:type', 'website');
     setMetaTag('og:site_name', SITE_NAME);
 
-    // Ảnh preview đại diện: dùng background của chính ga đó
-    if (currentScene.backgroundUrl) {
-      try {
-        const fullImgUrl = new URL(currentScene.backgroundUrl, window.location.href).href;
-        setMetaTag('og:image', fullImgUrl);
-      } catch {
-        // Bỏ qua nếu URL không phân giải được
-      }
+    setNameMetaTag('twitter:title', title);
+    setNameMetaTag('twitter:description', description);
+
+    // Ảnh preview đại diện: Trang chủ dùng master og-image.png, các ga khác dùng background ga tương ứng
+    try {
+      const previewImgUrl = isHome
+        ? new URL('/og-image.png', window.location.href).href
+        : currentScene.backgroundUrl
+          ? new URL(currentScene.backgroundUrl, window.location.href).href
+          : new URL('/og-image.png', window.location.href).href;
+
+      setMetaTag('og:image', previewImgUrl);
+      setNameMetaTag('twitter:image', previewImgUrl);
+    } catch {
+      // Bỏ qua nếu URL không phân giải được
     }
   }, [currentScene, timeOfDay]);
 }
