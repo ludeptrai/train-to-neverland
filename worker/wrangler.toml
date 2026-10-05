@@ -4,5 +4,5 @@ compatibility_date = "2024-10-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "neverland-stats-db"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+database_name = "train-to-neverland"
+database_id = "b39134b1-f082-4a19-81e6-e8e0116afab9"

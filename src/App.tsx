@@ -98,7 +98,7 @@ export const App: React.FC = () => {
           setCurrentScene((prevScene) => {
             const idx = SCENES.findIndex((s) => s.id === prevScene.id);
             const nextScene = SCENES[(idx + 1) % SCENES.length];
-            analyticsService.recordSceneChange(nextScene.id, nextScene.name, prevScene.id);
+            analyticsService.recordSceneChange(nextScene.id, nextScene.name, prevScene.id, 'auto');
             return nextScene;
           });
           return 0;
@@ -176,7 +176,7 @@ export const App: React.FC = () => {
   // Khởi tạo phiên lữ khách lên hệ thống thống kê ngay khi vừa bước lên tàu
   useEffect(() => {
     const sceneList = SCENES.map((s) => ({ id: s.id, name: s.name }));
-    analyticsService.initSession(currentScene.id, currentScene.name, weather, sceneList);
+    analyticsService.initSession(currentScene.id, currentScene.name, weather, sceneList, currentTrain.id, timeOfDay, isAutoTour);
   }, []);
 
   // Đồng bộ trạng thái âm thanh & thời tiết vào analytics
@@ -190,9 +190,19 @@ export const App: React.FC = () => {
 
   // Handle manual scene switch (resets progress)
   const handleSceneChange = (scene: SceneConfig) => {
-    analyticsService.recordSceneChange(scene.id, scene.name, currentScene.id);
+    analyticsService.recordSceneChange(scene.id, scene.name, currentScene.id, 'user');
     setCurrentScene(scene);
     setTourProgress(0);
+  };
+
+  const handleTrainChange = (train: TrainTheme) => {
+    setCurrentTrain(train);
+    analyticsService.recordTrainChange(train.id);
+  };
+
+  const handleTimeOfDayChange = (time: TimeOfDay) => {
+    setTimeOfDay(time);
+    analyticsService.recordTimeSelect(time);
   };
 
   // Sync lighting
@@ -377,12 +387,12 @@ export const App: React.FC = () => {
             weather={weather}
             onWeatherChange={handleWeatherChange}
             timeOfDay={timeOfDay}
-            onTimeOfDayChange={setTimeOfDay}
+            onTimeOfDayChange={handleTimeOfDayChange}
             currentScene={currentScene}
             onSceneChange={handleSceneChange}
             scenes={SCENES}
             currentTrain={currentTrain}
-            onTrainChange={setCurrentTrain}
+            onTrainChange={handleTrainChange}
             trains={TRAINS}
             isAutoTour={isAutoTour}
             onToggleAutoTour={() => setIsAutoTour(!isAutoTour)}

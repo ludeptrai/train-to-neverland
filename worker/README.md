@@ -1,10 +1,10 @@
-# 🚂 Hướng Dẫn Triển Khai Backend Thống Kê Cloudflare Worker + D1
+# 🚂 Hướng Dẫn Triển Khai Backend Nhật Ký Hành Trình Cloudflare Worker + D1
 
-Backend này được tối ưu hóa 100% cho dự án **Chuyến Tàu Không Vội (Train to the Neverland)**, chạy trên nền tảng **Cloudflare Serverless Edge** miễn phí hoàn toàn, không tốn bất kỳ chi phí duy trì nào và có độ trễ cực thấp (< 50ms).
+Backend này được thiết kế và tối ưu hóa 100% cho dự án **Chuyến Tàu Không Vội (Train to the Neverland)**, chạy trên nền tảng **Cloudflare Serverless Edge + D1 SQL Database** miễn phí hoàn toàn, không tốn bất kỳ chi phí duy trì nào và có độ trễ cực thấp (< 50ms).
 
 ---
 
-## ⚡ LỰA CHỌN 1: Triển khai nhanh bằng Dòng lệnh (Wrangler CLI - Khuyên dùng, 2 phút)
+## ⚡ Triển khai nhanh bằng Wrangler CLI (2 phút)
 
 Mở terminal trong thư mục `worker/` (hoặc từ thư mục gốc dự án) và chạy lần lượt các lệnh sau:
 
@@ -40,7 +40,7 @@ Sau khi hoàn tất, terminal sẽ cấp cho bạn một đường link dạng:
 `https://train-neverland-stats.<tên-subdomain-của-bạn>.workers.dev`
 
 ### Bước 5: Kết nối vào Frontend
-Tạo file `.env` ở thư mục gốc của dự án web (hoặc sao chép từ `.env.example`):
+Tạo file `.env` ở thư mục gốc của dự án web (hoặc chỉnh sửa `.env` hiện tại):
 ```env
 VITE_STATS_API_URL=https://train-neverland-stats.<tên-subdomain-của-bạn>.workers.dev
 ```
@@ -48,22 +48,36 @@ Chạy lại `npm run build` hoặc `npm run dev`. Website sẽ tự động k�
 
 ---
 
-## 🔍 API Kiểm Tra & Debug Nhật Ký Phiên (Session Logs)
+## 🔍 Kiến Trúc & Các Endpoint API
 
-Backend cung cấp sẵn các endpoint để bạn trực tiếp kiểm tra và xác minh luồng dữ liệu trên trình duyệt:
+Hệ thống được thiết kế theo mô hình **Ghi log phiên + Batch Event Tracking** chính xác:
 
-1. **Xem tổng quan cộng đồng**: `GET /api/stats`
-2. **Xem danh sách 50 phiên lữ khách gần nhất**: `GET /api/sessions?limit=50`
-   - Hiển thị chi tiết: `session_id`, thời gian bắt đầu, thời lượng trên tàu (`duration_seconds`), ga ban đầu, danh sách các ga đã ghé (`scenes_visited`), số chuyến đi (`journey_count`), quốc gia, thiết bị (desktop/mobile) và trạng thái.
-3. **Xem dòng thời gian sự kiện của 1 session**: `GET /api/sessions/timeline?sessionId=traveler_...`
-   - Xem từng bước của session: lúc bước lên tàu (`arrival`), lúc chuyển cảnh qua các ga (`scene_change`), lúc rời tàu (`session_end`).
-4. **Xem danh sách góp ý**: `GET /api/feedback`
-5. **Reset an toàn (Yêu cầu mật khẩu)**: `POST /api/reset` kèm header `Authorization: Bearer <ADMIN_SECRET>` hoặc query `?secret=<ADMIN_SECRET>`.
+1. **`POST /api/session/start`**:
+   - Khởi tạo phiên của lữ khách ngay khi vừa vào trang.
+   - Tự động ghi nhận thiết bị, độ phân giải màn hình, ngôn ngữ, quốc gia (qua Cloudflare Edge), ga xuất phát, đoàn tàu và chế độ tự động chuyển ga.
+   - Trả về thông tin cá nhân của lữ khách (`me.total_active_sec`, `session_count`).
+
+2. **`POST /api/session/track`**:
+   - Nhận gói tin đồng bộ delta thời gian định kỳ mỗi 15s (`active_sec`, `rain_sec`, `lofi_sec`).
+   - Ghi nhận nhật ký sự kiện dạng hàng loạt (`station_arrive`, `train_change`, `weather_change`, `time_select`, `audio_start`, `audio_stop`).
+   - Tự động đóng lượt dừng ga cũ và mở lượt dừng ga mới trong `station_visits` (chống ghi trùng bằng `event_id UNIQUE`).
+   - Hỗ trợ `end: true` qua `navigator.sendBeacon` khi người dùng đóng tab / rời trang.
+
+3. **`GET /api/stats?visitor_id=...`**:
+   - Trả về tổng quan số liệu cộng đồng:
+     - `online`: Số lượng lữ khách đang cùng trên tàu thời gian thực (trong cửa sổ 60s).
+     - `totals`: Lượt lữ khách (`visitors`), chuyến đi (`trips`), phút đi tàu (`train_minutes`), phút nghe mưa (`rain_minutes`), giờ nghe nhạc (`lofi_hours`), số ga đã khám phá (`stations_explored`).
+     - `top_stations`: Bảng xếp hạng các ga tàu được ghé thăm nhiều nhất kèm số lượt.
+     - `time_of_day_pct`: Tỷ lệ % các khung giờ được lựa chọn (`dawn`, `day`, `dusk`, `night`).
+     - `me`: Dữ liệu cá nhân của riêng lữ khách (`total_active_sec`, `session_count`).
+
+4. **`POST /api/feedback` & `GET /api/feedback`**:
+   - Nhận và lưu lại các lời nhắn, góp ý gửi về nhà ga từ `FeedbackDonateModal`.
 
 ---
 
-## 🛡️ Cam Kết Bảo Mật & Quyền Riêng Tư (Zero Tracking)
-- Không thu thập địa chỉ IP, không dùng GPS hay cookie theo dõi cá nhân.
-- Định danh hoàn toàn ẩn danh theo UUID phiên (`sessionStorage`).
-- Tự động dọn dẹp các phiên không còn hoạt động.
-- Dữ liệu hoàn toàn thuộc quyền sở hữu của bạn trên Cloudflare D1.
+## 🛠️ File Thư Viện Kèm Theo (`journey-tracker.js`)
+
+File `journey-tracker.js` (được lưu tại `worker/journey-tracker.js` và `public/journey-tracker.js`) cung cấp sẵn đối tượng toàn cục `JourneyTracker` và `JourneyStats` cho các trang HTML tĩnh thuần nếu bạn muốn nhúng trực tiếp qua thẻ `<script src="journey-tracker.js"></script>`.
+
+Trong ứng dụng React chính của dự án, logic này đã được tích hợp toàn diện và liền mạch vào `src/services/AnalyticsService.ts`.
