@@ -13,6 +13,7 @@ import { FeedbackDonateModal } from './components/HUD/FeedbackDonateModal';
 import { ZenModeToggle } from './components/HUD/ZenModeToggle';
 import { audioManager } from './engines/AudioManager';
 import { analyticsService } from './services/AnalyticsService';
+import { usePageSeo } from './hooks/usePageSeo';
 
 const VALID_TIMES: TimeOfDay[] = ['dawn', 'day', 'sunset', 'night', 'auto'];
 const VALID_WEATHERS: WeatherType[] = ['clear', 'rain', 'snow', 'sakura'];
@@ -39,7 +40,9 @@ export const App: React.FC = () => {
       const found = SCENES.find((s) => s.id.toLowerCase() === q || s.name.toLowerCase().includes(q));
       if (found) return found;
     }
-    return SCENES[0];
+    // Ưu tiên ga TP. Hồ Chí Minh làm mặc định cho trang chủ
+    const hcm = SCENES.find((s) => s.id === 'hochiminhcity');
+    return hcm || SCENES[0];
   });
 
   const [currentTrain, setCurrentTrain] = useState<TrainTheme>(() => {
@@ -70,6 +73,9 @@ export const App: React.FC = () => {
   });
 
   const [isPaused, setIsPaused] = useState<boolean>(false);
+
+  // Tự động tối ưu Title, Meta tags, Canonical URL và Open Graph cho từng địa điểm + thời gian
+  usePageSeo({ currentScene, timeOfDay });
 
   // Auto-Tour state (Slow Rail style 60s per station)
   const [isAutoTour, setIsAutoTour] = useState<boolean>(() => {
@@ -138,6 +144,9 @@ export const App: React.FC = () => {
         const q = p.sceneId.toLowerCase();
         const found = SCENES.find((s) => s.id.toLowerCase() === q || s.name.toLowerCase().includes(q));
         if (found) setCurrentScene(found);
+      } else {
+        const hcm = SCENES.find((s) => s.id === 'hochiminhcity');
+        if (hcm) setCurrentScene(hcm);
       }
       if (p.trainId) {
         const q = p.trainId.toLowerCase();

@@ -3,6 +3,7 @@ import path from 'path';
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { generateRegistryFiles } from './scripts/scan_assets.js';
+import { generateSeoFiles } from './scripts/generate_seo_files.js';
 import { processLandscapeFolder } from './scripts/process_landscape_theme.js';
 import { processTrainFolder } from './scripts/process_train_theme.js';
 
@@ -11,6 +12,7 @@ function assetRegistryPlugin(): Plugin {
     name: 'vite-plugin-asset-registry',
     buildStart() {
       generateRegistryFiles();
+      generateSeoFiles();
     },
     configureServer(server) {
       // Đảm bảo mọi asset trong public/ luôn được đọc trực tiếp từ disk, không bị kẹt cache SPA fallback
@@ -46,6 +48,7 @@ function assetRegistryPlugin(): Plugin {
 
       // Quét và cập nhật danh sách ngay khi khởi động dev server
       generateRegistryFiles();
+      generateSeoFiles();
 
       // Tự động theo dõi các thư mục asset & file quản lý tên tập trung
       const watchPaths = [
@@ -108,6 +111,7 @@ function assetRegistryPlugin(): Plugin {
           norm.includes('src/config/names.json')
         ) {
           generateRegistryFiles();
+          generateSeoFiles();
           server.ws.send({ type: 'full-reload' });
         }
       });

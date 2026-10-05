@@ -161,9 +161,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             }}
           >
             {scenes.map((s) => (
-              <button
+              <a
                 key={s.id}
-                onClick={() => {
+                href={`?scene=${s.id}&time=${timeOfDay}`}
+                onClick={(e) => {
+                  e.preventDefault();
                   onSceneChange(s);
                   setIsSceneMenuOpen(false);
                 }}
@@ -176,6 +178,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                   borderRadius: '6px',
                   fontFamily: "'VT323', monospace",
                   fontSize: '16px',
+                  textDecoration: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -184,7 +187,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               >
                 <span style={{ fontWeight: 'bold' }}>{s.name}</span>
                 <span style={{ fontSize: '10px', color: '#a09080' }}>{s.subtitle}</span>
-              </button>
+              </a>
             ))}
           </div>
         )}
