@@ -80,6 +80,7 @@ export interface AudioSettings {
   windVolume: number;
   natureVolume: number;
   isPlayingMusic: boolean;
+  isMuted: boolean;
   currentTrackIndex: number;
   dspPreset: DSPPreset;
 }

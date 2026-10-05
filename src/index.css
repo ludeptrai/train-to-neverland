@@ -61,3 +61,46 @@ input[type=range]::-moz-range-thumb {
 .watermark-glow {
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0,0,0,0.8);
 }
+
+/* Custom Retro Scrollbar (Chuẩn phong cách pixel & retro cho toàn bộ popup/dropdown) */
+::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 12, 18, 0.7);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ffd166;
+  border-radius: 4px;
+  box-shadow: 0 0 4px rgba(255, 209, 102, 0.4);
+}
+
+::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ffeaa7;
+}
+
+::-webkit-scrollbar-corner,
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-button,
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*,
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #ffd166 rgba(15, 12, 18, 0.7);
+}

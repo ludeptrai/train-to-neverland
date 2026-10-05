@@ -253,7 +253,7 @@ export const SCENES: SceneConfig[] = [
     "location": "Khánh Hòa, Việt Nam",
     "bgSpeed": 0.15,
     "mgSpeed": 0.85,
-    "bgMirror": true,
+    "bgMirror": false,
     "mgScaleRatio": 0.8,
     "mgY": -80,
     "sun": {

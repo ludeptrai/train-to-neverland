@@ -1,0 +1,58 @@
+{
+  "landscapes": {
+    "dalat": "Đà Lạt Ngàn Hoa",
+    "halong": "Vịnh Hạ Long",
+    "hoian": "Phố Cổ Hội An",
+    "nhatrang": "Biển Nha Trang",
+    "sapa": "Sa Pa Tây Bắc",
+    "tokyo": "Thành Phố Tokyo",
+    "tokyo_fuji": "Tokyo & Núi Phú Sĩ",
+    "kyoto": "Cố Đô Kyoto",
+    "kyoto_autumn": "Kyoto Mùa Thu Vàng",
+    "newyork": "New York Skyline",
+    "danang": "Đà Nẵng Biển Đẹp",
+    "paris": "Kinh Đô Paris",
+    "hanoi": "Hà Nội 36 Phố Phường",
+    "hue": "Cố Đô Huế",
+    "phuquoc": "Đảo Ngọc Phú Quốc",
+    "hochiminhcity": "TP. Hồ Chí Minh",
+    "hagiang": "Hà Giang"
+  },
+  "trains": {
+    "futuristic_train": "Tàu Cao Tốc Tương Lai",
+    "metro": "Tàu Điện Ngầm Metro",
+    "train_blue_metro": "Tàu Điện Ngầm Xanh Lam",
+    "train_green_cargo": "Tàu Hàng Container Xanh Lá",
+    "train_monorail": "Tàu Monorail Treo Tương Lai",
+    "train_oil_steam": "Tàu Hơi Nước Thùng Dầu",
+    "train_orange_bullet": "Tàu Cao Tốc Cam Vàng",
+    "train_orange_tram": "Tàu Điện Mặt Đất Cam Cổ Điển",
+    "train_red_shinkansen": "Tàu Shinkansen Đỏ Siêu Tốc",
+    "train_red_white_commuter": "Tàu Liên Tỉnh Đỏ Trắng Nhật Bản",
+    "train_shinkansen_high_speed": "Tàu Shinkansen Siêu Tốc",
+    "train_vintage_steam": "Tàu Hơi Nước Than Đá Cổ Điển",
+    "train_yellow_metro": "Tàu Điện Ngầm Vàng Đen (U-Bahn)"
+  },
+  "music": {
+    "Pokemon Black White Music - Sky Arrow Bridge.mp3": {
+      "title": "Sky Arrow Bridge (Cầu Mũi Tên Trời)",
+      "artist": "Pokémon Black & White OST"
+    },
+    "Pokemon X & Y-Bicycle theme [OST].mp3": {
+      "title": "Bicycle Theme (Khúc Dạo Xe Đạp)",
+      "artist": "Pokémon X & Y OST"
+    },
+    "春日狂想 (洛克王國BGM).mp3": {
+      "title": "Xuân Nhật Cuồng Tưởng (春日狂想)",
+      "artist": "Roco Kingdom OST (洛克王國)"
+    },
+    "風 - ゆったりピアノ曲【音楽素材MusMus】.mp3": {
+      "title": "Khúc Dương Cầm Gió Thoảng (ゆったりピアノ曲)",
+      "artist": "MusMus Studio (風)"
+    },
+    "rokudenashi_one_voice.mp3": {
+      "title": "One Voice (ただ声一つ)",
+      "artist": "Rokudenashi (ロクデナシ)"
+    }
+  }
+}

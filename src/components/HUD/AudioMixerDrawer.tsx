@@ -28,6 +28,25 @@ export const AudioMixerDrawer: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<AudioSettings>(audioManager.settings);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  // Tự động đóng popup khi click ra bên ngoài
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     return audioManager.subscribe((newSettings) => {
@@ -60,6 +79,7 @@ export const AudioMixerDrawer: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'relative',
         display: 'flex',
@@ -70,25 +90,28 @@ export const AudioMixerDrawer: React.FC = () => {
       {/* Drawer Dropdown Content */}
       {isOpen && (
         <div
+          ref={popupRef}
+          className="custom-scrollbar"
           style={{
             position: 'absolute',
-            top: '42px',
+            top: 'calc(100% + 6px)',
             right: 0,
-            width: '320px',
-            maxHeight: 'calc(100vh - 80px)',
+            width: '330px',
+            maxWidth: 'calc(100vw - 20px)',
+            maxHeight: 'min(480px, calc(100vh - 120px))',
             overflowY: 'auto',
-            background: 'rgba(20, 16, 20, 0.95)',
+            zIndex: 1000,
+            background: 'rgba(20, 16, 20, 0.96)',
             backdropFilter: 'blur(16px)',
             border: '2px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '12px',
             padding: '16px',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.85)',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
             color: '#f5e6d3',
             fontFamily: "'VT323', monospace",
             display: 'flex',
             flexDirection: 'column',
             gap: '14px',
-            zIndex: 1000,
           }}
         >
           {/* Header */}
@@ -242,19 +265,34 @@ export const AudioMixerDrawer: React.FC = () => {
             {/* Master Volume */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '4px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Volume2 size={11} color="#ffbe76" /> TỔNG (MASTER)
+                <span
+                  onClick={() => audioManager.toggleMute()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+                  title="Nhấn để Tắt/Bật toàn bộ tiếng"
+                >
+                  {!settings.isMuted ? <Volume2 size={11} color="#ffbe76" /> : <VolumeX size={11} color="#ff7675" />}
+                  TỔNG (MASTER)
                 </span>
-                <span>{Math.round(settings.masterVolume * 100)}%</span>
+                <span
+                  onClick={() => audioManager.toggleMute()}
+                  style={{
+                    cursor: 'pointer',
+                    color: settings.isMuted ? '#ff7675' : '#f5e6d3',
+                    fontWeight: settings.isMuted ? 'bold' : 'normal',
+                  }}
+                  title="Nhấn để Tắt/Bật toàn bộ tiếng"
+                >
+                  {settings.isMuted ? 'MUTE (TẮT TIẾNG)' : `${Math.round(settings.masterVolume * 100)}%`}
+                </span>
               </div>
               <input
                 type="range"
                 min="0"
                 max="1"
                 step="0.05"
-                value={settings.masterVolume}
+                value={settings.isMuted ? 0 : settings.masterVolume}
                 onChange={(e) => handleSliderChange('masterVolume', parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: '#ffbe76', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: settings.isMuted ? '#ff7675' : '#ffbe76', cursor: 'pointer' }}
               />
             </div>
 
@@ -368,12 +406,12 @@ export const AudioMixerDrawer: React.FC = () => {
       </PixelButton>
 
       <PixelButton
-        active={settings.isPlayingMusic}
-        onClick={() => audioManager.toggleMusic()}
-        title={settings.isPlayingMusic ? 'Tắt nhạc' : 'Bật nhạc'}
+        active={!settings.isMuted}
+        onClick={() => audioManager.toggleMute()}
+        title={settings.isMuted ? 'Bật lại toàn bộ âm thanh (Phím M)' : 'Tắt toàn bộ âm thanh trang web (Mute - Phím M)'}
         style={{ width: '34px', height: '34px', minWidth: '34px', padding: 0 }}
       >
-        {settings.isPlayingMusic ? <Volume2 size={14} color="#55efc4" /> : <VolumeX size={14} color="#ff7675" />}
+        {!settings.isMuted ? <Volume2 size={14} color="#55efc4" /> : <VolumeX size={14} color="#ff7675" />}
       </PixelButton>
     </div>
   );

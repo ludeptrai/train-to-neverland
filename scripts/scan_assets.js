@@ -2,46 +2,66 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Tự động chuyển đổi tên thư mục sang tên hiển thị Tiếng Việt / Thân thiện
+ * Đọc từ điển tên hiển thị tập trung từ src/config/names.json
  */
-function humanizeName(id) {
-  const map = {
-    dalat: 'Đà Lạt Ngàn Hoa',
-    halong: 'Vịnh Hạ Long',
-    hoian: 'Phố Cổ Hội An',
-    nhatrang: 'Biển Nha Trang',
-    sapa: 'Sa Pa Tây Bắc',
-    tokyo: 'Thành Phố Tokyo',
-    tokyo_fuji: 'Tokyo & Núi Phú Sĩ',
-    kyoto: 'Cố Đô Kyoto',
-    kyoto_autumn: 'Kyoto Mùa Thu Vàng',
-    newyork: 'New York Skyline',
-    danang: 'Đà Nẵng Biển Đẹp',
-    paris: 'Kinh Đô Paris',
-    hanoi: 'Hà Nội 36 Phố Phường',
-    hue: 'Cố Đô Huế',
-    phuquoc: 'Đảo Ngọc Phú Quốc',
-    hochiminhcity: 'TP. Hồ Chí Minh',
-    hagiang: 'Hà Giang',
-    train_red_shinkansen: 'Tàu Shinkansen Đỏ Siêu Tốc',
-    train_orange_bullet: 'Tàu Cao Tốc Cam Vàng',
-    train_blue_metro: 'Tàu Điện Ngầm Xanh Lam',
-    train_yellow_metro: 'Tàu Điện Ngầm Vàng Đen (U-Bahn)',
-    train_vintage_steam: 'Tàu Hơi Nước Than Đá Cổ Điển',
-    train_oil_steam: 'Tàu Hơi Nước Thùng Dầu',
-    train_green_cargo: 'Tàu Hàng Container Xanh Lá',
-    train_orange_tram: 'Tàu Điện Mặt Đất Cam Cổ Điển',
-    train_red_white_commuter: 'Tàu Liên Tỉnh Đỏ Trắng Nhật Bản',
-    train_monorail: 'Tàu Monorail Treo Tương Lai',
-    futuristic_train: 'Tàu Cao Tốc Tương Lai (Futuristic Maglev)',
-  };
+let cachedNames = null;
+let lastMtime = 0;
 
-  if (map[id]) return map[id];
+export function loadNamesDictionary() {
+  const possiblePaths = [
+    path.resolve('src/config/names.json'),
+    path.resolve(process.cwd(), 'src/config/names.json'),
+  ];
+  const namesFile = possiblePaths.find(p => fs.existsSync(p));
+  if (!namesFile) return { landscapes: {}, trains: {} };
 
-  // Nếu không có trong map, tự format: "my_new_station" -> "My New Station"
+  try {
+    const stats = fs.statSync(namesFile);
+    if (cachedNames && stats.mtimeMs === lastMtime) {
+      return cachedNames;
+    }
+    const content = fs.readFileSync(namesFile, 'utf-8');
+    cachedNames = JSON.parse(content);
+    lastMtime = stats.mtimeMs;
+    return cachedNames;
+  } catch (e) {
+    console.warn(`⚠️ [Names Dictionary] Không thể đọc ${namesFile}:`, e.message);
+    return cachedNames || { landscapes: {}, trains: {} };
+  }
+}
+
+/**
+ * Tự động chuyển đổi mã ID sang tên hiển thị Tiếng Việt / Thân thiện
+ * Tra cứu tập trung từ src/config/names.json
+ */
+export function humanizeName(id, category = null) {
+  if (!id) return '';
+  const dict = loadNamesDictionary();
+
+  // 1. Tìm chính xác theo category được chỉ định (landscapes / trains / music)
+  if (category && dict[category] && dict[category][id]) {
+    const val = dict[category][id];
+    return typeof val === 'object' && val !== null ? (val.title || val.name || id) : val;
+  }
+
+  // 2. Tìm trong tất cả các nhóm (landscapes, trains, music, ...)
+  for (const group of Object.keys(dict)) {
+    if (typeof dict[group] === 'object' && dict[group] !== null && dict[group][id]) {
+      const val = dict[group][id];
+      return typeof val === 'object' && val !== null ? (val.title || val.name || id) : val;
+    }
+  }
+
+  // 3. Tìm nếu dict là flat map id -> name
+  if (typeof dict[id] === 'string') {
+    return dict[id];
+  }
+
+  // 4. Fallback tự động format chữ cái đầu: "train_orange_bullet" -> "Tàu Orange Bullet"
   return id
     .replace(/^train_/, 'Tàu ')
     .split('_')
+    .filter(Boolean)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
@@ -50,7 +70,7 @@ function humanizeName(id) {
  * Tạo nội dung meta.json chuẩn với các giá trị mặc định cho địa điểm mới
  */
 export function createDefaultLandscapeMeta(id) {
-  const name = humanizeName(id);
+  const name = humanizeName(id, 'landscapes');
   return {
     name,
     subtitle: `Hành trình qua ga ${name}`,
@@ -175,7 +195,7 @@ export function scanLandscapes() {
       mgLightsUrl = `./assets/landscapes/${dir}/midground_lights.png`;
     }
 
-    const name = meta.name || humanizeName(dir);
+    const name = meta.name || humanizeName(dir, 'landscapes');
     const subtitle = meta.subtitle || `Chuyến tàu qua ga ${name}`;
     const location = meta.location || 'Việt Nam';
     const bgSpeed = meta.bgSpeed !== undefined ? meta.bgSpeed : 0.15;
@@ -287,6 +307,17 @@ export function scanTrains() {
   const trainsDir = path.resolve('public/assets/trains/templates');
   if (!fs.existsSync(trainsDir)) return [];
 
+  // Đọc file meta.json chung quản lý tất cả các loại train trong public/assets/trains/meta.json
+  const globalMetaPath = path.resolve('public/assets/trains/meta.json');
+  let globalTrainsMeta = {};
+  if (fs.existsSync(globalMetaPath)) {
+    try {
+      globalTrainsMeta = JSON.parse(fs.readFileSync(globalMetaPath, 'utf-8'));
+    } catch (e) {
+      console.warn(`⚠️ Lỗi đọc ${globalMetaPath}:`, e.message);
+    }
+  }
+
   const dirs = fs.readdirSync(trainsDir, { withFileTypes: true })
     .filter(d => d.isDirectory())
     .map(d => d.name);
@@ -296,15 +327,21 @@ export function scanTrains() {
   for (const dir of dirs) {
     const dirPath = path.join(trainsDir, dir);
     const metaPath = path.join(dirPath, 'meta.json');
-    let meta = {};
+    let localMeta = {};
 
     if (fs.existsSync(metaPath)) {
       try {
-        meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+        localMeta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
       } catch (e) {
         console.warn(`⚠️ Lỗi đọc ${metaPath}:`, e.message);
       }
     }
+
+    // Kết hợp cấu hình: global public/assets/trains/meta.json -> local meta.json của folder
+    const meta = {
+      ...(globalTrainsMeta[dir] || {}),
+      ...localMeta,
+    };
 
     const files = fs.readdirSync(dirPath);
 
@@ -335,7 +372,7 @@ export function scanTrains() {
     }
 
     const isSteam = dir.includes('steam');
-    const name = meta.name || humanizeName(dir);
+    const name = meta.name || humanizeName(dir, 'trains');
     const description = meta.description || `Đoàn tàu ${name} vận hành êm ái trên hành trình`;
     const wheelType = meta.wheelType || (isSteam ? 'spoke' : 'standard');
     const hasPantograph = meta.hasPantograph !== undefined ? meta.hasPantograph : false;
@@ -364,6 +401,10 @@ export function scanMusic() {
   const musicDir = path.resolve('public/assets/music');
   if (!fs.existsSync(musicDir)) return [];
 
+  // Đọc cấu hình từ names.json (src/config/names.json)
+  const dict = loadNamesDictionary();
+  const namesMusicMap = dict.music || {};
+
   const metaPath = path.join(musicDir, 'meta.json');
   let metaMap = {};
   if (fs.existsSync(metaPath)) {
@@ -373,6 +414,9 @@ export function scanMusic() {
       console.warn(`⚠️ Lỗi đọc ${metaPath}:`, e.message);
     }
   }
+
+  // Gộp thông tin meta: names.json có quyền ưu tiên cao nhất, sau đó đến meta.json
+  const combinedMetaMap = { ...metaMap, ...namesMusicMap };
 
   const supportedExts = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.webm'];
 
@@ -409,11 +453,11 @@ export function scanMusic() {
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '') || `track_${tracks.length + 1}`;
 
-    // Kiểm tra cấu hình trong meta.json (tìm theo tên file đầy đủ, tên file tương đối hoặc id)
-    const fileMeta = metaMap[file.name] || metaMap[file.relPath] || metaMap[id] || metaMap[baseName] || {};
+    // Kiểm tra cấu hình trong names.json & meta.json (tìm theo tên file đầy đủ, tên file tương đối hoặc id)
+    const fileMeta = combinedMetaMap[file.name] || combinedMetaMap[file.relPath] || combinedMetaMap[id] || combinedMetaMap[baseName] || {};
 
-    let title = fileMeta.title;
-    let artist = fileMeta.artist;
+    let title = typeof fileMeta === 'string' ? fileMeta : fileMeta.title;
+    let artist = typeof fileMeta === 'object' ? fileMeta.artist : undefined;
 
     if (!title || !artist) {
       // Tự động phân tách Artist - Title nếu có dạng "Nghệ sĩ - Tên bài"
@@ -443,26 +487,18 @@ export function scanMusic() {
     });
   }
 
-  // Luôn kèm một kênh Procedural Synthesizer tạo hợp âm Lo-Fi thời gian thực
-  tracks.push({
-    id: 'synth_tokyo_sunset',
-    title: 'Tokyo Sunset Ambient Chords',
-    artist: 'Neverland Lo-Fi Synthesizer',
-    url: 'procedural',
-  });
-
   return tracks;
 }
 
-/**
- * Ghi tự động ra src/config/auto_scenes.ts, src/config/auto_trains.ts và src/config/auto_music.ts
- */
-export function generateRegistryFiles() {
-  const scenes = scanLandscapes();
-  const trains = scanTrains();
-  const musicTracks = scanMusic();
+  /**
+   * Ghi tự động ra src/config/auto_scenes.ts, src/config/auto_trains.ts và src/config/auto_music.ts
+   */
+  export function generateRegistryFiles() {
+    const scenes = scanLandscapes();
+    const trains = scanTrains();
+    const musicTracks = scanMusic();
 
-  const scenesTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/landscapes/
+    const scenesTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/landscapes/
 // KHÔNG CHỈNH SỬA THỦ CÔNG FILE NÀY.
 // Để thêm ga mới: chỉ cần tạo folder trong public/assets/landscapes/[tên_ga]/ kèm theo meta.json (tùy chọn)
 
@@ -471,7 +507,7 @@ import { SceneConfig } from '../types';
 export const SCENES: SceneConfig[] = ${JSON.stringify(scenes, null, 2)};
 `;
 
-  const trainsTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/trains/templates/
+    const trainsTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/trains/templates/
 // KHÔNG CHỈNH SỬA THỦ CÔNG FILE NÀY.
 // Để thêm đoàn tàu mới: chỉ cần tạo folder trong public/assets/trains/templates/[tên_tàu]/ kèm theo meta.json (tùy chọn)
 
@@ -480,7 +516,7 @@ import { TrainTheme } from '../types';
 export const TRAINS: TrainTheme[] = ${JSON.stringify(trains, null, 2)};
 `;
 
-  const musicTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/music/
+    const musicTs = `// 🤖 TỰ ĐỘNG TẠO SINH TỪ THƯ MỤC public/assets/music/
 // KHÔNG CHỈNH SỬA THỦ CÔNG FILE NÀY.
 // Để thêm nhạc mới: chỉ cần thả file audio (.mp3, .wav, .ogg, .flac) vào public/assets/music/
 // Tùy chọn: chỉnh sửa public/assets/music/meta.json để đặt tiêu đề và tên nghệ sĩ mong muốn
@@ -490,19 +526,19 @@ import { AudioTrack } from '../types';
 export const MUSIC_TRACKS: AudioTrack[] = ${JSON.stringify(musicTracks, null, 2)};
 `;
 
-  const outScenes = path.resolve('src/config/auto_scenes.ts');
-  const outTrains = path.resolve('src/config/auto_trains.ts');
-  const outMusic = path.resolve('src/config/auto_music.ts');
+    const outScenes = path.resolve('src/config/auto_scenes.ts');
+    const outTrains = path.resolve('src/config/auto_trains.ts');
+    const outMusic = path.resolve('src/config/auto_music.ts');
 
-  fs.writeFileSync(outScenes, scenesTs, 'utf-8');
-  fs.writeFileSync(outTrains, trainsTs, 'utf-8');
-  fs.writeFileSync(outMusic, musicTs, 'utf-8');
+    fs.writeFileSync(outScenes, scenesTs, 'utf-8');
+    fs.writeFileSync(outTrains, trainsTs, 'utf-8');
+    fs.writeFileSync(outMusic, musicTs, 'utf-8');
 
-  console.log(`✅ [Asset Registry Scanner] Đã quét thành công ${scenes.length} địa điểm (scenes), ${trains.length} đoàn tàu (trains) và ${musicTracks.length} bản nhạc (music)!`);
-}
+    console.log(`✅ [Asset Registry Scanner] Đã quét thành công ${scenes.length} địa điểm (scenes), ${trains.length} đoàn tàu (trains) và ${musicTracks.length} bản nhạc (music)!`);
+  }
 
-// Chạy trực tiếp
-if (process.argv[1] && process.argv[1].endsWith('scan_assets.js')) {
-  generateRegistryFiles();
-}
+  // Chạy trực tiếp
+  if (process.argv[1] && process.argv[1].endsWith('scan_assets.js')) {
+    generateRegistryFiles();
+  }
 

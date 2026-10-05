@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PixelButton } from '../Shared/PixelButton';
 import { Play, Pause, RotateCcw, Timer } from 'lucide-react';
 
@@ -7,6 +7,25 @@ export const PomodoroTimer: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
   const [isExpanded, setIsExpanded] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  // Tự động đóng popup khi click ra bên ngoài
+  useEffect(() => {
+    if (!isExpanded) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isExpanded]);
 
   useEffect(() => {
     let timer: number;
@@ -67,6 +86,7 @@ export const PomodoroTimer: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'relative',
         display: 'flex',
@@ -85,23 +105,28 @@ export const PomodoroTimer: React.FC = () => {
 
       {isExpanded && (
         <div
+          ref={popupRef}
+          className="custom-scrollbar"
           style={{
             position: 'absolute',
-            top: '42px',
+            top: 'calc(100% + 6px)',
             right: 0,
-            width: '210px',
-            background: 'rgba(20, 16, 20, 0.95)',
+            width: '230px',
+            maxWidth: 'calc(100vw - 20px)',
+            maxHeight: 'min(420px, calc(100vh - 120px))',
+            overflowY: 'auto',
+            zIndex: 1000,
+            background: 'rgba(20, 16, 20, 0.96)',
             backdropFilter: 'blur(16px)',
             border: '2px solid rgba(255, 255, 255, 0.15)',
             borderRadius: '10px',
             padding: '12px',
-            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.85)',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.85)',
             color: '#f5e6d3',
             fontFamily: "'VT323', monospace",
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            zIndex: 1000,
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

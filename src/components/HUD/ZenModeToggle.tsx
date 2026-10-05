@@ -13,10 +13,10 @@ export const ZenModeToggle: React.FC<ZenModeToggleProps> = ({
 }) => {
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => { });
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     }
   };
@@ -39,7 +39,7 @@ export const ZenModeToggle: React.FC<ZenModeToggleProps> = ({
         }}
       >
         {isZenMode ? <Eye size={14} color="#ffd166" /> : <EyeOff size={14} color="#f5e6d3" />}
-        <span>{isZenMode ? 'HIỆN UI' : 'ZEN MODE'}</span>
+        <span>{isZenMode ? '' : 'ZEN MODE'}</span>
       </PixelButton>
 
       {!isZenMode && (

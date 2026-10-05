@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TimeOfDay, WeatherType, SceneConfig, TrainTheme } from '../../types';
 import { PixelButton } from '../Shared/PixelButton';
 import { Sun, CloudRain, Snowflake, Sparkles, Sunrise, Sunset, Moon, Clock, MapPin, TrainTrack, ChevronDown, Compass } from 'lucide-react';
@@ -34,6 +34,40 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 }) => {
   const [isTrainMenuOpen, setIsTrainMenuOpen] = useState(false);
   const [isSceneMenuOpen, setIsSceneMenuOpen] = useState(false);
+
+  const sceneBtnRef = useRef<HTMLDivElement | null>(null);
+  const trainBtnRef = useRef<HTMLDivElement | null>(null);
+  const scenePopupRef = useRef<HTMLDivElement | null>(null);
+  const trainPopupRef = useRef<HTMLDivElement | null>(null);
+
+  // Tự động đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    if (!isSceneMenuOpen && !isTrainMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        isSceneMenuOpen &&
+        sceneBtnRef.current &&
+        !sceneBtnRef.current.contains(target)
+      ) {
+        setIsSceneMenuOpen(false);
+      }
+      if (
+        isTrainMenuOpen &&
+        trainBtnRef.current &&
+        !trainBtnRef.current.contains(target)
+      ) {
+        setIsTrainMenuOpen(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isSceneMenuOpen, isTrainMenuOpen]);
 
   // Cycle weather
   const weatherList: WeatherType[] = ['clear', 'rain', 'snow', 'sakura'];
@@ -88,7 +122,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       </PixelButton>
 
       {/* Scene switch button with dropdown */}
-      <div style={{ position: 'relative' }}>
+      <div ref={sceneBtnRef} style={{ position: 'relative' }}>
         <PixelButton
           active={isSceneMenuOpen}
           onClick={() => {
@@ -104,21 +138,26 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
         {isSceneMenuOpen && (
           <div
+            ref={scenePopupRef}
+            className="custom-scrollbar"
             style={{
               position: 'absolute',
-              top: '42px',
+              top: 'calc(100% + 6px)',
               left: 0,
               minWidth: '220px',
-              background: 'rgba(25, 20, 22, 0.95)',
-              backdropFilter: 'blur(10px)',
+              maxWidth: 'calc(100vw - 20px)',
+              maxHeight: '280px',
+              overflowY: 'auto',
+              zIndex: 1000,
+              background: 'rgba(25, 20, 22, 0.96)',
+              backdropFilter: 'blur(14px)',
               border: '2px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '8px',
               padding: '6px',
               display: 'flex',
               flexDirection: 'column',
               gap: '4px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
-              zIndex: 1000,
+              boxShadow: '0 16px 40px rgba(0,0,0,0.85)',
             }}
           >
             {scenes.map((s) => (
@@ -152,7 +191,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       </div>
 
       {/* Train switch button with dropdown listing ALL 12 train templates */}
-      <div style={{ position: 'relative' }}>
+      <div ref={trainBtnRef} style={{ position: 'relative' }}>
         <PixelButton
           active={isTrainMenuOpen}
           onClick={() => {
@@ -168,23 +207,26 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
         {isTrainMenuOpen && (
           <div
+            ref={trainPopupRef}
+            className="custom-scrollbar"
             style={{
               position: 'absolute',
-              top: '42px',
+              top: 'calc(100% + 6px)',
               left: 0,
               width: '320px',
-              maxHeight: '380px',
+              maxWidth: 'calc(100vw - 20px)',
+              maxHeight: '260px',
               overflowY: 'auto',
-              background: 'rgba(25, 20, 22, 0.95)',
-              backdropFilter: 'blur(10px)',
+              zIndex: 1000,
+              background: 'rgba(25, 20, 22, 0.96)',
+              backdropFilter: 'blur(14px)',
               border: '2px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '8px',
               padding: '6px',
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.7)',
-              zIndex: 1000,
+              boxShadow: '0 16px 40px rgba(0,0,0,0.85)',
             }}
           >
             <div style={{ padding: '4px 8px', fontSize: '10px', color: '#ffd166', letterSpacing: '1px' }}>

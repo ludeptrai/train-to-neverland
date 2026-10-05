@@ -6,7 +6,7 @@
   "mgSpeed": 0.85,
   "mgScaleRatio": 0.8,
   "mgY": -80,
-  "bgMirror": true,
+  "bgMirror": false,
   "sun": {
     "dawn": {
       "y": "48%",
