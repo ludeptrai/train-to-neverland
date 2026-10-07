@@ -371,6 +371,11 @@ export const App: React.FC = () => {
           minHeight: '34px',
         }}
       >
+        {/* Semantic H1 heading for SEO & Accessibility */}
+        <h1 className="sr-only">
+          Đi Khắp Việt Nam — Chuyến Tàu Đi Khắp Việt Nam (Train to Neverland | Xứ Sở Hư Vô) — Pixel Art Thư Giãn | Blog Của Lưu — Phan Duy Lưu
+        </h1>
+
         {/* Cụm nút chuyển đổi bên trái (Địa điểm, Tàu, Thời tiết, Thời điểm, Tự chuyển ga) */}
         <div
           style={{
@@ -520,7 +525,7 @@ export const App: React.FC = () => {
               textShadow: '0 0 16px rgba(245, 230, 211, 0.4)',
             }}
           >
-            CHUYẾN TÀU TỚI XỨ SỞ VĨNH HẰNG
+            CHUYẾN TÀU ĐI KHẮP VIỆT NAM • XỨ SỞ HƯ VÔ
           </span>
           <span
             style={{
@@ -530,7 +535,7 @@ export const App: React.FC = () => {
               color: '#d4bda8',
             }}
           >
-            {currentScene.location} • {currentScene.subtitle}
+            {currentScene.location} • {currentScene.subtitle} | Train to Neverland — Blog Của Lưu
           </span>
         </div>
 

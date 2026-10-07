@@ -3,224 +3,224 @@
   <!-- Trang chủ mặc định: TP. Hồ Chí Minh (Hoàng Hôn) -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <!-- hochiminhcity - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hochiminhcity&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hochiminhcity - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hochiminhcity&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hochiminhcity - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hochiminhcity&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- dalat - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=dalat&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- dalat - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=dalat&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- dalat - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=dalat&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- dalat - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=dalat&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hagiang - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hagiang&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hagiang - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hagiang&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hagiang - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hagiang&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hagiang - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hagiang&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- halong - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=halong&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- halong - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=halong&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- halong - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=halong&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- halong - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=halong&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hanoi - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hanoi&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hanoi - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hanoi&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hanoi - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hanoi&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hanoi - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hanoi&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hoian - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hoian&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hoian - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hoian&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- hoian - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hoian&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- hoian - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=hoian&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- nhatrang - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=nhatrang&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- nhatrang - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=nhatrang&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- nhatrang - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=nhatrang&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- nhatrang - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=nhatrang&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- ninhbinh - sunset -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=ninhbinh&amp;time=sunset</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- ninhbinh - night -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=ninhbinh&amp;time=night</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <!-- ninhbinh - dawn -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=ninhbinh&amp;time=dawn</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <!-- ninhbinh - day -->
   <url>
     <loc>https://dikhapvietnam.luu.name.vn/?scene=ninhbinh&amp;time=day</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
