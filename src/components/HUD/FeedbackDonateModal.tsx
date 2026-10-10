@@ -22,7 +22,7 @@ export const FeedbackDonateModal: React.FC = () => {
   const apiUrl =
     (typeof import.meta !== 'undefined' &&
       (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_STATS_API_URL) ||
-    '';
+    'https://train-neverland-stats.luuphan2810.workers.dev';
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText('PHAN DUY LUU - MoMo / VietQR');
@@ -243,10 +243,6 @@ export const FeedbackDonateModal: React.FC = () => {
             {/* TAB 1: RETRO TRAIN TICKET DONATION (MÔ PHỎNG VÉ TÀU CHUẨN MẪU) */}
             {activeTab === 'donate' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '15px', color: '#c8b8a8', lineHeight: 1.4 }}>
-                  Mỗi tách cà phê ấm hay lời động viên từ bạn là nguồn năng lượng quý giá giúp người lái tàu tiếp tục duy
-                  trì đường ray và kiến tạo thêm nhiều ga tàu mới cho chuyến hành trình.
-                </div>
 
                 {/* THE AUTHENTIC BOARDING PASS / TRAIN TICKET */}
                 <div
@@ -692,14 +688,7 @@ export const FeedbackDonateModal: React.FC = () => {
 
                       {/* Bottom Barcode of Stub (matching reference image) */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%', marginTop: '2px' }}>
-                        <div style={{ display: 'flex', gap: '2px', height: '20px', alignItems: 'flex-end', justifyContent: 'center', width: '100%' }}>
-                          {[2, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 4, 1, 2, 3, 1, 4, 2, 1, 2, 1].map((w, i) => (
-                            <div key={i} style={{ width: `${w * 1.3}px`, height: '100%', backgroundColor: '#1e293b' }} />
-                          ))}
-                        </div>
-                        <span style={{ fontSize: '9px', color: '#64748b', letterSpacing: '1px', fontFamily: 'monospace' }}>
-                          #NVL-8888-PASS
-                        </span>
+
                       </div>
                     </div>
                   </div>
@@ -708,7 +697,8 @@ export const FeedbackDonateModal: React.FC = () => {
                 {/* Footer Note */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#a09080' }}>
                   <Heart size={14} color="#ff7675" />
-                  <span>Cảm ơn bạn đã luôn là một phần ý nghĩa của Chuyến Tàu Không Vội!</span>
+                  <span>Cảm ơn bạn đã luôn là một phần ý nghĩa của Chuyến Tàu! Mỗi tách cà phê ấm hay lời động viên từ bạn là nguồn năng lượng quý giá giúp người lái tàu tiếp tục duy
+                    trì đường ray và kiến tạo thêm nhiều ga tàu mới cho chuyến hành trình.</span>
                 </div>
 
                 {/* ZOOMED QR MODAL OVERLAY */}

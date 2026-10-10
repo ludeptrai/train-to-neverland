@@ -102,7 +102,7 @@ class AnalyticsService {
   private apiUrl: string =
     (typeof import.meta !== 'undefined' &&
       (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_STATS_API_URL) ||
-    '';
+    'https://train-neverland-stats.luuphan2810.workers.dev';
 
   // Seeded Community Stats khi chưa kết nối backend hoặc offline
   private fallbackCommunityStats: CommunityStats = {

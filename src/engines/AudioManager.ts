@@ -66,8 +66,8 @@ class AudioManager {
 
   public settings: AudioSettings = {
     masterVolume: 0.9,
-    musicVolume: 0.85,
-    trainVolume: 0.35,
+    musicVolume: 0.4,
+    trainVolume: 0.8,
     rainVolume: 0.0,
     windVolume: 0.05,
     natureVolume: 0.15,
@@ -97,7 +97,7 @@ class AudioManager {
 
   private loadFromStorage() {
     try {
-      const isV3Applied = localStorage.getItem('neverland_audio_default_music_v3');
+      const isV4Applied = localStorage.getItem('neverland_audio_default_v4');
       const saved = localStorage.getItem('neverland_audio_settings');
       if (saved) {
         this.settings = { ...this.settings, ...JSON.parse(saved) };
@@ -110,16 +110,16 @@ class AudioManager {
         this.settings.isMuted = false;
       }
 
-      // Tự động nâng cấp âm lượng nhạc và giảm tiếng ồn môi trường cho cả người dùng mới và người dùng cũ có cài đặt âm lượng nhạc quá thấp (< 60%)
-      if (!isV3Applied || (typeof this.settings.musicVolume === 'number' && this.settings.musicVolume < 0.6)) {
+      // Cập nhật mặc định âm lượng: nhạc 40% (0.4) và âm thanh tàu 80% (0.8) cho cả người dùng mới và phiên cũ
+      if (!isV4Applied) {
         this.settings.isPlayingMusic = true;
-        this.settings.musicVolume = 0.85;
+        this.settings.musicVolume = 0.4;
+        this.settings.trainVolume = 0.8;
         this.settings.masterVolume = Math.max(0.85, this.settings.masterVolume || 0.9);
-        this.settings.windVolume = 0.05; // Gió êm dịu, không rít
-        this.settings.trainVolume = Math.min(0.35, this.settings.trainVolume || 0.35); // Tiếng xình xịch vừa phải
+        this.settings.windVolume = 0.05;
         this.settings.natureVolume = Math.min(0.2, this.settings.natureVolume || 0.15);
         this.settings.isMuted = false;
-        localStorage.setItem('neverland_audio_default_music_v3', 'true');
+        localStorage.setItem('neverland_audio_default_v4', 'true');
         this.saveToStorage();
       }
     } catch {
