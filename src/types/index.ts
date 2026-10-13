@@ -51,15 +51,20 @@ export interface SceneConfig {
     sunset?: string[];
     night?: string[];
   };
-  ambientFilter?: {
-    dawn?: string;
-    day?: string;
-    sunset?: string;
-    night?: string;
-  } | string;
+  ambientFilter?: TimeFilterMap | string;
+  bgFilter?: TimeFilterMap | string;
+  mgFilter?: TimeFilterMap | string;
+  fgFilter?: TimeFilterMap | string;
   nightFilter?: string;
   nightOverlayBlend?: string;
 }
+
+export type TimeFilterMap = {
+  dawn?: string;
+  day?: string;
+  sunset?: string;
+  night?: string;
+};
 
 export interface TrainTheme {
   id: string;

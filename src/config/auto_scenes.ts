@@ -53,6 +53,12 @@ export const SCENES: SceneConfig[] = [
         "#203a43",
         "#2c5364"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -102,6 +108,12 @@ export const SCENES: SceneConfig[] = [
         "#13547a",
         "#80d0c7"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.5) contrast(1.15) saturate(0.55) hue-rotate(35deg)"
     }
   },
   {
@@ -134,6 +146,8 @@ export const SCENES: SceneConfig[] = [
     "midgroundUrl": "./assets/landscapes/halong/midground_track.png",
     "foregroundUrl": "./assets/landscapes/default_foreground.png",
     "fgSpeed": 1.35,
+    "fgScaleRatio": 0,
+    "fgY": -20,
     "skyPresets": {
       "dawn": [
         "#a8edea",
@@ -151,6 +165,12 @@ export const SCENES: SceneConfig[] = [
         "#13547a",
         "#80d0c7"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -165,16 +185,16 @@ export const SCENES: SceneConfig[] = [
     "mgY": -20,
     "sun": {
       "dawn": {
-        "y": "30%",
-        "size": 90
+        "y": "40%",
+        "size": 150
       },
       "day": {
         "y": "12%",
         "size": 58
       },
       "sunset": {
-        "y": "24%",
-        "size": 100
+        "y": "34%",
+        "size": 200
       },
       "night": {}
     },
@@ -206,6 +226,12 @@ export const SCENES: SceneConfig[] = [
         "#1b2a4a",
         "#2c3e50"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -238,6 +264,8 @@ export const SCENES: SceneConfig[] = [
     "midgroundUrl": "./assets/landscapes/hochiminhcity/midground_track.png",
     "foregroundUrl": "./assets/landscapes/default_foreground.png",
     "fgSpeed": 1.35,
+    "fgScaleRatio": 0.3,
+    "fgY": -20,
     "skyPresets": {
       "dawn": [
         "#fbc2eb",
@@ -259,6 +287,12 @@ export const SCENES: SceneConfig[] = [
         "#1a1c2e",
         "#2c2d4a"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -309,6 +343,73 @@ export const SCENES: SceneConfig[] = [
         "#203a43",
         "#2c5364"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
+    }
+  },
+  {
+    "id": "hue",
+    "name": "Huế",
+    "subtitle": "Thành phố Huế - Lãng mạng bên bờ sông Hương",
+    "location": "Việt Nam",
+    "bgSpeed": 0.15,
+    "mgSpeed": 0.5,
+    "bgMirror": false,
+    "mgScaleRatio": 1.17,
+    "mgY": -100,
+    "sun": {
+      "dawn": {
+        "y": "46%",
+        "size": 130
+      },
+      "day": {
+        "y": "12%",
+        "size": 58
+      },
+      "sunset": {
+        "y": "44%",
+        "size": 140
+      },
+      "night": {}
+    },
+    "backgroundUrl": "./assets/landscapes/hue/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/hue/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/hue/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/hue/foreground.png",
+    "foregroundLightsUrl": "./assets/landscapes/hue/foreground_lights.png",
+    "fgSpeed": 1,
+    "fgScaleRatio": 1,
+    "fgY": -100,
+    "skyPresets": {
+      "dawn": [
+        "#fbc2eb",
+        "#a6c1ee"
+      ],
+      "day": [
+        "#4facfe",
+        "#00f2fe",
+        "#e0f7fa"
+      ],
+      "sunset": [
+        "#fa709a",
+        "#fee140",
+        "#f39c12"
+      ],
+      "night": [
+        "#09203f",
+        "#1b2a4a",
+        "#2c3e50"
+      ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -362,6 +463,12 @@ export const SCENES: SceneConfig[] = [
         "#1b2a4a",
         "#2c3e50"
       ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   },
   {
@@ -419,8 +526,72 @@ export const SCENES: SceneConfig[] = [
       ]
     },
     "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
       "night": "brightness(0.68) contrast(1.15) saturate(0.8) hue-rotate(35deg)"
     },
     "nightFilter": "brightness(0.68) contrast(1.15) saturate(0.8) hue-rotate(35deg)"
+  },
+  {
+    "id": "sapa",
+    "name": "Sa Pa Tây Bắc",
+    "subtitle": "Hành trình qua ga Sa Pa Tây Bắc",
+    "location": "Việt Nam",
+    "bgSpeed": 0.15,
+    "mgSpeed": 0.85,
+    "bgMirror": true,
+    "mgScaleRatio": 0.5,
+    "mgY": -52,
+    "sun": {
+      "dawn": {
+        "y": "46%",
+        "size": 130
+      },
+      "day": {
+        "y": "12%",
+        "size": 58
+      },
+      "sunset": {
+        "y": "44%",
+        "size": 140
+      },
+      "night": {}
+    },
+    "backgroundUrl": "./assets/landscapes/sapa/background.png",
+    "backgroundLightsUrl": "./assets/landscapes/sapa/background_lights.png",
+    "midgroundUrl": "./assets/landscapes/sapa/midground_track.png",
+    "foregroundUrl": "./assets/landscapes/sapa/foreground.png",
+    "foregroundLightsUrl": "./assets/landscapes/sapa/foreground_lights.png",
+    "fgSpeed": 1.05,
+    "fgScaleRatio": 0.35,
+    "fgY": -100,
+    "skyPresets": {
+      "dawn": [
+        "#fbc2eb",
+        "#a6c1ee"
+      ],
+      "day": [
+        "#4facfe",
+        "#00f2fe",
+        "#e0f7fa"
+      ],
+      "sunset": [
+        "#fa709a",
+        "#fee140",
+        "#f39c12"
+      ],
+      "night": [
+        "#09203f",
+        "#1b2a4a",
+        "#2c3e50"
+      ]
+    },
+    "ambientFilter": {
+      "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+      "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
+    }
   }
 ];

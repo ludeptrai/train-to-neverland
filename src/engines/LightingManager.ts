@@ -51,7 +51,7 @@ export function getLightingTheme(time: 'dawn' | 'day' | 'sunset' | 'night'): Lig
     case 'night':
       return {
         skyGradient: 'linear-gradient(180deg, #050b14 0%, #0d1b2a 40%, #1b263b 75%, #2a3d54 100%)',
-        ambientFilter: 'brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(200deg)',
+        ambientFilter: 'brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)',
         emissiveOpacity: 1.0,
         emissiveGlow: 'drop-shadow(0 0 8px rgba(255, 230, 110, 0.9))',
         overlayBlend: 'rgba(13, 27, 42, 0.35)',

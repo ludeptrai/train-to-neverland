@@ -143,7 +143,10 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
                   : (meta.foregroundY !== undefined ? { fgY: meta.foregroundY } : {}))),
             ...(meta.fgOpacity !== undefined ? { fgOpacity: Number(meta.fgOpacity) } : {}),
             ...(meta.skyPresets ? { skyPresets: meta.skyPresets } : {}),
-            ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : {}),
+            ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : (meta.filters !== undefined ? { ambientFilter: meta.filters } : (meta.filter !== undefined ? { ambientFilter: meta.filter } : {}))),
+            ...(meta.bgFilter !== undefined ? { bgFilter: meta.bgFilter } : {}),
+            ...(meta.mgFilter !== undefined ? { mgFilter: meta.mgFilter } : {}),
+            ...(meta.fgFilter !== undefined ? { fgFilter: meta.fgFilter } : {}),
             ...(meta.nightFilter !== undefined ? { nightFilter: meta.nightFilter } : {}),
             ...(meta.nightOverlayBlend !== undefined ? { nightOverlayBlend: meta.nightOverlayBlend } : {}),
             ...(meta.bgMirror !== undefined ? { bgMirror: Boolean(meta.bgMirror) } : (meta.mirrorBackground !== undefined ? { bgMirror: Boolean(meta.mirrorBackground) } : {})),
@@ -418,10 +421,20 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
   const beamBulbOffsetY = Math.round(beamHeight * (110 / 220));
 
   const effectiveTime = resolveTimeOfDay(timeOfDay);
-  const sceneFilter = typeof displayedScene.ambientFilter === 'string'
-    ? displayedScene.ambientFilter
-    : displayedScene.ambientFilter?.[effectiveTime];
-  const effectiveAmbientFilter = sceneFilter || (effectiveTime === 'night' && displayedScene.nightFilter ? displayedScene.nightFilter : lighting.ambientFilter);
+  const resolveLayerFilter = (
+    filterConfig?: { dawn?: string; day?: string; sunset?: string; night?: string } | string,
+    fallback?: string
+  ) => {
+    if (!filterConfig) return fallback;
+    if (typeof filterConfig === 'string') return filterConfig;
+    return filterConfig[effectiveTime] || fallback;
+  };
+
+  const sceneAmbientFilter = resolveLayerFilter(displayedScene.ambientFilter || (displayedScene as any).filters || (displayedScene as any).filter);
+  const effectiveAmbientFilter = sceneAmbientFilter || (effectiveTime === 'night' && displayedScene.nightFilter ? displayedScene.nightFilter : lighting.ambientFilter);
+  const effectiveBgFilter = resolveLayerFilter(displayedScene.bgFilter, effectiveAmbientFilter)!;
+  const effectiveMgFilter = resolveLayerFilter(displayedScene.mgFilter, effectiveAmbientFilter)!;
+  const effectiveFgFilter = resolveLayerFilter(displayedScene.fgFilter, effectiveAmbientFilter)!;
   const effectiveOverlayBlend = (effectiveTime === 'night' && displayedScene.nightOverlayBlend) || lighting.overlayBlend;
 
   return (
@@ -485,7 +498,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          filter: effectiveAmbientFilter,
+          filter: effectiveBgFilter,
           transition: 'filter 1.5s ease',
           zIndex: 2,
         }}
@@ -528,7 +541,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             opacity: lighting.emissiveOpacity,
             transition: 'opacity 1.5s ease',
             pointerEvents: 'none',
-            zIndex: 20, // Nằm trên Ambient Mood Overlay (zIndex 12) để bảo tồn 100% màu gốc không bị ám màu thời gian
+            zIndex: 15, // Nằm trên Ambient Mood Overlay (zIndex 12) để bảo tồn 100% màu gốc, nhưng NẰM DƯỚI Midground Track (zIndex 20)
           }}
         >
           {tileIndices.map((k) => {
@@ -571,9 +584,9 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
           backgroundPosition: `${-mgOffset}px bottom`,
           backgroundSize: 'auto 100%',
           imageRendering: 'pixelated',
-          filter: effectiveAmbientFilter,
+          filter: effectiveMgFilter,
           transition: 'filter 1.5s ease',
-          zIndex: 10,
+          zIndex: 20, // Nằm trên Background Lights (zIndex 15) để che chắn ánh sáng đèn hậu cảnh phía sau
         }}
       />
       {displayedScene.midgroundLightsUrl && (
@@ -592,7 +605,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             opacity: lighting.emissiveOpacity,
             transition: 'opacity 1.5s ease',
             pointerEvents: 'none',
-            zIndex: 21, // Nằm trên Ambient Mood Overlay (zIndex 12) để giữ nguyên 100% màu gốc
+            zIndex: 22, // Nằm trên Midground Track (zIndex 20) để hiển thị đèn đường ray riêng biệt
           }}
         />
       )}
@@ -782,7 +795,7 @@ export const ParallaxEngine: React.FC<ParallaxEngineProps> = ({
             backgroundPosition: `${-fgOffset}px bottom`,
             backgroundSize: 'auto 100%',
             imageRendering: 'pixelated',
-            filter: effectiveAmbientFilter,
+            filter: effectiveFgFilter,
             transition: 'filter 1.5s ease',
           }}
         />

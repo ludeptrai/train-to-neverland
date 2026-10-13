@@ -12,16 +12,16 @@
   "bgMirror": true,
   "sun": {
     "dawn": {
-      "y": "30%",
-      "size": 90
+      "y": "40%",
+      "size": 150
     },
     "day": {
       "y": "12%",
       "size": 58
     },
     "sunset": {
-      "y": "24%",
-      "size": 100
+      "y": "34%",
+      "size": 200
     }
   },
   "skyPresets": {
@@ -44,5 +44,11 @@
       "#1b2a4a",
       "#2c3e50"
     ]
+  },
+  "ambientFilter": {
+    "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+    "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+    "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+    "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
   }
 }

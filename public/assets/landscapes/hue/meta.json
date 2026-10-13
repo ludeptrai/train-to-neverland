@@ -1,0 +1,54 @@
+{
+  "name": "Huế",
+  "subtitle": "Thành phố Huế - Lãng mạng bên bờ sông Hương",
+  "location": "Việt Nam",
+  "bgSpeed": 0.15,
+  "mgSpeed": 0.5,
+  "fgSpeed": 1,
+  "fgScaleRatio": 1,
+  "fgY": -100,
+  "mgScaleRatio": 1.17,
+  "mgY": -100,
+  "bgMirror": false,
+  "sun": {
+    "dawn": {
+      "y": "46%",
+      "size": 130
+    },
+    "day": {
+      "y": "12%",
+      "size": 58
+    },
+    "sunset": {
+      "y": "44%",
+      "size": 140
+    }
+  },
+  "skyPresets": {
+    "dawn": [
+      "#fbc2eb",
+      "#a6c1ee"
+    ],
+    "day": [
+      "#4facfe",
+      "#00f2fe",
+      "#e0f7fa"
+    ],
+    "sunset": [
+      "#fa709a",
+      "#fee140",
+      "#f39c12"
+    ],
+    "night": [
+      "#09203f",
+      "#1b2a4a",
+      "#2c3e50"
+    ]
+  },
+  "ambientFilter": {
+    "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+    "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+    "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+    "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
+  }
+}

@@ -117,6 +117,12 @@ export function createDefaultLandscapeMeta(id) {
         "#1b2a4a",
         "#2c3e50"
       ]
+    },
+    ambientFilter: {
+      dawn: "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+      day: "brightness(1.0) contrast(1.0) saturate(1.0)",
+      sunset: "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+      night: "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
     }
   };
 }
@@ -337,7 +343,10 @@ export function scanLandscapes() {
       ...(fgY !== undefined ? { fgY } : {}),
       ...(fgOpacity !== undefined ? { fgOpacity } : {}),
       skyPresets,
-      ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : {}),
+      ...(meta.ambientFilter !== undefined ? { ambientFilter: meta.ambientFilter } : (meta.filters !== undefined ? { ambientFilter: meta.filters } : (meta.filter !== undefined ? { ambientFilter: meta.filter } : {}))),
+      ...(meta.bgFilter !== undefined ? { bgFilter: meta.bgFilter } : {}),
+      ...(meta.mgFilter !== undefined ? { mgFilter: meta.mgFilter } : {}),
+      ...(meta.fgFilter !== undefined ? { fgFilter: meta.fgFilter } : {}),
       ...(meta.nightFilter !== undefined ? { nightFilter: meta.nightFilter } : {}),
       ...(meta.nightOverlayBlend !== undefined ? { nightOverlayBlend: meta.nightOverlayBlend } : {}),
     });

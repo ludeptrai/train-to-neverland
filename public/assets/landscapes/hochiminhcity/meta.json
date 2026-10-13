@@ -3,6 +3,8 @@
   "subtitle": "Hòn Ngọc Viễn Đông & Nhịp Sống Đô Thị Hoa Lệ",
   "location": "Sài Gòn, Việt Nam",
   "bgSpeed": 0.15,
+  "fgScaleRatio": 0.3,
+  "fgY": -20,
   "mgSpeed": 0.85,
   "mgScaleRatio": 0.65,
   "mgY": 0,
@@ -42,5 +44,11 @@
       "#1a1c2e",
       "#2c2d4a"
     ]
+  },
+  "ambientFilter": {
+    "dawn": "brightness(0.92) contrast(1.02) saturate(1.1) sepia(0.15)",
+    "day": "brightness(1.0) contrast(1.0) saturate(1.0)",
+    "sunset": "brightness(0.95) contrast(1.08) saturate(1.25) sepia(0.25)",
+    "night": "brightness(0.68) contrast(1.15) saturate(0.85) hue-rotate(35deg)"
   }
 }
